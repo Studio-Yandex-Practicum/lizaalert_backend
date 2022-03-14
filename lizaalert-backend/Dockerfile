@@ -1,4 +1,4 @@
-FROM python:3.9.7-slim
+FROM python:3.7.12-slim
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000/tcp
