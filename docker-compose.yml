@@ -31,19 +31,6 @@ services:
       - liza_alert
     depends_on:
       - postgres
-    entrypoint: [ "./entrypoint.sh" ]
-
-  admin_panel_migration:
-    build: ./lizaalert-backend
-    env_file:
-      - ./lizaalert-backend/.env
-    volumes:
-      - static_volume:/home/app/admin/static
-    networks:
-      - liza_alert
-    depends_on:
-      - postgres
-    entrypoint: ["./entrypoint.sh", "migrate"]
 
   nginx:
     build: ./services/nginx

@@ -18,4 +18,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN ["chmod", "+x", "/home/app/admin/entrypoint.sh"]
+CMD ["gunicorn", "-c", "/home/app/admin/gunicorn_conf.py", "settings.wsgi"]
