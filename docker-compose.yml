@@ -13,7 +13,7 @@ services:
     networks:
       - liza_alert
     ports:
-      - 5432:5432
+      - 15432:5432
     volumes:
       - postgres_volume:/var/lib/postgresql/data/
     env_file:
