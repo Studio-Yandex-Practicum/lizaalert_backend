@@ -1,0 +1,15 @@
+.idea
+.env
+files/
+images/
+nginx/
+pg_data/
+static/
+tasks/
+static/
+staticfiles/
+venv/
+README.md
+Dockerfile
+docker-compose.yml
+*.sqlite3
