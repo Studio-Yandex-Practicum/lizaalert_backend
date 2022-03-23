@@ -1,0 +1,5 @@
+-r common.txt
+flake8==4.0.1
+flake8-broken-line
+flake8-return
+isort==5.10.1
