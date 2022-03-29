@@ -418,7 +418,7 @@ paths:
           description: Пользователь не авторизован!
           $ref: '#/components/responses/Unauthorized'
 
-  /profile/history: # В мекете не предусмотрено, но возможность вывода истории входов в аккаунт есть
+  /profile/history: # В макете не предусмотрено, но возможность вывода истории входов в аккаунт есть
     get:
       tags:
       - account
@@ -494,7 +494,7 @@ paths:
   /courses: # Уточнить endpoint
     get:
       tags:
-      - account
+      - course
       summary: Главная страница сайта платформы обучения (для авторизованного пользователя)
       description: Отображает информацию о курсах, пользователе и выбранных фильтрах
       operationId: getIndexAuthorizedUser
@@ -564,7 +564,7 @@ paths:
                         number_of_classes:
                           type: integer
                           description: Количество занятий
-                          example: 144
+                          example: 24
                         duration:
                           type: integer
                           description: Продолжительность курса в часах
@@ -577,7 +577,307 @@ paths:
           description: Некорректные параметры запроса
           $ref: '#/components/responses/BadRequest'
 
-      
+  /course/{course_id}:
+    parameters:
+      - in: path
+        name: course_id
+        description: Уникальный идентификатор курса
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get: # Уточнить видимость полей для неавторизованного пользователя
+      tags:
+        - course
+      summary: Информация о курсе
+      description: Отображает информацию о курсе, уровне пользователяб кол-во часов и список уроков в курсе
+      operationId: getIndexCourse
+      security:
+        - bearerAuth: [ ]
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Уникальный идентификатор курса
+                  title:
+                    type: string
+                    description: Название курса
+                    example: Кинологическое направление
+                  level:
+                    type: string
+                    description: Уровень курса
+                    example: Бывалый
+                  description:
+                    type: string
+                    description: Описание курса
+                    example: Поисково-спасательная работа, следовая работа, а так же поиск тел погибших с помощью собак
+                  cover:
+                    type: string
+                    format: uri
+                    description: ссылка на обложку курса
+                  number_of_classes:
+                    type: integer
+                    description: Количество занятий
+                    example: 24
+                  duration:
+                    type: integer
+                    description: Продолжительность курса в часах
+                    example: 144
+                  course_start:
+                    type: string
+                    description: Дата начала занятий курса
+                    example: 22.02.2022
+                  what_you_learn:
+                    type: array
+                    description: изучаемые навыки
+                    items:
+                      type: object
+                      properties:
+                        header:
+                          type: string
+                          description: заголовок навыка
+                          example: Поисково-спасательная работа
+                        text:
+                          type: string
+                          description: описание навыка
+                          example: Поиск тел погибших
+                  lessons_list:
+                    type: array
+                    description: Список уроков в курсе
+                    items:
+                      type: object
+                      properties:
+                        theme:
+                          type: string
+                          description: заголовок навыка
+                          example: Поисково-спасательная работа
+                        lessons_material:
+                          type: array
+                          description: Список материалов урока
+                          items:
+                            type: object
+                            properties:
+                              material:
+                                type: string # уточнить тип
+                                description: материал урока
+                                example: Пример # уточнить пример материала
+                              status:
+                                type: boolean
+                                description: Статус прохождения материала урока
+                                example: True/False
+        400:
+          description: Некорректные параметры запроса
+          $ref: '#/components/responses/BadRequest'
+        401: # Уточнить что выводить неавторизованному пользователю
+          description: Нет прав для доступа к ресурсу
+          $ref: '#/components/responses/Unauthorized'
+
+    patch: # Уточнить какие методы необходимы
+      tags:
+        - course
+      summary: Обновление информация о курсе
+      description: Выполняется сохранение обновленных данных курса
+      operationId: updateCourse
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  description: Уникальный идентификатор курса
+                title:
+                  type: string
+                  description: Название курса
+                  example: Кинологическое направление
+                level:
+                  type: string
+                  description: Уровень курса
+                  example: Бывалый
+                description:
+                  type: string
+                  description: Описание курса
+                  example: Поисково-спасательная работа, следовая работа, а так же поиск тел погибших с помощью собак
+                cover:
+                  type: string
+                  format: uri
+                  description: ссылка на обложку курса
+                number_of_classes:
+                  type: integer
+                  description: Количество занятий
+                  example: 24
+                duration:
+                  type: integer
+                  description: Продолжительность курса в часах
+                  example: 144
+                course_start:
+                  type: string
+                  description: Дата начала занятий курса
+                  example: 22.02.2022
+                what_you_learn:
+                  type: array
+                  description: изучаемые навыки
+                  items:
+                    type: object
+                    properties:
+                      header:
+                        type: string
+                        description: заголовок навыка
+                        example: Поисково-спасательная работа
+                      text:
+                        type: string
+                        description: описание навыка
+                        example: Поиск тел погибших
+                lessons_list:
+                  type: array
+                  description: Список уроков в курсе
+                  items:
+                    type: object
+                    properties:
+                      theme:
+                        type: string
+                        description: заголовок навыка
+                        example: Поисково-спасательная работа
+                      lessons_material:
+                        type: array
+                        description: Список материалов урока
+                        items:
+                          type: object
+                          properties:
+                            material:
+                              type: string # уточнить тип
+                              description: материал урока
+                              example: Пример # уточнить пример материала
+                            status:
+                              type: boolean
+                              description: Статус прохождения материала урока
+                              example: True/False
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Уникальный идентификатор курса
+                  title:
+                    type: string
+                    description: Название курса
+                    example: Кинологическое направление
+                  level:
+                    type: string
+                    description: Уровень курса
+                    example: Бывалый
+                  description:
+                    type: string
+                    description: Описание курса
+                    example: Поисково-спасательная работа, следовая работа, а так же поиск тел погибших с помощью собак
+                  cover:
+                    type: string
+                    format: uri
+                    description: ссылка на обложку курса
+                  number_of_classes:
+                    type: integer
+                    description: Количество занятий
+                    example: 24
+                  duration:
+                    type: integer
+                    description: Продолжительность курса в часах
+                    example: 144
+                  course_start:
+                    type: string
+                    description: Дата начала занятий курса
+                    example: 22.02.2022
+                  what_you_learn:
+                    type: array
+                    description: изучаемые навыки
+                    items:
+                      type: object
+                      properties:
+                        header:
+                          type: string
+                          description: заголовок навыка
+                          example: Поисково-спасательная работа
+                        text:
+                          type: string
+                          description: описание навыка
+                          example: Поиск тел погибших
+                  lessons_list:
+                    type: array
+                    description: Список уроков в курсе
+                    items:
+                      type: object
+                      properties:
+                        theme:
+                          type: string
+                          description: заголовок навыка
+                          example: Поисково-спасательная работа
+                        lessons_material:
+                          type: array
+                          description: Список материалов урока
+                          items:
+                            type: object
+                            properties:
+                              material:
+                                type: string # уточнить тип
+                                description: материал урока
+                                example: Пример # уточнить пример материала
+                              status:
+                                type: boolean
+                                description: Статус прохождения материала урока
+                                example: True/False
+        400:
+          description: Неверный формат полей запроса
+          $ref: '#/components/responses/BadRequest'
+        403:
+          description: Недостаточно прав. Доступ запрещен.
+          $ref: '#/components/responses/Forbidden'
+        401:
+          description: Пользователь не авторизован!
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags:
+        - course
+      summary: Удаление курса
+      description: Удаление курса из базы данных
+      operationId: Course
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: course_id
+          description: Уникальный идентификатор курса
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: No  content
+          content: { }
+        403:
+          description: Недостаточно прав. Доступ запрещен.
+          $ref: '#/components/responses/Forbidden'
+        404:
+          description: Курс не найден
+          $ref: '#/components/responses/NotFound'
+
 
 # Требуется уточнение необходимости реализации эндпоинтов администратора для управления пользователя и их ролями на первом этапе
 # Первоначально для администрирования достаточно встроенной админки Django
@@ -979,7 +1279,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/Unauthorized"
 
     Conflict:
       description: Resource Already Exist
