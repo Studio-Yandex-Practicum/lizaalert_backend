@@ -94,3 +94,6 @@ db.sqlite3
 
 ### Docker with Postgres ###
 data/**
+
+### vscode ###
+.vscode/
