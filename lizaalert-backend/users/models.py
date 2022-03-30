@@ -79,7 +79,7 @@ class Location(models.Model):
         verbose_name_plural = 'Регионы'
 
 
-class Direction(models.Model):
+class Department(models.Model):
     title = models.CharField(
         'Наименование направления', max_length=120
     )
@@ -88,7 +88,7 @@ class Direction(models.Model):
     )
 
     class Meta:
-        db_table = 'directions'
+        db_table = 'departments'
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
 
@@ -149,8 +149,8 @@ class Volunteer(models.Model):
         related_name='volunteers',
         verbose_name='Географический регион'
     )
-    direction = models.ForeignKey(
-        Direction, on_delete=models.SET_NULL, blank=True, null=True,
+    department = models.ForeignKey(
+        Department, on_delete=models.SET_NULL, blank=True, null=True,
         related_name='volunteers',
         verbose_name='Направление'
     )
