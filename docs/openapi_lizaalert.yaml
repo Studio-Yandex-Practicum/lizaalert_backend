@@ -610,6 +610,10 @@ paths:
                     type: string
                     description: Название курса
                     example: Кинологическое направление
+                  direction:
+                    type: string
+                    description: Направление курса
+                    example: Кинологическое направление
                   level:
                     type: string
                     description: Уровень курса
@@ -630,48 +634,68 @@ paths:
                     type: integer
                     description: Продолжительность курса в часах
                     example: 144
-                  course_start:
+                  start_date:
                     type: string
                     description: Дата начала занятий курса
                     example: 22.02.2022
-                  what_you_learn:
+                  skills :
                     type: array
                     description: изучаемые навыки
                     items:
                       type: object
                       properties:
-                        header:
+                        title:
                           type: string
-                          description: заголовок навыка
+                          description: название навыка
                           example: Поисково-спасательная работа
-                        text:
+                        description:
                           type: string
                           description: описание навыка
                           example: Поиск тел погибших
-                  lessons_list:
+                  contents:
                     type: array
-                    description: Список уроков в курсе
+                    description: Список частей в курсе
                     items:
                       type: object
                       properties:
-                        theme:
-                          type: string
-                          description: заголовок навыка
-                          example: Поисково-спасательная работа
-                        lessons_material:
+                        chapters:
                           type: array
-                          description: Список материалов урока
+                          description: Список уроков
                           items:
                             type: object
                             properties:
-                              material:
-                                type: string # уточнить тип
-                                description: материал урока
-                                example: Пример # уточнить пример материала
-                              status:
-                                type: boolean
-                                description: Статус прохождения материала урока
-                                example: True/False
+                              title:
+                                type: string
+                                description: название главы
+                                example: В каких случаях преспективно применение следовых кинологических расчетов
+                              lessons:
+                                type: array
+                                description: уроки в части
+                                items:
+                                  type: object
+                                  properties:
+                                    lessons_type:
+                                      type: string
+                                      description: тип урока
+                                      example: Урок
+                                    lessons_status:
+                                      type: boolean
+                                      description: статус урока
+                                      example: True
+                  faq:
+                    type: array
+                    description: список часто задаваемых вопросов
+                    items:
+                      type: object
+                      properties:
+                        question:
+                          type: string
+                          description: вопрос
+                          example: вопрос
+                        answer:
+                          type: string
+                          description: ответ
+                          example: ответ
         400:
           description: Некорректные параметры запроса
           $ref: '#/components/responses/BadRequest'
