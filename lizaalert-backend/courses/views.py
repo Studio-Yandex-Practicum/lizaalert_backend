@@ -5,6 +5,7 @@ from .models import Course
 from .pagination import CourseSetPagination
 from .serializers import CourseSerializer
 
+
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
