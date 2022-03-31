@@ -26,7 +26,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'courses',
-    'quizzes'
+    'quizzes',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
