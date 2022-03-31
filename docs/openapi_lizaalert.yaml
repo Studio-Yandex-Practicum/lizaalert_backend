@@ -908,7 +908,7 @@ paths:
           description: Курс не найден
           $ref: '#/components/responses/NotFound'
 
-  /course/{course_id}/chapter/{chapter_id}/lesson/{lesson_id}:
+  /course/{course_id}/lessons/{lesson_id}:
     get:
       tags:
         - course
