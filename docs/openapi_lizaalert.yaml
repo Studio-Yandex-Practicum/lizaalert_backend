@@ -908,6 +908,57 @@ paths:
           description: Курс не найден
           $ref: '#/components/responses/NotFound'
 
+  /course/{course_id}/chapter/{chapter_id}/lesson/{lesson_id}:
+    get:
+      tags:
+        - course
+      summary: Страница урока раздела обучения
+      description: Отображает информацию урока
+      operationId: getIndexlesson
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: course_id
+          description: Уникальный идентификатор курса
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: chapter_id
+          description: Уникальный идентификатор части
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: chapter_id
+          description: Уникальный идентификатор урока
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  title:
+                    description: Заголовок урока
+                    type: string
+                    example: Дрессировка поисково-спасательных собак
+                  lesson_type:
+                    description: Тип урока
+                    type: string
+                    example: Текст
+
+
+
+
+
 
 # Требуется уточнение необходимости реализации эндпоинтов администратора для управления пользователя и их ролями на первом этапе
 # Первоначально для администрирования достаточно встроенной админки Django
