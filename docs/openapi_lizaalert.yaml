@@ -749,44 +749,50 @@ paths:
                   type: string
                   description: Дата начала занятий курса
                   example: 22.02.2022
-                what_you_learn:
-                  type: array
-                  description: изучаемые навыки
-                  items:
-                    type: object
-                    properties:
-                      header:
-                        type: string
-                        description: заголовок навыка
-                        example: Поисково-спасательная работа
-                      text:
-                        type: string
-                        description: описание навыка
-                        example: Поиск тел погибших
-                lessons_list:
-                  type: array
-                  description: Список уроков в курсе
-                  items:
-                    type: object
-                    properties:
-                      theme:
-                        type: string
-                        description: заголовок навыка
-                        example: Поисково-спасательная работа
-                      lessons_material:
-                        type: array
-                        description: Список материалов урока
-                        items:
-                          type: object
-                          properties:
-                            material:
-                              type: string # уточнить тип
-                              description: материал урока
-                              example: Пример # уточнить пример материала
-                            status:
-                              type: boolean
-                              description: Статус прохождения материала урока
-                              example: True/False
+                  skills :
+                    type: array
+                    description: изучаемые навыки
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                          description: название навыка
+                          example: Поисково-спасательная работа
+                        description:
+                          type: string
+                          description: описание навыка
+                          example: Поиск тел погибших
+                  contents:
+                    type: array
+                    description: Список частей в курсе
+                    items:
+                      type: object
+                      properties:
+                        chapters:
+                          type: array
+                          description: Список уроков
+                          items:
+                            type: object
+                            properties:
+                              title:
+                                type: string
+                                description: название главы
+                                example: В каких случаях преспективно применение следовых кинологических расчетов
+                              lessons:
+                                type: array
+                                description: уроки в части
+                                items:
+                                  type: object
+                                  properties:
+                                    lessons_type:
+                                      type: string
+                                      description: тип урока
+                                      example: Урок
+                                    lessons_status:
+                                      type: boolean
+                                      description: статус урока
+                                      example: True
       responses:
         200:
           description: Успешная операция
