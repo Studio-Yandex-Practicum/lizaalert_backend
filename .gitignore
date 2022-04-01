@@ -34,6 +34,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.venv/
 venv/
 env/
 build/
@@ -44,6 +45,7 @@ eggs/
 lib/
 lib64/
 parts/
+poetry.toml
 sdist/
 var/
 *.egg-info/
