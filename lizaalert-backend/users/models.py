@@ -6,15 +6,15 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Level(models.Model):
-    LEVELS = (
-        ('Новичок', 'Новичок'),
-        ('Бывалый',  'Бывалый'),
-        ('Профессионал', 'Профессионал')
-    )
+
+    class LevelName(models.TextChoices):
+        beginner = 'Новичок', 'Новичок'
+        middle = 'Бывалый',  'Бывалый'
+        professional = 'Профессионал', 'Профессионал'
 
     name = models.CharField(
         'Наименование уровня', max_length=20,
-        choices=LEVELS
+        choices=LevelName.choices
     )
     description = models.TextField(
         'Описание уровня и условия его достижения',
