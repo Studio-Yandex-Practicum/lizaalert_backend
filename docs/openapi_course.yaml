@@ -1,0 +1,135 @@
+openapi: 3.0.1
+info:
+  title: Платформа для обучения добровольцев "ЛизаАлерт"
+  description: 'Описание контракта API платформы для обучения добровольцев "ЛизаАлерт"'
+  termsOfService: https://swagger.io/terms/
+  contact:
+    name: Developer Team
+    email: ""
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://liza-alert.ru/api/v1
+
+tags:
+- name: course
+  description: API по работе с конструктором курсов
+
+paths:
+  /courses: # Уточнить endpoint
+    get:
+      tags:
+        - course
+      summary: Главная страница сайта платформы обучения (для авторизованного пользователя)
+      description: Отображает информацию о курсах, пользователе и выбранных фильтрах
+      operationId: getIndexAuthorizedUser
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: query
+          name: status
+          description: Статус курса
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - active
+                - passed
+                - you-recorded
+        - in: query
+          name: level
+          description: Уровень
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - newbee
+                - experienced
+                - pro
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_count:
+                    type: integer
+                    description: Общее количество объектов (курсов)
+                    example: 16
+                  # Уточнить необходимость пагинации результата и состав дополнительных полей в ответе
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Уникальный идентификатор курса
+                        title:
+                          type: string
+                          description: Название курса
+                          example: Кинологическое направление
+                        level:
+                          type: string
+                          description: Уровень курса
+                          example: Бывалый
+                        short_description:
+                          type: string
+                          description: Краткое Описание курса
+                          example: Поисково-спасательная работа, следовая работа, а так же поиск тел погибших с помощью собак
+                        cover:
+                          type: string
+                          format: uri
+                          description: ссылка на обложку курса
+                        number_of_classes:
+                          type: integer
+                          description: Количество занятий
+                          example: 24
+                        duration:
+                          type: integer
+                          description: Продолжительность курса в часах
+                          example: 144
+                        status:
+                          type: string
+                          description: Статус прохождения курса пользователем
+                          example: Активный
+        400:
+          description: Некорректные параметры запроса
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  schemas:
+    Error: #Требуется уточнить состав и объем полей описания ошибки, отдаваемой в фронтенд
+      type: object
+      properties:
+        errors:
+          type: string
+        message:
+          type: string
+      required:
+        - errors
+        - message
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    minimalResponse:
+      description: "OK"
+
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
