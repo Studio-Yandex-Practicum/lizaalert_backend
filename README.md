@@ -30,3 +30,9 @@
   - Получить статику `python manage.py collectstatic --no-input`
   - Отключиться от контейнера: `exit`
 - Админка доступна [здесь](http://localhost:8000/admin)
+
+
+### Общие требования к коду проекта и принципы код-ревью
+
+- [Общие требования к коду проекта](docs/General_requirements_for_the_project_code.md)
+- [Принципы код-ревью](docs/Principles_of_code_review.md)
