@@ -1,5 +1,8 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from courses.models import Course
 
 from easy_thumbnails.fields import ThumbnailerImageField
 from phonenumber_field.modelfields import PhoneNumberField
@@ -135,6 +138,47 @@ class VolunteerBadge(models.Model):
         verbose_name_plural = 'Значки волонтеров'
 
 
+class VolunteerCourse(models.Model):
+
+    class CourseStatuses(models.TextChoices):
+        activ = 'Активный'
+        complete = 'Пройден'
+        registration = 'Вы записаны'
+
+    volunteer = models.ForeignKey(
+        'Volunteer', on_delete=models.CASCADE,
+        related_name='volunter_courses',
+        verbose_name='Волонтер'
+    )
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE,
+        related_name='course_volunteers',
+        verbose_name='Курс'
+    )
+    status = models.CharField(
+        'Статус курса', max_length=20,
+        choices=CourseStatuses.choices
+    )
+    assessment = models.FloatField(
+        'Оценка за курс', default=0.0,
+        validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
+    )
+    created_at = models.DateTimeField(
+        'Дата и время записи на курс',
+        auto_now_add=True
+    )
+
+    class Meta:
+        db_table = 'volunteers_courses'
+        verbose_name = 'Курс волонтера'
+        verbose_name_plural = 'Курсы волонтеров'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('volunteer', 'course', 'status'),
+                name='unique_volunteer_course'),
+        )
+
+
 class Volunteer(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
@@ -169,6 +213,11 @@ class Volunteer(models.Model):
         Badge, through=VolunteerBadge, blank=True,
         related_name='volunteers',
         verbose_name='Значки'
+    )
+    courses = models.ManyToManyField(
+        Course, through=VolunteerCourse, blank=True,
+        related_name='volunteers',
+        verbose_name='Курсы'
     )
     created_at = models.DateTimeField(
         'Дата и время создания запси', auto_now_add=True

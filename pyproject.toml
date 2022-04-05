@@ -1,0 +1,27 @@
+# Описание работы с poetry в ./docs/poetry.md
+
+[tool.poetry]
+name = "lizaalert"
+version = "0.1.0"
+description = ""
+authors = ["Lizaalert-backend-team"]
+
+[tool.poetry.dependencies]
+python = "^3.7.12"
+Django = "3.2.12"
+djangorestframework = "3.13.1"
+environs = "9.5.0"
+gunicorn = "20.1.0"
+pydantic = "1.9.0"
+psycopg2-binary = "2.9.3"
+easy-thumbnails = "2.8.1"
+phonenumbers = "8.12.45"
+django-phonenumber-field = "6.1.0"
+
+[tool.poetry.dev-dependencies]
+flake8 = "4.0.1"
+isort = "5.10.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
