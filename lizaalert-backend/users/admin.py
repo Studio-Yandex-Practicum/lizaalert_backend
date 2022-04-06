@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Badge, Level, Volunteer
+
+admin.site.register(Badge)
+admin.site.register(Level)
+admin.site.register(Volunteer)
