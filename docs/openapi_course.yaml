@@ -77,9 +77,16 @@ paths:
                           description: Название курса
                           example: Кинологическое направление
                         level:
-                          type: string
-                          description: Уровень курса
-                          example: Бывалый
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Уникальный идентификатор уровня
+                              format: uuid
+                            name:
+                              type: string
+                              description: Уровень курса
+                              example: Бывалый
                         short_description:
                           type: string
                           description: Краткое Описание курса
@@ -97,9 +104,16 @@ paths:
                           description: Продолжительность курса в часах
                           example: 144
                         status:
-                          type: string
-                          description: Статус прохождения курса пользователем
-                          example: Активный
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Уникальный идентификатор статуса
+                              format: uuid
+                            name:
+                              type: string
+                              description: имя статуса
+                              example: Активный
         400:
           description: Некорректные параметры запроса
           $ref: '#/components/responses/BadRequest'
