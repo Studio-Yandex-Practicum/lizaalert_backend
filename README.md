@@ -1,5 +1,7 @@
 ## Платформа для обучения добровольцев "ЛизаАлерт" - Backend
 
+[Список задач](https://github.com/Studio-Yandex-Practicum/lizaalert_backend/issues/19)
+
 ### Установка
 
 #### Установить Docker и Docker-Compose.
@@ -47,5 +49,4 @@
 
 ### Общие требования к коду проекта и принципы код-ревью
 
-- [Общие требования к коду проекта](docs/General_requirements_for_the_project_code.md)
-- [Принципы код-ревью](docs/Principles_of_code_review.md)
+- [Общие требования к коду проекта](docs/codestyle.md)

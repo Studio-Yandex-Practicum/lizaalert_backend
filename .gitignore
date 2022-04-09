@@ -34,6 +34,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.venv/
 venv/
 .venv/
 env/
@@ -45,6 +46,7 @@ eggs/
 lib/
 lib64/
 parts/
+poetry.toml
 sdist/
 var/
 *.egg-info/
@@ -100,8 +102,5 @@ static/
 ### Docker with Postgres ###
 data/**
 
-### IDE ###
+### vscode ###
 .vscode/
-*.code-workspace
-
-*.ipynb
