@@ -9,5 +9,7 @@ from .serializers import CourseSerializer
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = [AllowAny, ]
+    permission_classes = [
+        AllowAny,
+    ]
     pagination_class = CourseSetPagination
