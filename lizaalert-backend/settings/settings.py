@@ -24,10 +24,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 3-rd party apps
+    'easy_thumbnails',
+    'phonenumber_field',
+    'drf_yasg',
+    # lizaalert apps
     'users',
     'courses',
     'quizzes',
-    'drf_yasg',
 ]
 
 MIDDLEWARE = [

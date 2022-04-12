@@ -1,5 +1,7 @@
 ## Платформа для обучения добровольцев "ЛизаАлерт" - Backend
 
+[Список задач](https://github.com/Studio-Yandex-Practicum/lizaalert_backend/issues/19)
+
 ### Установка
 
 #### Установить Docker и Docker-Compose.
@@ -30,3 +32,8 @@
   - Получить статику `python manage.py collectstatic --no-input`
   - Отключиться от контейнера: `exit`
 - Админка доступна [здесь](http://localhost:8000/admin)
+
+
+### Общие требования к коду проекта и принципы код-ревью
+
+- [Общие требования к коду проекта](docs/codestyle.md)
