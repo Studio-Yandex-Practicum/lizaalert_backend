@@ -8,6 +8,7 @@ from drf_yasg import openapi
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("courses.urls")),
+    path("auth/", include("authentication.urls")),
 ]
 
 if settings.DEBUG:
