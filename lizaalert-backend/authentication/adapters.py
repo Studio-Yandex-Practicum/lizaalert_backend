@@ -1,14 +1,40 @@
 import requests
 
-from allauth.account.utils import user_email, user_field, user_username
+from allauth.account import app_settings as account_settings
 from allauth.account.adapter import DefaultAccountAdapter
+from allauth.account.utils import user_email, user_field, user_username
+from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.providers.yandex.views import YandexAuth2Adapter
-from allauth.utils import valid_email_or_none
+from allauth.utils import email_address_exists, valid_email_or_none
 from django.conf import settings
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    def is_auto_signup_allowed(self, request, sociallogin):
+        """
+        Функция незначительно переписана, чтобы исключить 500 ошибку.
+        """
+        auto_signup = app_settings.AUTO_SIGNUP
+        if auto_signup:
+            email = user_email(sociallogin.user)
+            if email:
+                if account_settings.UNIQUE_EMAIL and email_address_exists(email):
+                    # Мы в состоянии регистрации нового уникального SocialAccount().
+                    # Нужно создать под это нового пользователя и дать ему почту из SocialAccount().
+                    # Но оказывается, что такая почта уже существует в таблицах
+                    # EmailAddress или User, и при этом не связана ни с одним SocialAccount().
+                    # Скорее всего пользователь был создан через админку с указанием этой почты.
+                    # Выбрасываем ошибку, поскольку автоматическое разрешение таких конфликтов
+                    # не реализовано и произойдет редирект на несуществующий эндпоинт.
+                    # TODO Реализовать связывание нового соцаккаунта и существующего пользователя,
+                    # TODO считая, что мы доверяем админке, а другие пути в это состояние перекрыты.
+                    raise AuthenticationFailed(f'Пользователь с почтой {email} уже существует.')
+            elif app_settings.EMAIL_REQUIRED:
+                auto_signup = False
+        return auto_signup
+
     def populate_user(self, request, sociallogin, data):
         """
         Изменен способ предзаполнения поля username нового пользователя.
@@ -27,6 +53,9 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
 
 class AccountAdapter(DefaultAccountAdapter):
+    def respond_user_inactive(self, request, user):
+        raise AuthenticationFailed('user inactive')
+
     def populate_username(self, request, user):
         """
         Если при авторегистрации нового пользователя, username, полученный

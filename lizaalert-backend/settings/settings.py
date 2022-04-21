@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from environs import Env
@@ -131,6 +132,12 @@ REST_FRAMEWORK = {
     ]
 }
 
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True
+}
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None

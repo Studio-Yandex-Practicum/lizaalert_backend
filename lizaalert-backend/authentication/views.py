@@ -1,4 +1,4 @@
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client, OAuth2Error
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from django.http import HttpResponseRedirect
 from django.shortcuts import reverse
