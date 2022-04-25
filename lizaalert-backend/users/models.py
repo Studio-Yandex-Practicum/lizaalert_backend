@@ -112,7 +112,7 @@ class VolunteerCourse(models.Model):
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
     )
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
+        "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
     status = models.CharField("Статус курса", max_length=20, choices=CourseStatuses.choices)
     assessment = models.FloatField(
@@ -153,7 +153,7 @@ class Volunteer(models.Model):
         Badge, through=VolunteerBadge, blank=True, related_name="volunteers", verbose_name="Значки"
     )
     courses = models.ManyToManyField(
-        'courses.Course', through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы"
+        "courses.Course", through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы"
     )
     created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)

@@ -16,11 +16,12 @@ class YandexLoginView(View):
     Перенаправляет пользователя в авторизационный сервис для получения
     кода подтверждения.
     """
+
     provider = YandexCustomProvider
     adapter_class = YandexCustomAdapter
 
     def get_redirect_url(self):
-        url = self.request.build_absolute_uri(reverse(self.provider.id + '_callback'))
+        url = self.request.build_absolute_uri(reverse(self.provider.id + "_callback"))
         return url
 
     def get_client_id(self, request):
@@ -31,11 +32,11 @@ class YandexLoginView(View):
     def get(self, request):
         auth_url = self.adapter_class.authorize_url
         params = {
-            'response_type': 'code',
-            'client_id': self.get_client_id(request),
-            'redirect_uri': self.get_redirect_url(),
+            "response_type": "code",
+            "client_id": self.get_client_id(request),
+            "redirect_uri": self.get_redirect_url(),
         }
-        auth_url_with_params = '%s?%s' % (auth_url, urlencode(params))
+        auth_url_with_params = "%s?%s" % (auth_url, urlencode(params))
         return HttpResponseRedirect(auth_url_with_params)
 
 
@@ -49,17 +50,18 @@ class YandexLoginCallbackView(SocialLoginView):
     пользователю, если тот есть в БД. Иначе сначала создает нового
     пользователя.
     """
+
     adapter_class = YandexCustomAdapter
     client_class = OAuth2Client
     serializer_class = YandexLoginSerializer
-    http_method_names = ('get',)
+    http_method_names = ("get",)
 
     def get(self, request):
-        if 'code' not in request.GET:
+        if "code" not in request.GET:
             error = request.GET.get("error")
             raise AuthenticationFailed(error)
-        code = request.GET['code']
-        self.serializer = self.get_serializer(data={'code': code})
+        code = request.GET["code"]
+        self.serializer = self.get_serializer(data={"code": code})
         self.serializer.is_valid(raise_exception=True)
         self.login()
         return self.get_response()

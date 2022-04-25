@@ -4,8 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .provider import YandexCustomProvider
 
-
 urlpatterns = [
-    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 urlpatterns += default_urlpatterns(YandexCustomProvider)

@@ -24,21 +24,21 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # 3-rd party apps
-    'rest_framework',
-    'easy_thumbnails',
-    'phonenumber_field',
-    'drf_yasg',
+    "rest_framework",
+    "easy_thumbnails",
+    "phonenumber_field",
+    "drf_yasg",
     # 3-rd party authentication apps
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
     # lizaalert apps
-    'users',
-    'courses',
-    'quizzes',
-    'authentication',
+    "users",
+    "courses",
+    "quizzes",
+    "authentication",
 ]
 
 MIDDLEWARE = [
@@ -75,9 +75,9 @@ DB_SCHEME = env.str("DB_NAME", "")
 
 if DEBUG:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 else:
@@ -124,35 +124,33 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 }
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
 }
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None
-REST_AUTH_SERIALIZERS = {
-    'JWT_SERIALIZER': 'authentication.serializers.CustomJWTSerializer'
-}
+REST_AUTH_SERIALIZERS = {"JWT_SERIALIZER": "authentication.serializers.CustomJWTSerializer"}
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_ADAPTER = 'authentication.adapters.AccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'authentication.adapters.SocialAccountAdapter'
+ACCOUNT_ADAPTER = "authentication.adapters.AccountAdapter"
+SOCIALACCOUNT_ADAPTER = "authentication.adapters.SocialAccountAdapter"
 SOCIALACCOUNT_PROVIDERS = {
-    'yandex': {
-        'APP': {
-            'client_id': env.str('YANDEX_CLIENT_ID', 'a0693bfc6f9a4a8593e9cfc3a6b34c66'),
-            'secret': env.str('YANDEX_SECRET', 'd449d272d3f14c308610d3f65e5d3d1f'),
+    "yandex": {
+        "APP": {
+            "client_id": env.str("YANDEX_CLIENT_ID", "a0693bfc6f9a4a8593e9cfc3a6b34c66"),
+            "secret": env.str("YANDEX_SECRET", "d449d272d3f14c308610d3f65e5d3d1f"),
         },
-        'VERIFIED_EMAIL': True
+        "VERIFIED_EMAIL": True,
     }
 }

@@ -1,5 +1,4 @@
 import requests
-
 from allauth.account import app_settings as account_settings
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import user_email, user_field, user_username
@@ -30,7 +29,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     # не реализовано и произойдет редирект на несуществующий эндпоинт.
                     # TODO Реализовать связывание нового соцаккаунта и существующего пользователя,
                     # TODO считая, что мы доверяем админке, а другие пути в это состояние перекрыты.
-                    raise AuthenticationFailed(f'Пользователь с почтой {email} уже существует.')
+                    raise AuthenticationFailed(f"Пользователь с почтой {email} уже существует.")
             elif app_settings.EMAIL_REQUIRED:
                 auto_signup = False
         return auto_signup
@@ -45,7 +44,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         last_name = data.get("last_name")
         email = data.get("email")
         user_email(user, valid_email_or_none(email) or "")
-        username = email.split('@')[0] if email else None
+        username = email.split("@")[0] if email else None
         user_username(user, username or "")
         user_field(user, "first_name", first_name)
         user_field(user, "last_name", last_name)
@@ -54,7 +53,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
 class AccountAdapter(DefaultAccountAdapter):
     def respond_user_inactive(self, request, user):
-        raise AuthenticationFailed('user inactive')
+        raise AuthenticationFailed("user inactive")
 
     def populate_username(self, request, user):
         """
@@ -73,7 +72,7 @@ class AccountAdapter(DefaultAccountAdapter):
         """
         from allauth.account.utils import user_email, user_username
 
-        assumed_username = user_email(user).split('@')[0]
+        assumed_username = user_email(user).split("@")[0]
         username = user_username(user) or self.generate_unique_username([assumed_username])
         user_username(user, username)
 
