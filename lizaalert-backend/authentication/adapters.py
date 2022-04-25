@@ -1,7 +1,9 @@
+import uuid
+
 import requests
 from allauth.account import app_settings as account_settings
 from allauth.account.adapter import DefaultAccountAdapter
-from allauth.account.utils import user_email, user_field, user_username
+from allauth.account.utils import filter_users_by_username, user_email, user_field, user_username
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.providers.yandex.views import YandexAuth2Adapter
@@ -36,16 +38,16 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def populate_user(self, request, sociallogin, data):
         """
-        Изменен способ предзаполнения поля username нового пользователя.
-        Теперь туда попадает первая часть из поля email (до знака @).
+        Изменен способ предзаполнения поля username нового пользователя
+        на случайно сгенерированный UUID в hex представлении.
         """
-        user = sociallogin.user
+        username = uuid.uuid4().hex
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         email = data.get("email")
-        user_email(user, valid_email_or_none(email) or "")
-        username = email.split("@")[0] if email else None
+        user = sociallogin.user
         user_username(user, username or "")
+        user_email(user, valid_email_or_none(email) or "")
         user_field(user, "first_name", first_name)
         user_field(user, "last_name", last_name)
         return user
@@ -57,24 +59,26 @@ class AccountAdapter(DefaultAccountAdapter):
 
     def populate_username(self, request, user):
         """
-        Если при авторегистрации нового пользователя, username, полученный
-        на предварительной стадии из email, при проверки окажется уже занят,
-        тогда код выполняющийся до этой функции, сбросит username в пустую строку.
+        Если предзаполненное поле username у нового пользователя не проходит валидацию,
+        то в это поле помещается пустая строка. Данная функция вызывается пред сохранением
+        пользователя, чтобы обработать этот случай. Поскольку у нас username генерируется
+        с UUID, то это чрезвычайно редкий случай.
 
-        Но мы точно хотим, чтобы функция generate_unique_username(), которая генерирует
-        рандомный суффикс к слову, отталкилавалась все же от email, а не создавала
-        однобуквенные имена из пустой строки.
-
-        Ожидаемые рандомные имена будут иметь суффикс вида username[ddddlll],
-        где d-случайная цифра, l-сулчайная буква.
-
-        Пример: liza@yandex.ru => liza, liza5, liza4, liza16, liza9894asd
+        Пробуем сгенерировать вплоть до 5 раз новый UUID и проверить его в базе, иначе
+        бросаем ошибку.
         """
-        from allauth.account.utils import user_email, user_username
+        from allauth.account.utils import user_username
 
-        assumed_username = user_email(user).split("@")[0]
-        username = user_username(user) or self.generate_unique_username([assumed_username])
-        user_username(user, username)
+        username = user_username(user)
+        if username:
+            user_username(user, username)
+            return None
+        for _ in range(5):
+            username = uuid.uuid4().hex
+            if not filter_users_by_username(username).exists():
+                user_username(user, username)
+                return None
+        raise AuthenticationFailed("Джекпот! 6 раз подряд сгенерированный UUID оказался занят.")
 
 
 class YandexCustomAdapter(YandexAuth2Adapter):
