@@ -1,10 +1,15 @@
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
 from django.shortcuts import reverse
 from django.utils.http import urlencode
 from django.views import View
+from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .adapters import YandexCustomAdapter
 from .provider import YandexCustomProvider
@@ -65,6 +70,18 @@ class YandexLoginCallbackView(SocialLoginView):
         self.serializer.is_valid(raise_exception=True)
         self.login()
         return self.get_response()
+
+
+class LogoutView(APIView):
+    """
+    Удаляет session куки у пользователя.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_200_OK)
 
 
 oauth2_login = YandexLoginView.as_view()

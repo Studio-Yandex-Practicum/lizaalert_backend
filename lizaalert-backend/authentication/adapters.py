@@ -3,7 +3,7 @@ import uuid
 import requests
 from allauth.account import app_settings as account_settings
 from allauth.account.adapter import DefaultAccountAdapter
-from allauth.account.utils import filter_users_by_username, user_email, user_field, user_username
+from allauth.account.utils import user_email, user_field, user_username
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.providers.yandex.views import YandexAuth2Adapter
@@ -38,10 +38,11 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def populate_user(self, request, sociallogin, data):
         """
-        Изменен способ предзаполнения поля username нового пользователя
-        на случайно сгенерированный UUID в hex представлении.
+        Изменен способ предзаполнения поля username нового пользователя на случайно
+        сгенерированный UUID в hex представлении, предваренный префиксом "__".
+        Пример username: __a944a34b4d04460a94133393af851a5f.
         """
-        username = uuid.uuid4().hex
+        username = "__" + uuid.uuid4().hex
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         email = data.get("email")
@@ -55,30 +56,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
 class AccountAdapter(DefaultAccountAdapter):
     def respond_user_inactive(self, request, user):
-        raise AuthenticationFailed("user inactive")
-
-    def populate_username(self, request, user):
-        """
-        Если предзаполненное поле username у нового пользователя не проходит валидацию,
-        то в это поле помещается пустая строка. Данная функция вызывается пред сохранением
-        пользователя, чтобы обработать этот случай. Поскольку у нас username генерируется
-        с UUID, то это чрезвычайно редкий случай.
-
-        Пробуем сгенерировать вплоть до 5 раз новый UUID и проверить его в базе, иначе
-        бросаем ошибку.
-        """
-        from allauth.account.utils import user_username
-
-        username = user_username(user)
-        if username:
-            user_username(user, username)
-            return None
-        for _ in range(5):
-            username = uuid.uuid4().hex
-            if not filter_users_by_username(username).exists():
-                user_username(user, username)
-                return None
-        raise AuthenticationFailed("Джекпот! 6 раз подряд сгенерированный UUID оказался занят.")
+        raise AuthenticationFailed("inactive user")
 
 
 class YandexCustomAdapter(YandexAuth2Adapter):
