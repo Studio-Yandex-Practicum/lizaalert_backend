@@ -5,11 +5,12 @@ info:
   termsOfService: https://swagger.io/terms/
   contact:
     name: Developer Team
-    email: ""
+    email: "fake@yamdb.fake"
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
+
 servers:
 - url: https://liza-alert.ru/api/v1
 
@@ -21,12 +22,12 @@ paths:
   /courses: # Уточнить endpoint
     get:
       tags:
-        - course
+      - course
       summary: Главная страница сайта платформы обучения (для авторизованного пользователя)
       description: Отображает информацию о курсах, пользователе и выбранных фильтрах
       operationId: getIndexAuthorizedUser
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       parameters:
         - in: query
           name: status
@@ -36,9 +37,10 @@ paths:
             items:
               type: string
               enum:
-                - active
-                - passed
-                - you-recorded
+              - active
+              - booked
+              - finished
+              - inactive
         - in: query
           name: level
           description: Уровень
@@ -47,9 +49,21 @@ paths:
             items:
               type: string
               enum:
-                - newbee
-                - experienced
-                - pro
+              - novice
+              - experienced
+              - professional
+        - in: query
+          name: offset
+          description: начальный номер объекта списка на странице
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: limit
+          description: Кол-во элементов списка на странице
+          schema:
+            type: integer
+          required: true
       responses:
         200:
           description: Успешная операция
@@ -58,10 +72,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  total_count:
+                  limit:
                     type: integer
                     description: Общее количество объектов (курсов)
                     example: 16
+                  offset:
+                    description: начальный номер объекта списка на странице
+                    type: integer
+                    example: 1
                   # Уточнить необходимость пагинации результата и состав дополнительных полей в ответе
                   results:
                     type: array
@@ -69,9 +87,8 @@ paths:
                       type: object
                       properties:
                         id:
-                          type: string
-                          format: uuid
-                          description: Уникальный идентификатор курса
+                          type: integer
+                          description: Идентификатор курса
                         title:
                           type: string
                           description: Название курса
@@ -80,22 +97,25 @@ paths:
                           type: object
                           properties:
                             id:
-                              type: string
-                              description: Уникальный идентификатор уровня
-                              format: uuid
+                              type: integer
+                              description: Идентификатор курса
                             name:
-                              type: string
                               description: Уровень курса
                               example: Бывалый
-                        short_description:
+                            slug:
+                              type: string
+                              description: slug field
+                              format: slug
+                              example: experienced
+                        description:
                           type: string
                           description: Краткое Описание курса
                           example: Поисково-спасательная работа, следовая работа, а так же поиск тел погибших с помощью собак
-                        cover:
+                        image:
                           type: string
                           format: uri
                           description: ссылка на обложку курса
-                        number_of_classes:
+                        lessonsCount:
                           type: integer
                           description: Количество занятий
                           example: 24
@@ -107,16 +127,21 @@ paths:
                           type: object
                           properties:
                             id:
-                              type: string
-                              description: Уникальный идентификатор статуса
-                              format: uuid
+                              type: integer
+                              description: Идентификатор уровня
                             name:
+                              description: Статус курса
                               type: string
-                              description: имя статуса
-                              example: Активный
+                              example: Вы записаны
+                            slug:
+                              type: string
+                              description: slug field
+                              format: slug
+                              example: booked
         400:
           description: Некорректные параметры запроса
           $ref: '#/components/responses/BadRequest'
+
 
 components:
   schemas:
