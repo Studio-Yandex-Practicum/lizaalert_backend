@@ -5,7 +5,7 @@ info:
   termsOfService: https://swagger.io/terms/
   contact:
     name: Developer Team
-    email: ""
+    email: "fake@yamdb.fake"
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -490,7 +490,7 @@ paths:
         401:
           description: Пользователь не авторизован!
           $ref: '#/components/responses/Unauthorized'
-  
+
   /courses: # Уточнить endpoint
     get:
       tags:
@@ -510,8 +510,9 @@ paths:
               type: string
               enum:
               - active
-              - passed
-              - you-recorded
+              - booked
+              - finished
+              - inactive
         - in: query
           name: level
           description: Уровень
@@ -520,9 +521,21 @@ paths:
             items:
               type: string
               enum:
-              - newbee
+              - novice
               - experienced
-              - pro
+              - professional
+        - in: query
+          name: offset
+          description: начальный номер объекта списка на странице
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: limit
+          description: Кол-во элементов списка на странице
+          schema:
+            type: integer
+          required: true
       responses:
         200:
           description: Успешная операция
@@ -531,10 +544,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  total_count:
+                  limit:
                     type: integer
                     description: Общее количество объектов (курсов)
                     example: 16
+                  offset:
+                    description: начальный номер объекта списка на странице
+                    type: integer
+                    example: 1
                   # Уточнить необходимость пагинации результата и состав дополнительных полей в ответе
                   results:
                     type: array
@@ -542,26 +559,35 @@ paths:
                       type: object
                       properties:
                         id:
-                          type: string
-                          format: uuid
-                          description: Уникальный идентификатор курса
+                          type: integer
+                          description: Идентификатор курса
                         title:
                           type: string
                           description: Название курса
                           example: Кинологическое направление
                         level:
-                          type: string
-                          description: Уровень курса
-                          example: Бывалый
-                        short_description:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              description: Идентификатор курса
+                            name:
+                              description: Уровень курса
+                              example: Бывалый
+                            slug:
+                              type: string
+                              description: slug field
+                              format: slug
+                              example: experienced
+                        description:
                           type: string
                           description: Краткое Описание курса
                           example: Поисково-спасательная работа, следовая работа, а так же поиск тел погибших с помощью собак
-                        cover: 
+                        image:
                           type: string
                           format: uri
                           description: ссылка на обложку курса
-                        number_of_classes:
+                        lessonsCount:
                           type: integer
                           description: Количество занятий
                           example: 24
@@ -570,9 +596,20 @@ paths:
                           description: Продолжительность курса в часах
                           example: 144
                         status:
-                          type: string
-                          description: Статус прохождения курса пользователем
-                          example: Активный
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              description: Идентификатор уровня
+                            name:
+                              description: Уровень курса
+                              type: string
+                              example: Вы записаны
+                            slug:
+                              type: string
+                              description: slug field
+                              format: slug
+                              example: booked
         400:
           description: Некорректные параметры запроса
           $ref: '#/components/responses/BadRequest'
@@ -584,8 +621,7 @@ paths:
         description: Уникальный идентификатор курса
         required: true
         schema:
-          type: string
-          format: uuid
+          type: integer
     get: # Уточнить видимость полей для неавторизованного пользователя
       tags:
         - course
@@ -749,50 +785,50 @@ paths:
                   type: string
                   description: Дата начала занятий курса
                   example: 22.02.2022
-                  skills :
-                    type: array
-                    description: изучаемые навыки
-                    items:
-                      type: object
-                      properties:
-                        title:
-                          type: string
-                          description: название навыка
-                          example: Поисково-спасательная работа
-                        description:
-                          type: string
-                          description: описание навыка
-                          example: Поиск тел погибших
-                  contents:
-                    type: array
-                    description: Список частей в курсе
-                    items:
-                      type: object
-                      properties:
-                        chapters:
-                          type: array
-                          description: Список уроков
-                          items:
-                            type: object
-                            properties:
-                              title:
-                                type: string
-                                description: название главы
-                                example: В каких случаях преспективно применение следовых кинологических расчетов
-                              lessons:
-                                type: array
-                                description: уроки в части
-                                items:
-                                  type: object
-                                  properties:
-                                    lessons_type:
-                                      type: string
-                                      description: тип урока
-                                      example: Урок
-                                    lessons_status:
-                                      type: boolean
-                                      description: статус урока
-                                      example: True
+                skills :
+                  type: array
+                  description: изучаемые навыки
+                  items:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                        description: название навыка
+                        example: Поисково-спасательная работа
+                      description:
+                        type: string
+                        description: описание навыка
+                        example: Поиск тел погибших
+                contents:
+                  type: array
+                  description: Список частей в курсе
+                  items:
+                    type: object
+                    properties:
+                      chapters:
+                        type: array
+                        description: Список уроков
+                        items:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                              description: название главы
+                              example: В каких случаях преспективно применение следовых кинологических расчетов
+                            lessons:
+                              type: array
+                              description: уроки в части
+                              items:
+                                type: object
+                                properties:
+                                  lessons_type:
+                                    type: string
+                                    description: тип урока
+                                    example: Урок
+                                  lessons_status:
+                                    type: boolean
+                                    description: статус урока
+                                    example: True
       responses:
         200:
           description: Успешная операция
@@ -923,18 +959,15 @@ paths:
           description: Уникальный идентификатор курса
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
+            minimum: 1
         - in: path
-          name: chapter_id
+          name: lesson_id
           description: Уникальный идентификатор части
           required: true
           schema:
-            type: string
-            format: uuid
-        - in: path
-          name: chapter_id
-          description: Уникальный идентификатор урока
+            type: integer
+            minimum: 1
       responses:
         200:
           description: Успешная операция
@@ -944,8 +977,7 @@ paths:
                 type: object
                 properties:
                   id:
-                    type: string
-                    format: uuid
+                    type: integer
                   title:
                     description: Заголовок урока
                     type: string
@@ -954,9 +986,65 @@ paths:
                     description: Тип урока
                     type: string
                     example: Текст
+        400:
+          description: Некорректные параметры запроса
+          $ref: '#/components/responses/BadRequest'
+        401: # Уточнить что выводить неавторизованному пользователю
+          description: Нет прав для доступа к ресурсу
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          description: Курс с данным Id не обнаружен
+          $ref: '#/components/responses/NotFound'
 
-
-
+  /course/{course_id}/homeworks/{homework_id}:
+    get:
+      tags:
+        - course
+      summary: Страница домашнего задания курса
+      description: Отображает информацию домашнего задания
+      operationId: getIndexhomework
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: course_id
+          description: Уникальный идентификатор курса
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: homework_id
+          description: Уникальный идентификатор домашнего задания
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    description: Заголовок урока
+                    type: string
+                    example: Дрессировка поисково-спасательных собак
+                  lesson_type:
+                    description: Тип урока
+                    type: string
+                    example: Текст
+        400:
+          description: Некорректные параметры запроса
+          $ref: '#/components/responses/BadRequest'
+        401: # Уточнить что выводить неавторизованному пользователю
+          description: Нет прав для доступа к ресурсу
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          description: Курс с данным Id не обнаружен
+          $ref: '#/components/responses/NotFound'
 
 
 
@@ -1185,16 +1273,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - in: query
-          name: page
-          description: Номер страницы
-          schema:
-            type: integer
-        - in: query
-          name: per_page
-          description: Количество записей на странице
-          schema:
-            type: integer
       responses:
         200:
           description: Успешная операция
@@ -1262,7 +1340,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - in: path
+        - in: query
           name: role_id
           description: Уникальный идентификатор роли
           required: true
@@ -1299,7 +1377,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - in: path
+        - in: query
           name: role_id
           description: Уникальный идентификатор роли
           required: true
@@ -1360,7 +1438,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Unauthorized"
+            $ref: "#/components/schemas/Error"
 
     Conflict:
       description: Resource Already Exist
