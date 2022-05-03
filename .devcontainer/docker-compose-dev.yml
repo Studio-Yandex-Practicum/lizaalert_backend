@@ -1,0 +1,44 @@
+version: '3.7'
+
+networks:
+  liza_alert:
+    driver: bridge
+
+services:
+  postgres:
+    build: ../services/postgres
+    container_name: postgres
+    restart: always
+    networks:
+      - liza_alert
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data/
+    env_file:
+      - ../services/postgres/.env
+
+  admin_panel:
+    build:
+      context: ..
+      dockerfile: Dockerfile-dev
+    restart: always
+    container_name: admin_panel
+    env_file:
+      - ../lizaalert-backend/.env
+    volumes:
+      - ..:/workspace
+      - static_volume:/home/app/admin/static
+      - media_volume:/home/app/admin/media
+    networks:
+      - liza_alert
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres
+
+
+volumes:
+  postgres_volume:
+  static_volume:
+  media_volume:

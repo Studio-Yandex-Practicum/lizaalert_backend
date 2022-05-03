@@ -1,0 +1,11 @@
+{
+    "name": "LizaAlert (dev)",
+    "dockerComposeFile": "docker-compose-dev.yml",
+    "service": "admin_panel",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    "extensions": [
+		"ms-python.python",
+		"ms-python.vscode-pylance"
+	],
+}
