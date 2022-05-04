@@ -1,11 +1,12 @@
 {
     "name": "LizaAlert (dev)",
     "dockerComposeFile": "docker-compose-dev.yml",
-    "service": "admin_panel",
+    "service": "lizaalert",
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
     "extensions": [
 		"ms-python.python",
 		"ms-python.vscode-pylance"
 	],
+  "remoteUser": "$USER"
 }

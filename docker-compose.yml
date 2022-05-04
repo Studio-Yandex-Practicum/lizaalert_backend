@@ -13,38 +13,34 @@ services:
     networks:
       - liza_alert
     ports:
-      - 15432:5432
+      - 5432:5432
     volumes:
       - postgres_volume:/var/lib/postgresql/data/
     env_file:
       - ./services/postgres/.env
 
-  admin_panel:
-    build: ./lizaalert-backend
+  lizaalert:
+    build: 
+      context: .
+      dockerfile: Dockerfile-dev
     restart: always
-    container_name: admin_panel
+    container_name: lizaalert
     env_file:
       - ./lizaalert-backend/.env
     volumes:
-      - static_volume:/home/app/admin/static
+      - static_volume:/home/app/lizaalert/static
+      - media_volume:/home/app/lizaalert/media
+      - .:/workspace
     networks:
       - liza_alert
-    depends_on:
-      - postgres
-
-  nginx:
-    build: ./services/nginx
-    container_name: nginx
-    networks:
-      - liza_alert
-    volumes:
-      - static_volume:/home/app/admin/static
     ports:
       - 8000:8000
     depends_on:
-      - admin_panel
+      - postgres
+    command: sleep infinity
 
 
 volumes:
   postgres_volume:
   static_volume:
+  media_volume:

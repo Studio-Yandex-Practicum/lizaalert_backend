@@ -18,18 +18,18 @@ services:
     env_file:
       - ../services/postgres/.env
 
-  admin_panel:
+  lizaalert:
     build:
       context: ..
       dockerfile: Dockerfile-dev
     restart: always
-    container_name: admin_panel
+    container_name: lizaalert
     env_file:
       - ../lizaalert-backend/.env
     volumes:
       - ..:/workspace
-      - static_volume:/home/app/admin/static
-      - media_volume:/home/app/admin/media
+      - static_volume:/home/app/lizaalert/static
+      - media_volume:/home/app/lizaalert/media
     networks:
       - liza_alert
     ports:
