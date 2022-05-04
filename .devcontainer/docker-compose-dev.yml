@@ -28,6 +28,7 @@ services:
       - ../lizaalert-backend/.env
     volumes:
       - ..:/workspace
+      - ~/.ssh:/root/.ssh:ro
       - static_volume:/home/app/lizaalert/static
       - media_volume:/home/app/lizaalert/media
     networks:
@@ -36,6 +37,7 @@ services:
       - 8000:8000
     depends_on:
       - postgres
+    command: sleep infinity
 
 
 volumes:

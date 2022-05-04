@@ -5,8 +5,10 @@ migrate:
 	poetry run python ./lizaalert-backend/manage.py migrate
 lint:
 	poetry run isort ./ && poetry run flake8 ./
+packadges:
+	poetry install
 superuser:
-	python ./lizaalert-backend/manage.py createsuperuser
+	poetry run python ./lizaalert-backend/manage.py createsuperuser
 static:
 	poetry run python ./lizaalert-backend/manage.py collectstatic --no-input
 secret:

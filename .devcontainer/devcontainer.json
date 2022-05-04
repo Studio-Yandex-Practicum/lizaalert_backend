@@ -8,5 +8,5 @@
 		"ms-python.python",
 		"ms-python.vscode-pylance"
 	],
-  "remoteUser": "$USER"
+  "remoteUser": "vscode"
 }
