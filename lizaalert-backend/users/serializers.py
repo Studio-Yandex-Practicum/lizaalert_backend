@@ -37,7 +37,7 @@ class VolunteerSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         user = obj.user
-        return user.first_name + user.last_name
+        return user.first_name + ' ' + user.last_name
 
     def get_photo(self, obj):
         request = self.context.get("request")
