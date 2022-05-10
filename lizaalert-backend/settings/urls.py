@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path, re_path
+from django.urls import include, path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
+
+admin.site.site_header = "ЛизаАлерт"
+admin.site.site_title = "ЛизаАлерт"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
