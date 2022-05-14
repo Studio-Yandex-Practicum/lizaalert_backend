@@ -38,11 +38,10 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def populate_user(self, request, sociallogin, data):
         """
-        Изменен способ предзаполнения поля username нового пользователя на случайно
-        сгенерированный UUID в hex представлении, предваренный префиксом "__".
-        Пример username: __a944a34b4d04460a94133393af851a5f.
+        Изменен способ предзаполнения поля username нового пользователя
+        на случайно сгенерированный UUID.
         """
-        username = "__" + uuid.uuid4().hex
+        username = uuid.uuid4()
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         email = data.get("email")
