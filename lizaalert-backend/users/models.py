@@ -1,9 +1,13 @@
-from courses.models import Course
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from easy_thumbnails.fields import ThumbnailerImageField
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+class User(AbstractUser):
+    pass
 
 
 class Level(models.Model):
@@ -107,7 +111,9 @@ class VolunteerCourse(models.Model):
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
     )
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс")
+    course = models.ForeignKey(
+        "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
+    )
     status = models.CharField("Статус курса", max_length=20, choices=CourseStatuses.choices)
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
@@ -147,7 +153,7 @@ class Volunteer(models.Model):
         Badge, through=VolunteerBadge, blank=True, related_name="volunteers", verbose_name="Значки"
     )
     courses = models.ManyToManyField(
-        Course, through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы"
+        "courses.Course", through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы"
     )
     created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
