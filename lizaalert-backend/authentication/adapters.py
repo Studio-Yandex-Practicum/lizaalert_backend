@@ -41,7 +41,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         Изменен способ предзаполнения поля username нового пользователя
         на случайно сгенерированный UUID.
         """
-        username = uuid.uuid4()
+        username = str(uuid.uuid4())
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         email = data.get("email")
