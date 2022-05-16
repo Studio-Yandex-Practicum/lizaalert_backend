@@ -986,6 +986,10 @@ paths:
                     description: Тип урока
                     type: string
                     example: Текст
+                  duration:
+                    type: integer
+                    description: Продолжительность урока в минутах
+                    example: 144
         400:
           description: Некорректные параметры запроса
           $ref: '#/components/responses/BadRequest'
@@ -1046,7 +1050,55 @@ paths:
           description: Курс с данным Id не обнаружен
           $ref: '#/components/responses/NotFound'
 
-
+  /course/{course_id}/quizes/{quizes_id}:
+    get:
+      tags:
+        - course
+      summary: Страница теста курса или части курса
+      description: Отображает тест по курсу или части курса
+      operationId: getIndexhomework
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: course_id
+          description: Уникальный идентификатор курса
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: quizes
+          description: Уникальный идентификатор теста
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    description: Заголовок урока
+                    type: string
+                    example: Дрессировка поисково-спасательных собак
+                  lesson_type:
+                    description: Тип урока
+                    type: string
+                    example: Текст
+        400:
+          description: Некорректные параметры запроса
+          $ref: '#/components/responses/BadRequest'
+        401: # Уточнить что выводить неавторизованному пользователю
+          description: Нет прав для доступа к ресурсу
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          description: Курс с данным Id не обнаружен
+          $ref: '#/components/responses/NotFound'
 
 # Требуется уточнение необходимости реализации эндпоинтов администратора для управления пользователя и их ролями на первом этапе
 # Первоначально для администрирования достаточно встроенной админки Django
