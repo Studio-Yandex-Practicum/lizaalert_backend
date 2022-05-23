@@ -30,16 +30,6 @@ class Level(models.Model):
         return f"{self.name}"
 
 
-class CourseStatus(models.Model):
-    name = models.CharField("Статус курса", max_length=50, )
-    slug = models.SlugField(max_length=20, )
-
-    class Meta:
-        db_table = "course_status"
-        verbose_name = "Статус курса"
-        verbose_name_plural = "Статус курсов"
-
-
 class VolunteerLevel(models.Model):
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunteer_levels", verbose_name="Волонтер"
@@ -124,7 +114,7 @@ class VolunteerCourse(models.Model):
     course = models.ForeignKey(
         "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
-    status = models.ForeignKey(CourseStatus, on_delete=models.PROTECT,
+    status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT,
                                related_name="course_status", verbose_name="Статус")
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
