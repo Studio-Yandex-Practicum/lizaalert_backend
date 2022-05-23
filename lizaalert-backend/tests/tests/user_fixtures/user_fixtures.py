@@ -1,29 +1,5 @@
 import pytest
 
-statuses = [
-  {
-    "id": 1,
-    "name": "Активный",
-    "slug": "active"
-  },
-  {
-    "id": 2,
-    "name": "Вы записаны",
-    "slug": "booked"
-  },
-  {
-    "id": 3,
-    "name": "Пройден",
-    "slug": "finished"
-  },
-  {
-    "id": 4,
-    "name": "Не активный",
-    "slug": "inactive"
-  }
-]
-
-
 
 @pytest.fixture
 def user(django_user_model):
@@ -53,8 +29,5 @@ def user_client(token):
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token["access"]}')
     return client
 
-@pytest.fixture
-def create_statuses(token):
-    from users.models import CourseStatus
-    out = [CourseStatus.objects.create(**status) for status in statuses]
-    return out
+
+
