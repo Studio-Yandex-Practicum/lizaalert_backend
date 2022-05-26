@@ -115,7 +115,7 @@ class VolunteerCourse(models.Model):
         "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
     status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT,
-                               related_name="course_status", verbose_name="Статус")
+                               related_name="volunteer_courses", verbose_name="Статус")
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
     )
