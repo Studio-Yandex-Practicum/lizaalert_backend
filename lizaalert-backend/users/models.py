@@ -103,10 +103,6 @@ class VolunteerBadge(models.Model):
 
 
 class VolunteerCourse(models.Model):
-    class CourseStatuses(models.TextChoices):
-        activ = "Активный"
-        complete = "Пройден"
-        registration = "Вы записаны"
 
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
