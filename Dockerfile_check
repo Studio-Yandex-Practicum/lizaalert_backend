@@ -32,4 +32,4 @@ COPY lizaalert-backend/ /app/lizaalert-backend/
 COPY services/ app/services/
 COPY tests/ /app/tests/
 
-ENTRYPOINT flake8 /app/
+ENTRYPOINT flake8 --exclude migrations --max-line-length 119

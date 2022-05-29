@@ -1,4 +1,4 @@
-.PHONY: list test func run
+.PHONY: list unittest func run
 .SILENT: unittest_build_silent db_start db_stop service_build_silent
 
 PG_CONTAINER = la_postgresql_container
@@ -25,11 +25,11 @@ CHECK_DOCKERFILE = Dockerfile_check
 CHECK_IMAGE = la_check_image
 CHECK_CONTAINER = la_check_container
 
-list:
+list:  # свывод список команд Makefile
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 
-db_start:
+db_start:  # запуск контейнера с БД
 	docker run --rm -d \
 	--name $(PG_CONTAINER) \
 	-p 5432:5432 \
@@ -38,19 +38,19 @@ db_start:
 	postgres:13-alpine
 
 
-db_stop:
+db_stop:  # остановка контейнера с БД
 	docker stop $(PG_CONTAINER)
 
 
-unittest_build:
+unittest_build:  # сборка контейнера с тестами приложения
 	docker build -f $(TEST_DOCKERFILE) -t $(TEST_IMAGE) .
 
 
-unittest_build_silent:
+unittest_build_silent:  # сборка контейнера с тестами приложения
 	make unittest_build
 
 
-unittest:
+unittest:  # сборка контейнера с юниттестами приложения и запуск тестов
 	-make db_stop
 	make db_start
 	make unittest_build_silent
@@ -67,15 +67,15 @@ unittest:
 	make db_stop
 
 
-service_build:
+service_build:  # сборка контейнера приложения
 	docker build -f $(SERVICE_DOCKERFILE) -t $(SERVICE_IMAGE) .
 
 
-service_build_silent:
+service_build_silent:  # сборка контейнера приложения
 	make service_build
 
 
-run:
+run:  # сборка контейнера приложения, запуск БД и девсервера
 	-make db_stop
 	make db_start
 	make service_build_silent
@@ -90,6 +90,7 @@ run:
 	$(SERVICE_IMAGE)
 
 	make db_stop
+
 
 func_debug:
 	docker build -f $(FUNC_DOCKERFILE) -t $(FUNC_IMAGE) .
@@ -126,6 +127,6 @@ func:
 	make db_stop
 
 
-check:
+check:  # сборка контейнера с приложением и проверка кода линтером
 	docker build -f $(CHECK_DOCKERFILE) -t $(CHECK_IMAGE) .
 	docker run --rm --name $(CHECK_CONTAINER) $(CHECK_IMAGE)
