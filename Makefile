@@ -25,7 +25,7 @@ CHECK_DOCKERFILE = Dockerfile_check
 CHECK_IMAGE = la_check_image
 CHECK_CONTAINER = la_check_container
 
-list:  # свывод список команд Makefile
+list:  # вывод список команд Makefile
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 
@@ -42,11 +42,11 @@ db_stop:  # остановка контейнера с БД
 	docker stop $(PG_CONTAINER)
 
 
-unittest_build:  # сборка контейнера с тестами приложения
+unittest_build:  # сборка образа с тестами приложения
 	docker build -f $(TEST_DOCKERFILE) -t $(TEST_IMAGE) .
 
 
-unittest_build_silent:  # сборка контейнера с тестами приложения
+unittest_build_silent:  # сборка образа с тестами приложения
 	make unittest_build
 
 
@@ -67,15 +67,15 @@ unittest:  # сборка контейнера с юниттестами при�
 	make db_stop
 
 
-service_build:  # сборка контейнера приложения
+service_build:  # сборка образа приложения
 	docker build -f $(SERVICE_DOCKERFILE) -t $(SERVICE_IMAGE) .
 
 
-service_build_silent:  # сборка контейнера приложения
+service_build_silent:  # сборка образа приложения
 	make service_build
 
 
-run:  # сборка контейнера приложения, запуск БД и девсервера
+run:  # сборка образа и запуск контейнера приложения; запуск БД и девсервера
 	-make db_stop
 	make db_start
 	make service_build_silent
@@ -127,6 +127,6 @@ func:
 	make db_stop
 
 
-check:  # сборка контейнера с приложением и проверка кода линтером
+check:  # сборка и запуск контейнера с приложением и проверка кода линтером
 	docker build -f $(CHECK_DOCKERFILE) -t $(CHECK_IMAGE) .
 	docker run --rm --name $(CHECK_CONTAINER) $(CHECK_IMAGE)

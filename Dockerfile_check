@@ -24,6 +24,7 @@ RUN apk update --no-cache \
 WORKDIR /app
 COPY poetry.lock /app/poetry.lock
 COPY pyproject.toml /app/pyproject.toml
+COPY setup.cfg app/setup.cfg
 
 RUN poetry config virtualenvs.create false \
   && poetry install $(test "$YOUR_ENV" == production && echo "--no-dev") --no-interaction --no-ansi
@@ -32,4 +33,4 @@ COPY lizaalert-backend/ /app/lizaalert-backend/
 COPY services/ app/services/
 COPY tests/ /app/tests/
 
-ENTRYPOINT flake8 --exclude migrations --max-line-length 119
+ENTRYPOINT flake8
