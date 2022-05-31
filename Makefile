@@ -25,11 +25,14 @@ CHECK_DOCKERFILE = Dockerfile_check
 CHECK_IMAGE = la_check_image
 CHECK_CONTAINER = la_check_container
 
-list:  # вывод список команд Makefile
+
+# вывод список команд Makefile
+list:  
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 
-db_start:  # запуск контейнера с БД
+# запуск контейнера с БД
+db_start:  
 	docker run --rm -d \
 	--name $(PG_CONTAINER) \
 	-p 5432:5432 \
@@ -38,19 +41,23 @@ db_start:  # запуск контейнера с БД
 	postgres:13-alpine
 
 
-db_stop:  # остановка контейнера с БД
+# остановка контейнера с БД
+db_stop:  
 	docker stop $(PG_CONTAINER)
 
 
-unittest_build:  # сборка образа с тестами приложения
+# сборка образа с тестами приложения
+unittest_build:  
 	docker build -f $(TEST_DOCKERFILE) -t $(TEST_IMAGE) .
 
 
-unittest_build_silent:  # сборка образа с тестами приложения
+# сборка образа с тестами приложения
+unittest_build_silent:  
 	make unittest_build
 
 
-unittest:  # сборка контейнера с юниттестами приложения и запуск тестов
+# сборка контейнера с юниттестами приложения и запуск тестов
+unittest:  
 	-make db_stop
 	make db_start
 	make unittest_build_silent
@@ -67,15 +74,18 @@ unittest:  # сборка контейнера с юниттестами при�
 	make db_stop
 
 
-service_build:  # сборка образа приложения
+# сборка образа приложения
+service_build:  
 	docker build -f $(SERVICE_DOCKERFILE) -t $(SERVICE_IMAGE) .
 
 
-service_build_silent:  # сборка образа приложения
+# сборка образа приложения
+service_build_silent:  
 	make service_build
 
 
-run:  # сборка образа и запуск контейнера приложения; запуск БД и девсервера
+# сборка образа и запуск контейнера приложения; запуск БД и девсервера
+run:  
 	-make db_stop
 	make db_start
 	make service_build_silent
@@ -127,6 +137,7 @@ func:
 	make db_stop
 
 
-check:  # сборка и запуск контейнера с приложением и проверка кода линтером
+# сборка и запуск контейнера с приложением и проверка кода линтером
+check:  
 	docker build -f $(CHECK_DOCKERFILE) -t $(CHECK_IMAGE) .
 	docker run --rm --name $(CHECK_CONTAINER) $(CHECK_IMAGE)
