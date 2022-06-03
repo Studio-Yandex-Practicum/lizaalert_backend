@@ -28,6 +28,3 @@ def user_client(token):
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token["access"]}')
     return client
-
-
-
