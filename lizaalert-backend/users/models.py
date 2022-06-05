@@ -11,7 +11,9 @@ class User(AbstractUser):
 
 
 class Level(models.Model):
+    """Уровень опытности волонтёра в контексте организации."""
     class LevelName(models.TextChoices):
+        """Доступные для получения уровни."""
         beginner = "Новичок", "Новичок"
         middle = "Бывалый", "Бывалый"
         professional = "Профессионал", "Профессионал"
@@ -31,6 +33,7 @@ class Level(models.Model):
 
 
 class VolunteerLevel(models.Model):
+    """Определяет уровень (:model:`users.Level`) волонтёра (:model:`users.Volunteer`)."""
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunteer_levels", verbose_name="Волонтер"
     )
@@ -42,6 +45,7 @@ class VolunteerLevel(models.Model):
         blank=True,
         null=True,
         verbose_name="Кто подтвердил статус",
+        help_text="Кто подтвердил статус",
     )
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления", auto_now=True)
@@ -54,6 +58,7 @@ class VolunteerLevel(models.Model):
 
 
 class Location(models.Model):
+    """Местонахождение волонтёра (:model:`users.Volunteer`); административная единица РФ."""
     code = models.PositiveSmallIntegerField("Код региона", blank=True, null=True)
     region = models.CharField("Наименование региона", max_length=120)
 
@@ -64,6 +69,7 @@ class Location(models.Model):
 
 
 class Department(models.Model):
+    """Подразделение организации к которому относится волонтёр (:model:`users.Volunteer`)."""
     title = models.CharField("Наименование направления", max_length=120)
     description = models.TextField("Описание направления", blank=True, null=True)
 
@@ -77,6 +83,7 @@ class Department(models.Model):
 
 
 class Badge(models.Model):
+    """Значок-достижение; может быть получено волонтёром (:model:`users.Volunteer`)."""
     name = models.CharField("Наименование значка", max_length=40)
     description = models.TextField("Описание значка и условий его получения", blank=True, null=True)
 
@@ -90,11 +97,12 @@ class Badge(models.Model):
 
 
 class VolunteerBadge(models.Model):
+    """Определяет значки (:model:`users.Badge`) полученные волонтёром (:model:`users.Volunteer`)."""
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunteer_badges", verbose_name="Волонтер"
     )
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name="badge_volunteers", verbose_name="Значок")
-    created_at = models.DateTimeField("Дата создания записи", auto_now_add=True)
+    created_at = models.DateTimeField("Дата получения значка", auto_now_add=True)
 
     class Meta:
         db_table = "volunteers_badges"
@@ -103,15 +111,15 @@ class VolunteerBadge(models.Model):
 
 
 class VolunteerCourse(models.Model):
-
+    """Определяет курсы (:model:`users.Course`), которые волонтёр (:model:`users.Volunteer`) проходит или прошёл."""
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
     )
     course = models.ForeignKey(
         "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
-    status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT,
-                               related_name="volunteer_courses", verbose_name="Статус")
+    status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT, related_name="volunteer_courses",
+                               help_text="Статус прохождения курса", verbose_name="Статус")
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
     )
@@ -127,11 +135,15 @@ class VolunteerCourse(models.Model):
 
 
 class Volunteer(models.Model):
+    """Волонтёр организации "ЛизаАлерт", связан с учётной записью :model:`users.User`."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь")
     phone_number = PhoneNumberField(verbose_name="Номер телефона", unique=True)
     birth_date = models.DateField("Дата рождения")
     location = models.ForeignKey(
-        Location, on_delete=models.SET_NULL, null=True, related_name="volunteers", verbose_name="Географический регион"
+        Location, on_delete=models.SET_NULL, null=True,
+        related_name="volunteers",
+        verbose_name="Географический регион",
+        help_text="Географический регион"
     )
     department = models.ForeignKey(
         Department,
@@ -140,20 +152,24 @@ class Volunteer(models.Model):
         null=True,
         related_name="volunteers",
         verbose_name="Направление",
+        help_text="Направление",
     )
     call_sign = models.CharField("Позывной на форуме", max_length=50, blank=True, null=True)
     photo = ThumbnailerImageField(verbose_name="Путь к фотографии", blank=True, null=True)
     level = models.ManyToManyField(
-        Level, through=VolunteerLevel, blank=True, related_name="volunteers", verbose_name="Уровень"
+        Level, through=VolunteerLevel, blank=True, related_name="volunteers", verbose_name="Уровень",
+        help_text="Уровень волонтёра"
     )
     badges = models.ManyToManyField(
-        Badge, through=VolunteerBadge, blank=True, related_name="volunteers", verbose_name="Значки"
+        Badge, through=VolunteerBadge, blank=True, related_name="volunteers", verbose_name="Значки",
+        help_text="Значки, полученные волонтёром"
     )
     courses = models.ManyToManyField(
-        "courses.Course", through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы"
+        "courses.Course", through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы",
+        help_text="Курсы, на которые записан волонтёр"
     )
-    created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
-    updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
+    created_at = models.DateTimeField("Дата и время регистрации", auto_now_add=True)
+    updated_at = models.DateTimeField("Дата и время последнего обновления профиля", auto_now=True)
 
     class Meta:
         db_table = "volunteers"
