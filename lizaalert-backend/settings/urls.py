@@ -8,6 +8,7 @@ admin.site.site_header = "ЛизаАлерт"
 admin.site.site_title = "ЛизаАлерт"
 
 urlpatterns = [
+    path('admin/doc/', include('django.contrib.admindocs.urls')),
     path("admin/", admin.site.urls),
     path("api/v1/", include("courses.urls")),
     path("auth/", include("authentication.urls")),

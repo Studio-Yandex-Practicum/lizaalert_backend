@@ -18,12 +18,14 @@ ALLOWED_HOSTS = env.list(
     [
         "0.0.0.0",
         "127.0.0.1",
+        "localhost",
     ],
 )
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://0.0.0.0:8000"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
+    "django.contrib.admindocs",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -55,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.contrib.admindocs.middleware.XViewMiddleware",
 ]
 
 ROOT_URLCONF = "settings.urls"
