@@ -1,9 +1,13 @@
-from courses.models import Course
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from easy_thumbnails.fields import ThumbnailerImageField
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+class User(AbstractUser):
+    patronymic = models.CharField("Отчество", blank=True, max_length=20)
 
 
 class Level(models.Model):
@@ -107,7 +111,9 @@ class VolunteerCourse(models.Model):
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
     )
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс")
+    course = models.ForeignKey(
+        "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
+    )
     status = models.CharField("Статус курса", max_length=20, choices=CourseStatuses.choices)
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
@@ -124,11 +130,29 @@ class VolunteerCourse(models.Model):
 
 
 class Volunteer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь")
-    phone_number = PhoneNumberField(verbose_name="Номер телефона", unique=True)
-    birth_date = models.DateField("Дата рождения")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь"
+    )
+    phone_number = PhoneNumberField(
+        verbose_name="Номер телефона",
+        blank=True,
+        null=True,
+        unique=True
+    )
+    birth_date = models.DateField(
+        "Дата рождения",
+        blank=True,
+        null=True
+    )
     location = models.ForeignKey(
-        Location, on_delete=models.SET_NULL, null=True, related_name="volunteers", verbose_name="Географический регион"
+        Location,
+        on_delete=models.SET_NULL,
+        blank=True, null=True,
+        related_name="volunteers",
+        verbose_name="Географический регион"
     )
     department = models.ForeignKey(
         Department,
@@ -136,23 +160,57 @@ class Volunteer(models.Model):
         blank=True,
         null=True,
         related_name="volunteers",
-        verbose_name="Направление",
+        verbose_name="Направление"
     )
-    call_sign = models.CharField("Позывной на форуме", max_length=50, blank=True, null=True)
-    photo = ThumbnailerImageField(verbose_name="Путь к фотографии", blank=True, null=True)
+    call_sign = models.CharField(
+        "Позывной на форуме",
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    photo = ThumbnailerImageField(
+        verbose_name="Путь к фотографии",
+        blank=True,
+        null=True
+    )
     level = models.ManyToManyField(
-        Level, through=VolunteerLevel, blank=True, related_name="volunteers", verbose_name="Уровень"
+        Level,
+        through=VolunteerLevel,
+        blank=True,
+        null=True,
+        related_name="volunteers",
+        verbose_name="Уровень"
     )
     badges = models.ManyToManyField(
-        Badge, through=VolunteerBadge, blank=True, related_name="volunteers", verbose_name="Значки"
+        Badge,
+        through=VolunteerBadge,
+        blank=True,
+        null=True,
+        related_name="volunteers",
+        verbose_name="Значки"
     )
     courses = models.ManyToManyField(
-        Course, through=VolunteerCourse, blank=True, related_name="volunteers", verbose_name="Курсы"
+        "courses.Course",
+        through=VolunteerCourse,
+        blank=True,
+        related_name="volunteers",
+        verbose_name="Курсы"
     )
-    created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
-    updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
+    created_at = models.DateTimeField(
+        "Дата и время создания запси",
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        "Дата обновления записи",
+        auto_now=True
+        )
 
     class Meta:
         db_table = "volunteers"
         verbose_name = "Волонтер"
         verbose_name_plural = "Волонтеры"
+
+    @property
+    def count_pass_course(self):
+        pass_course = self.volunter_courses.filter(status="Пройден")
+        return len(pass_course)

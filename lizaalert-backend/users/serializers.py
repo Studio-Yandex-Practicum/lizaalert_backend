@@ -1,56 +1,80 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Badge, Volunteer, VolunteerCourse
+from .models import Badge, Location, Volunteer
+
+User = get_user_model()
 
 
 class BageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Badge
-        fields = ["name", "description", ]
+        fields = ['name', 'description', ]
+
+
+class FullNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'patronymic']
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name',
+                                                 instance.first_name)
+        instance.last_name = validated_data.get('last_name',
+                                                instance.last_name)
+        instance.patronymic = validated_data.get('patronymic',
+                                                 instance.patronymic)
+        instance.save()
+        return instance
 
 
 class VolunteerSerializer(serializers.ModelSerializer):
-    email = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()
-    full_name = serializers.SerializerMethodField()
-    photo = serializers.SerializerMethodField()
-    level = serializers.SerializerMethodField()
-    badges = BageSerializer(many=True)
-    count_pass_course = serializers.SerializerMethodField()
+    email = serializers.EmailField(source='user.email', read_only=True)
+    location = serializers.CharField(required=False,
+                                     allow_null=True,
+                                     source='location.region')
+    full_name = FullNameSerializer(source='user')
+    photo = serializers.SerializerMethodField(read_only=True)
+    level = serializers.CharField(source='level.name', read_only=True)
+    badges = BageSerializer(many=True, read_only=True)
+    count_pass_course = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Volunteer
-        fields = ["id", "phone_number", "email", "full_name",
-                  "birth_date", "location", "photo", "level", "badges",
-                  "count_pass_course"
+        fields = ['id', 'phone_number', 'email', 'full_name',
+                  'birth_date', 'location', 'call_sign', 'photo', 'level',
+                  'badges', 'count_pass_course'
                   ]
 
-    def get_location(self, obj):
-        location = obj.location
-        if location:
-            return location.region
-        return None
-
-    def get_email(self, obj):
-        user = obj.user
-        return user.email
-
-    def get_full_name(self, obj):
-        user = obj.user
-        return user.first_name + ' ' + user.last_name
-
     def get_photo(self, obj):
-        request = self.context.get("request")
+        request = self.context.get('request')
         if obj.photo:
             photo_url = obj.photo.url
             return request.build_absolute_uri(photo_url)
         return None
 
-    def get_level(self, obj):
-        level = obj.level
-        return level.name
+    def update(self, instance, validated_data):
+        instance.birth_date = validated_data.get('birth_date',
+                                                 instance.birth_date)
+        instance.call_sign = validated_data.get('call_sign',
+                                                instance.call_sign)
+        instance.phone_number = validated_data.get('phone_number',
+                                                   instance.phone_number)
 
-    def get_count_pass_course(self, obj):
-        courses = VolunteerCourse.objects.filter(volunteer=obj.pk,
-                                                 status="Пройден")
-        return len(courses)
+        location = validated_data.get('location', None)
+        if location and (
+            Location.objects.filter(region=location['region']).exists()
+        ):
+            region = Location.objects.get(region=location['region'])
+            print(region)
+            instance.location = Location.objects.get(region=location['region'])
+
+        full_name = validated_data.get('user', None)
+        if full_name:
+            serializer = FullNameSerializer(
+                instance.user, data=full_name, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+        instance.save()
+        return instance
