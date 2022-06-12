@@ -103,10 +103,6 @@ class VolunteerBadge(models.Model):
 
 
 class VolunteerCourse(models.Model):
-    class CourseStatuses(models.TextChoices):
-        activ = "Активный"
-        complete = "Пройден"
-        registration = "Вы записаны"
 
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
@@ -114,7 +110,8 @@ class VolunteerCourse(models.Model):
     course = models.ForeignKey(
         "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
-    status = models.CharField("Статус курса", max_length=20, choices=CourseStatuses.choices)
+    status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT,
+                               related_name="volunteer_courses", verbose_name="Статус")
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
     )

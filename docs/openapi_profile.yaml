@@ -1,0 +1,290 @@
+openapi: 3.0.1
+info:
+  title: Платформа для обучения добровольцев "ЛизаАлерт"
+  description: 'Описание контракта API платформы для обучения добровольцев "ЛизаАлерт"'
+  termsOfService: https://swagger.io/terms/
+  contact:
+    name: Developer Team
+    email: ""
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: https://liza-alert.ru/api/v1
+
+tags:
+- name: account
+  description: API регистрации и работе с личным кабинетом (профилем)
+
+paths:
+  /profile/{volunteer_id}:
+    parameters:
+      - in: path
+        name: volunteer_id
+        description: Уникальный идентификатор пользователя
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - account
+      summary: Доступ к странице профиля пользователя
+      operationId: getUserProfile
+      description: Предоставляется информация для отображения профиля пользователя
+      security:
+      - bearerAuth: [ ]
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Уникальный идентификатор пользователя
+                  phone_number:
+                    type: string
+                    description: Номер телефона пользователя
+                    example: "+71234567899"
+                  email:
+                    type: string
+                    format: email
+                    description: Адрес электронной почты пользователя
+                  full_name:
+                    type: object
+                    properties:
+                      first_name:
+                        type: string
+                        description: Имя волонтера
+                      last_name:
+                        type: string
+                        description: Фамилия волонтера
+                      patronymic:
+                        type: string
+                        description: Отчество волонтера
+                  birth_date:
+                    type: string
+                    format: date
+                    description: Дата рождения
+                    example: 01-10-1995
+                  location:
+                    type: string
+                    description: Географический регион
+                    example: г. Санкт-Петербург
+                  call_sign:
+                    type: string
+                    description: Позывной на форуме
+                    example: Белка
+                  photo:
+                    type: string
+                    format: uri
+                    description: Ссылка на фотографию
+                  level:
+                    type: string
+                    description: Уровень волонтера (Новичок, Бывалый, Профессонал)
+                  badges:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Наименование значка
+                      description:
+                        type: string
+                        description: Описание значка и условий его получения
+                  count_pass_course:
+                    type: integer
+                    description: Количество пройденных курсов
+        404:
+          description: Пользователь не найден
+          $ref: '#/components/responses/NotFound'
+        401:
+          description: Пользователь не авторизован!
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags:
+        - account
+      summary: Изменение личных данных
+      operationId: updateUserProfile
+      description: Выполняется сохранение обновленных личных данных
+      security:
+      - bearerAuth: [ ]
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: object
+                  properties:
+                    first_name:
+                      type: string
+                      description: Имя волонтера
+                    last_name:
+                      type: string
+                      description: Фамилия волонтера
+                    patronymic:
+                      type: string
+                      description: Отчество волонтера
+                birth_date:
+                  type: string
+                  format: date
+                  description: Дата рождения
+                location:
+                  type: string
+                  description: Географический регион
+                call_sign:
+                  type: string
+                  description: Позывной на форуме
+                  example: Белка
+                phone_number:
+                  type: string
+                  description: Номер телефона пользователя
+                  example: "+71234567899"
+      x-codegen-request-body-name: body
+      responses:
+        200:
+          description: Успешная операция
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: Уникальный идентификатор пользователя
+                  phone_number:
+                    type: string
+                    description: Номер телефона пользователя
+                    example: "+71234567899"
+                  email:
+                    type: string
+                    format: email
+                    description: Адрес электронной почты пользователя
+                  full_name:
+                    type: object
+                    properties:
+                      first_name:
+                        type: string
+                        description: Имя волонтера
+                      last_name:
+                        type: string
+                        description: Фамилия волонтера
+                      patronymic:
+                        type: string
+                        description: Отчество волонтера
+                  birth_date:
+                    type: string
+                    format: date
+                    description: Дата рождения
+                    example: 01-10-1995
+                  location:
+                    type: string
+                    description: Географический регион
+                    example: г. Санкт-Петербург
+                  call_sign:
+                    type: string
+                    description: Позывной на форуме
+                    example: Белка
+                  photo:
+                    type: string
+                    format: uri
+                    description: Ссылка на фотографию
+                  level:
+                    type: string
+                    description: Уровень волонтера (Новичок, Бывалый, Профессонал)
+                  badges:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Наименование значка
+                      description:
+                        type: string
+                        description: Описание значка и условий его получения
+                  count_pass_course:
+                    type: integer
+                    description: Количество пройденных курсов
+        400:
+          description: Неверный формат полей запроса
+          $ref: '#/components/responses/BadRequest'
+        404:
+          description: Пользователь не найден
+          $ref: '#/components/responses/NotFound'
+        401:
+          description: Пользователь не авторизован!
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  schemas:
+
+    Error: #Требуется уточнить состав и объем полей описания ошибки, отдаваемой в фронтенд
+      type: object
+      properties:
+        errors:
+          type: string
+        message:
+          type: string
+      required:
+        - errors
+        - message
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    minimalResponse:
+      description: "OK"
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    Conflict:
+      description: Resource Already Exist
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    FailedDependency:
+      description: Failed Dependency
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    Forbidden:
+      description: Resource modification is prohibited
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

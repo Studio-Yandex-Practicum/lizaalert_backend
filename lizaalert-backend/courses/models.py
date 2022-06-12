@@ -21,3 +21,16 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class CourseStatus(models.Model):
+    name = models.CharField("Статус курса", max_length=50, editable=False)
+    slug = models.SlugField(max_length=20, editable=False)
+
+    class Meta:
+        db_table = "course_status"
+        verbose_name = "Статус курса"
+        verbose_name_plural = "Статус курсов"
+
+    def __str__(self):
+        return f"{self.slug}"
