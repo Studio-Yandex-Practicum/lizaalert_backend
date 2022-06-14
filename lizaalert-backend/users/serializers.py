@@ -34,8 +34,10 @@ class VolunteerSerializer(serializers.ModelSerializer):
                                      allow_null=True,
                                      source='location.region')
     full_name = FullNameSerializer(source='user')
-    photo = serializers.SerializerMethodField(read_only=True)
-    level = serializers.CharField(source='level.name', read_only=True)
+    photo = serializers.ImageField(
+        max_length=None, use_url=True, allow_null=True, required=False
+    )
+    level = serializers.CharField(source='level_confirmed', read_only=True)
     badges = BageSerializer(many=True, read_only=True)
     count_pass_course = serializers.IntegerField(read_only=True)
 
@@ -45,13 +47,6 @@ class VolunteerSerializer(serializers.ModelSerializer):
                   'birth_date', 'location', 'call_sign', 'photo', 'level',
                   'badges', 'count_pass_course'
                   ]
-
-    def get_photo(self, obj):
-        request = self.context.get('request')
-        if obj.photo:
-            photo_url = obj.photo.url
-            return request.build_absolute_uri(photo_url)
-        return None
 
     def update(self, instance, validated_data):
         instance.birth_date = validated_data.get('birth_date',
@@ -65,8 +60,6 @@ class VolunteerSerializer(serializers.ModelSerializer):
         if location and (
             Location.objects.filter(region=location['region']).exists()
         ):
-            region = Location.objects.get(region=location['region'])
-            print(region)
             instance.location = Location.objects.get(region=location['region'])
 
         full_name = validated_data.get('user', None)
@@ -76,5 +69,8 @@ class VolunteerSerializer(serializers.ModelSerializer):
             )
             if serializer.is_valid():
                 serializer.save()
+
+        if validated_data.get('photo') is not None:
+            instance.photo = validated_data.pop('photo')
         instance.save()
         return instance

@@ -209,5 +209,17 @@ class Volunteer(models.Model):
 
     @property
     def count_pass_course(self):
-        pass_course = self.volunter_courses.filter(status="Пройден")
-        return len(pass_course)
+        # TODO: Продумать рефакторинг статусов для избежания ошибки с вычислением пройденных курсов
+        from courses.models import CourseStatus
+        if CourseStatus.objects.filter(name="Пройден").exists():
+            status_passed = CourseStatus.objects.get(name="Пройден")
+            pass_course = self.volunter_courses.filter(status=status_passed)
+            return len(pass_course)
+        return None
+
+    @property
+    def level_confirmed(self):
+        levels = self.volunteer_levels.filter(confirmed=True).order_by('-updated_at')
+        if levels:
+            return levels[0]
+        return False

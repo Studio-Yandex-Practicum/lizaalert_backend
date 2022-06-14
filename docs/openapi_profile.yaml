@@ -18,15 +18,7 @@ tags:
   description: API регистрации и работе с личным кабинетом (профилем)
 
 paths:
-  /profile/{volunteer_id}:
-    parameters:
-      - in: path
-        name: volunteer_id
-        description: Уникальный идентификатор пользователя
-        required: true
-        schema:
-          type: string
-          format: uuid
+  /profile/:
     get:
       tags:
         - account
@@ -148,6 +140,9 @@ paths:
                   type: string
                   description: Номер телефона пользователя
                   example: "+71234567899"
+                photo:
+                  type: string
+                  format: binary
       x-codegen-request-body-name: body
       responses:
         200:

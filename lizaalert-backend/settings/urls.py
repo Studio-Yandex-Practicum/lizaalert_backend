@@ -10,11 +10,8 @@ admin.site.site_title = "ЛизаАлерт"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("courses.urls")),
-<<<<<<< HEAD
     path("api/v1/", include("users.urls")),
-=======
     path("auth/", include("authentication.urls")),
->>>>>>> 9b4bb9ca955bdc816746bc75c6546c3955f00245
 ]
 
 if settings.DEBUG:
