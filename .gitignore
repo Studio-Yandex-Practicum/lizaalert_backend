@@ -99,3 +99,4 @@ data/**
 
 ### vscode ###
 .vscode/
+.devcontainer/
