@@ -1,7 +1,7 @@
 name: CodeStyle checks & Tests
 on: 
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, ready_for_review]
 
 jobs:
   tests:
