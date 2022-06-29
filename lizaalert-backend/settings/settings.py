@@ -18,6 +18,7 @@ ALLOWED_HOSTS = env.list(
     [
         "0.0.0.0",
         "127.0.0.1",
+        "localhost",
     ],
 )
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://0.0.0.0:8000"]

@@ -5,7 +5,7 @@ import psycopg2
 import pydantic
 import pytest
 
-SERVER_URL = "http://localhost:8000"
+SERVER_URL = "http://localhost:8000/admin"
 
 
 class DBConfig(pydantic.BaseSettings):

@@ -1,5 +1,5 @@
 .PHONY: list unittest func run
-.SILENT: unittest_build_silent db_start db_stop service_build_silent
+.SILENT: unittest_build_silent db_start db_stop service_build_silent build_base_image
 
 PG_CONTAINER = la_postgresql_container
 
@@ -8,6 +8,9 @@ DB_PORT = 5432
 DB_USER = postgres
 DB_PASSWORD = password
 DB_NAME = lizaalert
+
+BASE_DOCKERFILE = Dockerfile_base
+BASE_IMAGE = la_base_image
 
 SERVICE_DOCKERFILE = Dockerfile_local
 SERVICE_IMAGE = la_local_image
@@ -46,6 +49,11 @@ db_stop:
 	docker stop $(PG_CONTAINER)
 
 
+# сборка базового образа
+build_base_image:  
+	docker build -f $(BASE_DOCKERFILE) -t $(BASE_IMAGE) .
+
+
 # сборка образа с тестами приложения
 unittest_build:  
 	docker build -f $(TEST_DOCKERFILE) -t $(TEST_IMAGE) .
@@ -60,6 +68,7 @@ unittest_build_silent:
 unittest:  
 	-make db_stop
 	make db_start
+	make build_base_image
 	make unittest_build_silent
 
 	docker run --rm --net=host \
@@ -81,6 +90,7 @@ service_build:
 
 # сборка образа приложения
 service_build_silent:  
+	make build_base_image
 	make service_build
 
 
@@ -88,6 +98,7 @@ service_build_silent:
 run:  
 	-make db_stop
 	make db_start
+	make build_base_image
 	make service_build_silent
 
 	docker run --rm --net=host \
@@ -119,6 +130,7 @@ func:
 	-docker stop $(SERVICE_CONTAINER)
 	-make db_stop
 	make db_start
+	make build_base_image
 	make service_build_silent
 
 	docker run -d --rm --net=host \
