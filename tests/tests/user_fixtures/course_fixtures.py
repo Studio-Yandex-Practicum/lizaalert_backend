@@ -22,11 +22,13 @@ statuses = [
         "slug": "inactive"
     }
 ]
-
-
-@pytest.fixture
+@pytest.fixture()
 def create_statuses(token):
     from courses.models import CourseStatus
     [CourseStatus.objects.create(**status) for status in statuses]
+
+
+def return_course_data():
+    from courses.models import CourseStatus
     out = list(CourseStatus.objects.all().values())
     return out
