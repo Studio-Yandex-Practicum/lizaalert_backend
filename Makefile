@@ -1,5 +1,5 @@
-.PHONY: list test func run
-.SILENT: unittest_build_silent db_start db_stop service_build_silent
+.PHONY: list unittest func run
+.SILENT: unittest_build_silent db_start db_stop service_build_silent build_base_image
 
 PG_CONTAINER = la_postgresql_container
 
@@ -8,6 +8,9 @@ DB_PORT = 5432
 DB_USER = postgres
 DB_PASSWORD = password
 DB_NAME = lizaalert
+
+BASE_DOCKERFILE = Dockerfile_base
+BASE_IMAGE = la_base_image
 
 SERVICE_DOCKERFILE = Dockerfile_local
 SERVICE_IMAGE = la_local_image
@@ -25,11 +28,14 @@ CHECK_DOCKERFILE = Dockerfile_check
 CHECK_IMAGE = la_check_image
 CHECK_CONTAINER = la_check_container
 
-list:
+
+# вывод список команд Makefile
+list:  
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 
-db_start:
+# запуск контейнера с БД
+db_start:  
 	docker run --rm -d \
 	--name $(PG_CONTAINER) \
 	-p 5432:5432 \
@@ -38,21 +44,31 @@ db_start:
 	postgres:13-alpine
 
 
-db_stop:
+# остановка контейнера с БД
+db_stop:  
 	docker stop $(PG_CONTAINER)
 
 
-unittest_build:
+# сборка базового образа
+build_base_image:  
+	docker build -f $(BASE_DOCKERFILE) -t $(BASE_IMAGE) .
+
+
+# сборка образа с тестами приложения
+unittest_build:  
 	docker build -f $(TEST_DOCKERFILE) -t $(TEST_IMAGE) .
 
 
-unittest_build_silent:
+# сборка образа с тестами приложения
+unittest_build_silent:  
 	make unittest_build
 
 
-unittest:
+# сборка контейнера с юниттестами приложения и запуск тестов
+unittest:  
 	-make db_stop
 	make db_start
+	make build_base_image
 	make unittest_build_silent
 
 	docker run --rm --net=host \
@@ -67,17 +83,22 @@ unittest:
 	make db_stop
 
 
-service_build:
+# сборка образа приложения
+service_build:  
 	docker build -f $(SERVICE_DOCKERFILE) -t $(SERVICE_IMAGE) .
 
 
-service_build_silent:
+# сборка образа приложения
+service_build_silent:  
+	make build_base_image
 	make service_build
 
 
-run:
+# сборка образа и запуск контейнера приложения; запуск БД и девсервера
+run:  
 	-make db_stop
 	make db_start
+	make build_base_image
 	make service_build_silent
 
 	docker run --rm --net=host \
@@ -90,6 +111,7 @@ run:
 	$(SERVICE_IMAGE)
 
 	make db_stop
+
 
 func_debug:
 	docker build -f $(FUNC_DOCKERFILE) -t $(FUNC_IMAGE) .
@@ -108,6 +130,7 @@ func:
 	-docker stop $(SERVICE_CONTAINER)
 	-make db_stop
 	make db_start
+	make build_base_image
 	make service_build_silent
 
 	docker run -d --rm --net=host \
@@ -126,6 +149,7 @@ func:
 	make db_stop
 
 
-check:
+# сборка и запуск контейнера с приложением и проверка кода линтером
+check:  
 	docker build -f $(CHECK_DOCKERFILE) -t $(CHECK_IMAGE) .
 	docker run --rm --name $(CHECK_CONTAINER) $(CHECK_IMAGE)
