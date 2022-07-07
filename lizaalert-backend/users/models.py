@@ -12,9 +12,9 @@ class User(AbstractUser):
 
 class Level(models.Model):
     class LevelName(models.TextChoices):
-        beginner = "Новичок", "Новичок"
-        middle = "Бывалый", "Бывалый"
-        professional = "Профессионал", "Профессионал"
+        beginner = "Новичок", "novice"
+        middle = "Бывалый", "experienced"
+        professional = "Профессионал", "professional"
 
     name = models.CharField("Наименование уровня", max_length=20, choices=LevelName.choices)
     description = models.TextField(
