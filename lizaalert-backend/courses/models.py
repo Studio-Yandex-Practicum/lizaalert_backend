@@ -10,6 +10,7 @@ class Course(models.Model):
     start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
     cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
+    level = models.ForeignKey("users.Level", on_delete=models.PROTECT, verbose_name="Уровень", related_name='course')
     full_description = models.TextField(verbose_name="Полное описание курса")
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания курса")
