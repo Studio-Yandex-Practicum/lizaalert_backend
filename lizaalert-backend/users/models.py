@@ -136,8 +136,7 @@ class Volunteer(models.Model):
     phone_number = PhoneNumberField(
         verbose_name="Номер телефона",
         blank=True,
-        null=True,
-        unique=True
+        null=True
     )
     birth_date = models.DateField(
         "Дата рождения",
@@ -176,7 +175,7 @@ class Volunteer(models.Model):
         blank=True,
         null=True,
         related_name="volunteers",
-        verbose_name="Уровень"
+        verbose_name="Уровени"
     )
     badges = models.ManyToManyField(
         Badge,
@@ -209,17 +208,8 @@ class Volunteer(models.Model):
 
     @property
     def count_pass_course(self):
-        # TODO: Продумать рефакторинг статусов для избежания ошибки с вычислением пройденных курсов
-        from courses.models import CourseStatus
-        if CourseStatus.objects.filter(name="Пройден").exists():
-            status_passed = CourseStatus.objects.get(name="Пройден")
-            pass_course = self.volunter_courses.filter(status=status_passed)
-            return len(pass_course)
-        return None
+        return len(self.volunter_courses.filter(status="complete"))
 
     @property
     def level_confirmed(self):
-        levels = self.volunteer_levels.filter(confirmed=True).order_by('-updated_at')
-        if levels:
-            return levels[0]
-        return False
+        return self.volunteer_levels.filter(confirmed=True).order_by('-updated_at').first()

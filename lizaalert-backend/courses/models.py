@@ -24,8 +24,18 @@ class Course(models.Model):
 
 
 class CourseStatus(models.Model):
+    class SlugStatus(models.TextChoices):
+        ACTIV = "active"
+        COMPLETE = "complete"
+        REGISTRATION = "registration"
+
     name = models.CharField("Статус курса", max_length=50, editable=False)
-    slug = models.SlugField(max_length=20, editable=False)
+    slug = models.CharField(
+        max_length=20,
+        choices=SlugStatus.choices,
+        default=SlugStatus.ACTIV,
+        editable=False
+    )
 
     class Meta:
         db_table = "course_status"

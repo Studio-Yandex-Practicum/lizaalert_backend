@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 
 from .models import Badge, Location, Volunteer
@@ -48,6 +49,7 @@ class VolunteerSerializer(serializers.ModelSerializer):
                   'badges', 'count_pass_course'
                   ]
 
+    @transaction.non_atomic_requests
     def update(self, instance, validated_data):
         instance.birth_date = validated_data.get('birth_date',
                                                  instance.birth_date)
