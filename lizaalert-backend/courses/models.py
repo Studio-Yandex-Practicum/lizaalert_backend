@@ -25,7 +25,7 @@ class Course(models.Model):
 
 class CourseStatus(models.Model):
     class SlugStatus(models.TextChoices):
-        ACTIV = "active"
+        ACTIVE = "active"
         COMPLETE = "complete"
         REGISTRATION = "registration"
 
@@ -33,7 +33,7 @@ class CourseStatus(models.Model):
     slug = models.CharField(
         max_length=20,
         choices=SlugStatus.choices,
-        default=SlugStatus.ACTIV,
+        default=SlugStatus.ACTIVE,
         editable=False
     )
 

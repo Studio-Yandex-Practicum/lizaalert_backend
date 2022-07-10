@@ -175,7 +175,7 @@ class Volunteer(models.Model):
         blank=True,
         null=True,
         related_name="volunteers",
-        verbose_name="Уровени"
+        verbose_name="Уровни"
     )
     badges = models.ManyToManyField(
         Badge,
