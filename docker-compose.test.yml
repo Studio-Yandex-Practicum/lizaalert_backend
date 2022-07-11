@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  postgres:
+    build: ./services/postgres
+    container_name: la_postgres
+    restart: always
+    ports:
+      - 5432
+    env_file:
+      - ./services/postgres/.env
+
+  tests:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    container_name: tests
+    command: pytest
+    env_file:
+      - ./lizaalert-backend/.env
+    depends_on:
+      - postgres

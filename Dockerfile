@@ -1,18 +1,11 @@
-ARG VARIANT=3.10-bullseye
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
+FROM python:3.10.5
 
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000/tcp
 
-ENV APP_HOME=/home/app/lizaalert
-RUN mkdir -p $APP_HOME
-RUN mkdir -p $APP_HOME/static
-RUN mkdir -p $APP_HOME/media
-WORKDIR $APP_HOME
-
 RUN apt-get -y update --no-install-recommends \
-    && apt-get -y install --no-install-recommends \
+    && apt-get install -yq --no-install-recommends \
     curl \
     git \
     && apt-get autoremove -y \
@@ -21,3 +14,16 @@ RUN apt-get -y update --no-install-recommends \
 # get poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="${PATH}:/root/.local/bin"
+
+ENV APP_HOME=/app/lizaalert
+
+WORKDIR ${APP_HOME}
+
+COPY poetry.lock ${APP_HOME}/poetry.lock
+COPY pyproject.toml ${APP_HOME}/pyproject.toml
+
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
+
+COPY lizaalert-backend ${APP_HOME}
+COPY tests/tests/ ${APP_HOME}/tests
