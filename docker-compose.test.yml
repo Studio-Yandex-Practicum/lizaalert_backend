@@ -5,10 +5,12 @@ services:
     build: ./services/postgres
     container_name: la_postgres
     restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=lizaalert
     ports:
       - 5432
-    env_file:
-      - ./services/postgres/.env
 
   tests:
     build:
@@ -16,7 +18,11 @@ services:
       context: .
     container_name: tests
     command: pytest
-    env_file:
-      - ./lizaalert-backend/.env
+    environment:
+      - DB_NAME=lizaalert
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_HOST=postgres
+      - DB_PORT=5432
     depends_on:
       - postgres
