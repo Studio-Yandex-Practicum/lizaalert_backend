@@ -1,8 +1,8 @@
 name: Code Style Checks & Tests
 on:
   push:
-    # branches:
-    #   - master
+    branches:
+      - master
   pull_request:
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
 
 
   tests:
-    name: Run tests
+    name: Run Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
