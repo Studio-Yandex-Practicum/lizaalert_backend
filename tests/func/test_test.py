@@ -15,4 +15,4 @@ def test_db(db_conn):
 
 def test_request():
     result = requests.get(f"{SERVER_URL}/")
-    assert result.status_code == HTTPStatus.BAD_REQUEST
+    assert result.status_code == HTTPStatus.OK
