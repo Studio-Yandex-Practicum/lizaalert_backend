@@ -89,6 +89,8 @@ target/
 *.pyc
 __pycache__/
 local_settings.py
+static/
+media/
 
 .env
 .env.prod
@@ -100,3 +102,4 @@ data/**
 ### vscode ###
 .vscode/
 .devcontainer/
+*.code-workspace
