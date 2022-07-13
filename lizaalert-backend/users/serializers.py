@@ -7,7 +7,7 @@ class LevelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Level
-        exclude = ('description', )
+        exclude = ("description",)
 
     def get_slug(self, obj):
         return obj.get_name_display()

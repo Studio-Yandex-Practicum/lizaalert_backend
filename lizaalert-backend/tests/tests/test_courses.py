@@ -4,7 +4,7 @@ from rest_framework import status
 
 
 class TestCourseStatus:
-    url = reverse('courses_statuses-list')
+    url = reverse("courses_statuses-list")
 
     @pytest.mark.django_db(transaction=True)
     def test_coursestatus_list_not_found(self, user_client):
