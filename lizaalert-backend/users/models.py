@@ -10,6 +10,20 @@ class User(AbstractUser):
     pass
 
 
+class UserRole(models.Model):
+    class Role(models.TextChoices):
+        MAIN_ADMIN = "main admin", "Главный Администратор"
+        ADMIN = "admin", "Администратор"
+        TEACHER = "teacher", "Преподаватель"
+        VOLUNTEER = "volunteer", "Волонтёр"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    role = models.CharField(choices=Role.choices, max_length=20, verbose_name="Роль пользователя")
+
+    class Meta:
+        constraints = (models.UniqueConstraint(fields=("user", "role"), name="unique_user_role"),)
+
+
 class Level(models.Model):
     class LevelName(models.TextChoices):
         beginner = "Новичок", "novice"
@@ -110,8 +124,9 @@ class VolunteerCourse(models.Model):
     course = models.ForeignKey(
         "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
-    status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT,
-                               related_name="volunteer_courses", verbose_name="Статус")
+    status = models.ForeignKey(
+        "courses.CourseStatus", on_delete=models.PROTECT, related_name="volunteer_courses", verbose_name="Статус"
+    )
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
     )
