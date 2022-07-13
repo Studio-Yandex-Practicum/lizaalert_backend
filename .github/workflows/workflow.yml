@@ -34,7 +34,7 @@ jobs:
         run: poetry run flake8
 
       - name: Black (check only)
-        run: black --check .
+        run: poetry run black --check .
 
       - name: isort (check only)
         run: poetry run isort --check-only --skip-gitignore .
