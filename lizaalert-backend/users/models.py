@@ -21,7 +21,12 @@ class UserRole(models.Model):
     role = models.CharField(choices=Role.choices, max_length=20, verbose_name="Роль пользователя")
 
     class Meta:
+        verbose_name = "Роль пользователя"
+        verbose_name_plural = "Роли пользователей"
         constraints = (models.UniqueConstraint(fields=("user", "role"), name="unique_user_role"),)
+
+    def __str__(self) -> str:
+        return f"{self.user} ({self.role})"
 
 
 class Level(models.Model):
