@@ -146,5 +146,5 @@ class ChapterLesson(models.Model):
         ordering = ("chapter", "order_number")
         constraints = [
             models.UniqueConstraint(fields=["chapter", "lesson", "order_number"],
-                                    name="уникальный урок в главе")
+                                    name="unique_chater_lesson")
         ]
