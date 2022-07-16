@@ -50,41 +50,43 @@ class Lesson(models.Model):
     duration* - продолжительность урока, минут
     user_created* - пользователь создавший урок
     user_modified* - последний редактировавший урок
-    ready* - статус готовности готов/не готов
-    visible* - статус видимости урока вкл./выкл
-    published* - статус публикации урока, опубликован - да/нет
+    lesson_status* - статус готовности урока (draft, ready, published)
     additional* - дополнительный урок - да/нет
     diploma* - дипломный урок - да/нет
     created_at* - дата создания записи об уроке, автоматическое проставление текущего времени
     updated_at* - дата обновления записи об уроке, автоматическое проставление текущего времени.
     """
 
-    LESSON = "Lesson"
-    VIDEOLESSON = "Videolesson"
-    WEBINAR = "Webinar"
-    QUIZZE = "Quizze"
-    TYPE_CHOICES = ((LESSON, "Урок"), (VIDEOLESSON, "Видеоурок"), (WEBINAR, "Вебинар"), (QUIZZE, "Тест"))
+    class LessonType(models.TextChoices):
+        LESSON = "Lesson", "Урок"
+        VIDEOLESSON = "Videolesson", "Видеоурок"
+        WEBINAR = "Webinar", "Вебинар"
+        QUIZ = "Quiz", "Тест"
+
+    class LessonStatus(models.TextChoices):
+        DRAFT = "Draft", "В разработке"
+        READY = "Ready", "Готов"
+        PUBLISHED = "Published", "Опубликован"
 
     title = models.CharField(max_length=120, verbose_name="название урока")
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
-    lesson_type = models.CharField(blank=True, null=True, max_length=20, verbose_name="тип урока",
-                                   choices=TYPE_CHOICES)
+    lesson_type = models.CharField(max_length=20, verbose_name="тип урока",
+                                   choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")
     user_created = models.ForeignKey(User, related_name="lesson_creator", on_delete=models.PROTECT,
                                      verbose_name="пользователь, создавший урок")
     user_modifier = models.ForeignKey(User, related_name="lesson_editor", on_delete=models.PROTECT,
                                       verbose_name="пользователь, внёсший изменения в урок")
-    ready = models.BooleanField(verbose_name="статус готовности", default=False)
-    visible = models.BooleanField(verbose_name="статус видимости урока", default=True)
-    published = models.BooleanField(verbose_name="статус публикации урока", default=False)
+    lesson_status = models.CharField(max_length=20, verbose_name="статус урока", choices=LessonStatus.choices,
+                                     default=LessonStatus.DRAFT)
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="дата создания урока")
     update_at = models.DateTimeField(auto_now=True, verbose_name="дата изменения урока")
 
     class Meta:
-        ordering = ('title',)
+        ordering = ("title",)
         verbose_name = "урок"
         verbose_name_plural = "урок"
 
@@ -106,7 +108,7 @@ class Chapter(models.Model):
     """
 
     title = models.CharField(max_length=120, null=True, blank=True, verbose_name="название главы")
-    lessons = models.ManyToManyField(Lesson, through='ChapterLesson', verbose_name="Уроки главы")
+    lessons = models.ManyToManyField(Lesson, through='ChapterLesson', verbose_name="уроки главы")
     user_created = models.ForeignKey(User, related_name="chapter_creator", on_delete=models.PROTECT,
                                      verbose_name="пользователь, создавший главу")
     user_modifier = models.ForeignKey(User, related_name="chapter_editor", on_delete=models.PROTECT,
@@ -115,7 +117,7 @@ class Chapter(models.Model):
     update_at = models.DateTimeField(auto_now=True, verbose_name="дата изменения главы")
 
     class Meta:
-        ordering = ('title',)
+        ordering = ("title",)
         verbose_name = "глава"
         verbose_name_plural = "глава"
 
@@ -136,11 +138,13 @@ class ChapterLesson(models.Model):
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT)
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
-    order_number = models.PositiveSmallIntegerField("порядковый номер урока в главе", unique=True,
+    order_number = models.PositiveSmallIntegerField("порядковый номер урока в главе",
                                                     validators=[MinValueValidator(1)])
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="дата добавления урока в главу")
 
     class Meta:
-        ordering = ('order_number',)
-        unique_together = ['chapter', 'lesson']
-
+        ordering = ("chapter", "order_number")
+        constraints = [
+            models.UniqueConstraint(fields=["chapter", "lesson", "order_number"],
+                                    name="уникальный урок в главе")
+        ]
