@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import status, viewsets, views
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Level, Volunteer
+from .models import Level, Volunteer, UserRole
 from .serializers import LevelSerializer, VolunteerSerializer
 
 
@@ -28,3 +28,9 @@ class VolunteerAPIview(APIView):
 class LevelViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
+
+
+class ListRoles(views.APIView):
+    def get(self, request):
+        results = [{"name": name, "description": description} for name, description in UserRole.Role.choices]
+        return Response({"results": results})

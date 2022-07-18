@@ -10,6 +10,29 @@ class User(AbstractUser):
     patronymic = models.CharField("Отчество", blank=True, max_length=20)
 
 
+class UserRole(models.Model):
+    """Отношение зарегистрированного пользователя и его роли в образовательной системе "ЛизаАлерт".
+    Используется для разграничения прав доступа к учебным материалам.
+    """
+
+    class Role(models.TextChoices):
+        MAIN_ADMIN = "main admin", "Главный Администратор"
+        ADMIN = "admin", "Администратор"
+        TEACHER = "teacher", "Преподаватель"
+        VOLUNTEER = "volunteer", "Волонтёр"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    role = models.CharField(choices=Role.choices, max_length=20, verbose_name="Роль пользователя")
+
+    class Meta:
+        verbose_name = "Роль пользователя"
+        verbose_name_plural = "Роли пользователей"
+        constraints = (models.UniqueConstraint(fields=("user", "role"), name="unique_user_role"),)
+
+    def __str__(self) -> str:
+        return f"{self.user} ({self.role})"
+
+
 class Level(models.Model):
     class LevelName(models.TextChoices):
         beginner = "Новичок", "novice"
@@ -110,8 +133,9 @@ class VolunteerCourse(models.Model):
     course = models.ForeignKey(
         "courses.Course", on_delete=models.CASCADE, related_name="course_volunteers", verbose_name="Курс"
     )
-    status = models.ForeignKey("courses.CourseStatus", on_delete=models.PROTECT,
-                               related_name="volunteer_courses", verbose_name="Статус")
+    status = models.ForeignKey(
+        "courses.CourseStatus", on_delete=models.PROTECT, related_name="volunteer_courses", verbose_name="Статус"
+    )
     assessment = models.FloatField(
         "Оценка за курс", default=0.0, validators=(MinValueValidator(0.0), MaxValueValidator(100.0))
     )

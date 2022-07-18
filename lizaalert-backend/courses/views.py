@@ -18,6 +18,4 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CourseStatus.objects.all()
     serializer_class = CourseStatusSerializer
-    permission_classes = [
-        IsAuthenticated
-    ]
+    permission_classes = [IsAuthenticated]
