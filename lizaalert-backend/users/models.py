@@ -11,6 +11,10 @@ class User(AbstractUser):
 
 
 class UserRole(models.Model):
+    """Отношение зарегистрированного пользователя и его роли в образовательной системе "ЛизаАлерт".
+    Используется для разграничения прав доступа к учебным материалам.
+    """
+
     class Role(models.TextChoices):
         MAIN_ADMIN = "main admin", "Главный Администратор"
         ADMIN = "admin", "Администратор"
