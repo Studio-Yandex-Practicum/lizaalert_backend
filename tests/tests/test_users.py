@@ -4,7 +4,7 @@ from rest_framework import status
 
 
 class TestLevel:
-    url = reverse('level-list')
+    url = reverse("level-list")
 
     @pytest.mark.django_db(transaction=True)
     def test_level_list_not_found(self, user_client):
