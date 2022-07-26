@@ -2,8 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from tests.tests.user_fixtures.course_fixtures import create_statuses, return_course_data, statuses
-from tests.tests.user_fixtures.level_fixtures import create_levels, levels, return_levels_data
+from tests.user_fixtures.course_fixtures import create_statuses, return_course_data, statuses
+from tests.user_fixtures.level_fixtures import create_levels, levels, return_levels_data
 
 
 @pytest.mark.django_db(transaction=True)

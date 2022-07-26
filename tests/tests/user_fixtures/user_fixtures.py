@@ -1,5 +1,7 @@
 import pytest
 
+from users.models import UserRole
+
 
 @pytest.fixture
 def user(django_user_model):
@@ -26,7 +28,12 @@ def token(user):
 @pytest.fixture
 def user_client(token):
     from rest_framework.test import APIClient
-
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token["access"]}')
     return client
+
+
+@pytest.fixture
+def user_admin_teacher_role(user, role_admin, role_teacher):
+    UserRole.objects.create(user=user, role=role_admin)
+    UserRole.objects.create(user=user, role=role_teacher)

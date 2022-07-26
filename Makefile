@@ -142,7 +142,7 @@ func:
 	-e DB_USER=$(DB_USER) \
 	$(SERVICE_IMAGE)
 
-	sleep 20
+	sleep 25
 	make func_debug
 
 	docker stop $(SERVICE_CONTAINER)
