@@ -5,7 +5,7 @@ from .views import LevelViewSet, ListRoles, UserRoleViewSet
 
 router = DefaultRouter()
 router.register(r"level", LevelViewSet, basename="level")
-router.register(r"users/(?P<user_id>\d+)/role", UserRoleViewSet, basename="user_role")
+router.register(r"users/(?P<user_id>\d+)/roles", UserRoleViewSet, basename="user_roles")
 
 urlpatterns = [
     path("", include(router.urls)),
