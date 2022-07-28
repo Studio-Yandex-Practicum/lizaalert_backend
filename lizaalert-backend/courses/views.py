@@ -1,4 +1,5 @@
-from django.db.models import Sum, Count, Q, F
+from django.db.models import Sum, Count, Q, Value, Subquery, CharField, OuterRef
+from django.db.models.functions import Coalesce
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
@@ -16,11 +17,22 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        course = Course.objects.annotate(course_duration=Sum('chapters__lessons__duration',
-                                                             filter=Q(chapters__lessons__lesson_status='Ready')),
-                                         lessons_count=Count('chapters__lessons',
-                                                             filter=Q(chapters__lessons__lesson_status='Ready')),
-                                         course_status=F('course_volunteers__status__slug'))
+        if user.is_authenticated:
+            course = Course.objects.all().annotate(
+                course_duration=Sum('chapters__lessons__duration',
+                                    filter=Q(chapters__lessons__lesson_status='Ready')),
+                lessons_count=Count('chapters__lessons',
+                                    filter=Q(chapters__lessons__lesson_status='Ready')),
+                course_status=(Coalesce(Subquery(Course.objects.filter(course_volunteers__volunteer__user=user, id=OuterRef('id')).values('course_volunteers__status__slug'), output_field=CharField()),
+                                       Value('inactive')))
+            )
+            return course
+        course = Course.objects.all().annotate(
+            course_duration=Sum('chapters__lessons__duration',
+                                filter=Q(chapters__lessons__lesson_status='Ready')),
+            lessons_count=Count('chapters__lessons',
+                                filter=Q(chapters__lessons__lesson_status='Ready')),
+            course_status=Value('inactive'))
         return course
 
 
