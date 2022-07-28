@@ -13,6 +13,7 @@ class Course(models.Model):
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
     level = models.ForeignKey("users.Level", on_delete=models.PROTECT, verbose_name="Уровень", related_name="course")
     full_description = models.TextField(verbose_name="Полное описание курса")
+    chapters = models.ForeignKey("Chapter", on_delete=models.PROTECT, verbose_name="Части", related_name="course")
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания курса")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата изменения курса")
@@ -148,3 +149,8 @@ class ChapterLesson(models.Model):
             models.UniqueConstraint(fields=["chapter", "lesson", "order_number"],
                                     name="unique_chapter_lesson")
         ]
+        verbose_name = "ГлаваУрок"
+        verbose_name_plural = "ГлаваУрок"
+
+    def __str__(self):
+        return f"{self.chapter.title} {self.lesson.title}"
