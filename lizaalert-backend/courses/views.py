@@ -23,8 +23,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                                     filter=Q(chapters__lessons__lesson_status='Ready')),
                 lessons_count=Count('chapters__lessons',
                                     filter=Q(chapters__lessons__lesson_status='Ready')),
-                course_status=(Coalesce(Subquery(Course.objects.filter(course_volunteers__volunteer__user=user, id=OuterRef('id')).values('course_volunteers__status__slug'), output_field=CharField()),
-                                       Value('inactive')))
+                course_status=(Coalesce(Subquery(Course.objects.filter(course_volunteers__volunteer__user=user,
+                                                                       id=OuterRef('id')).values(
+                    'course_volunteers__status__slug'), output_field=CharField()),
+                    Value('inactive')))
             )
             return course
         course = Course.objects.all().annotate(
