@@ -16,4 +16,3 @@ admin.site.register(UserRole)
 admin.site.register(Volunteer)
 admin.site.register(VolunteerCourse)
 admin.site.register(Location)
-
