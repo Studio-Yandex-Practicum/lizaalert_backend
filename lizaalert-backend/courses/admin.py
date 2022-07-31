@@ -15,8 +15,18 @@ class CourseAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
+class ChapterLessonInline(admin.TabularInline):
+    model = ChapterLesson
+    min_num = 1
+    extra = 0
+
+
+@admin.register(Chapter)
+class ChapterLessonAdmin(admin.ModelAdmin):
+    inlines = (ChapterLessonInline,)
+    ordering = ('-created_at',)
+
+
 admin.site.register(Course, CourseAdmin)
-admin.site.register(Chapter)
 admin.site.register(Lesson)
-admin.site.register(ChapterLesson)
 admin.site.register(CourseStatus)
