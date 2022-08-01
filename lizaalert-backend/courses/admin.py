@@ -12,6 +12,7 @@ class CourseAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    ordering = ('-created_at',)
     empty_value_display = "-пусто-"
 
 
@@ -22,7 +23,7 @@ class ChapterLessonInline(admin.TabularInline):
 
 
 @admin.register(Chapter)
-class ChapterLessonAdmin(admin.ModelAdmin):
+class ChapterAdmin(admin.ModelAdmin):
     inlines = (ChapterLessonInline,)
     ordering = ('-created_at',)
 
