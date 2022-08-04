@@ -3,7 +3,7 @@ from django.db.models.functions import Coalesce
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .models import Course, CourseStatus
+from .models import Course, CourseStatus, Lesson
 from .pagination import CourseSetPagination
 from .serializers import CourseSerializer, CourseStatusSerializer
 
@@ -20,9 +20,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         if user.is_authenticated:
             course = Course.objects.all().annotate(
                 course_duration=Sum('chapters__lessons__duration',
-                                    filter=Q(chapters__lessons__lesson_status='Ready')),
+                                    filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
                 lessons_count=Count('chapters__lessons',
-                                    filter=Q(chapters__lessons__lesson_status='Ready')),
+                                    filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
                 course_status=(Coalesce(Subquery(Course.objects.filter(course_volunteers__volunteer__user=user,
                                                                        id=OuterRef('id')).values(
                     'course_volunteers__status__slug'), output_field=CharField()),
@@ -31,9 +31,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return course
         course = Course.objects.all().annotate(
             course_duration=Sum('chapters__lessons__duration',
-                                filter=Q(chapters__lessons__lesson_status='Ready')),
+                                filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
             lessons_count=Count('chapters__lessons',
-                                filter=Q(chapters__lessons__lesson_status='Ready')),
+                                filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
             course_status=Value('inactive'))
         return course
 
