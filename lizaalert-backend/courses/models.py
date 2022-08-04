@@ -96,8 +96,8 @@ class Lesson(TimeStampedModel):
 
     class Meta:
         ordering = ("title",)
-        verbose_name = "урок"
-        verbose_name_plural = "урок"
+        verbose_name = "Урок"
+        verbose_name_plural = "Уроки"
 
     def __str__(self):
         return self.title
