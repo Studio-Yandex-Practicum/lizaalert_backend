@@ -7,7 +7,7 @@ from django.core.validators import MinValueValidator
 User = get_user_model()
 
 
-class TimeStampedMixin(models.Model):
+class TimeStampedModel(models.Model):
     """
     Абстрактная модель времени создания или изменения данных
 
@@ -22,7 +22,7 @@ class TimeStampedMixin(models.Model):
         abstract = True
 
 
-class Course(TimeStampedMixin):
+class Course(TimeStampedModel):
     title = models.CharField(max_length=120, verbose_name="Название курса")
     format = models.CharField(max_length=60, verbose_name="Формат курса")
     start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
@@ -53,7 +53,7 @@ class CourseStatus(models.Model):
         return f"{self.slug}"
 
 
-class Lesson(TimeStampedMixin):
+class Lesson(TimeStampedModel):
     """
     Модель урока.
 
@@ -103,7 +103,7 @@ class Lesson(TimeStampedMixin):
         return self.title
 
 
-class Chapter(TimeStampedMixin):
+class Chapter(TimeStampedModel):
     """
     Модель главы.
 
