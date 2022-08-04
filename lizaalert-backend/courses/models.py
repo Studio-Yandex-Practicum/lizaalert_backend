@@ -25,9 +25,7 @@ class TimeStampedMixin(models.Model):
 class Course(TimeStampedMixin):
     title = models.CharField(max_length=120, verbose_name="Название курса")
     format = models.CharField(max_length=60, verbose_name="Формат курса")
-    start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса",
-                                  validators=[MinValueValidator(limit_value=date.today)]
-                                  )
+    start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
     cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
     level = models.ForeignKey("users.Level", on_delete=models.PROTECT, verbose_name="Уровень", related_name="course")
