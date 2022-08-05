@@ -160,4 +160,4 @@ class ChapterLesson(models.Model):
         verbose_name_plural = "Урок"
 
     def __str__(self):
-        return f"{self.lesson.title}"
+        return f"Chapter {self.id}: {self.lesson.title}"
