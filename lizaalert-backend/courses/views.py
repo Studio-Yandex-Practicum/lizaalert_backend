@@ -17,12 +17,13 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        lesson_status = Lesson.LessonStatus.READY
         if user.is_authenticated:
             course = Course.objects.all().annotate(
                 course_duration=Sum('chapters__lessons__duration',
-                                    filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
+                                    filter=Q(chapters__lessons__lesson_status=lesson_status)),
                 lessons_count=Count('chapters__lessons',
-                                    filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
+                                    filter=Q(chapters__lessons__lesson_status=lesson_status)),
                 course_status=(Coalesce(Subquery(Course.objects.filter(course_volunteers__volunteer__user=user,
                                                                        id=OuterRef('id')).values(
                     'course_volunteers__status__slug'), output_field=CharField()),
@@ -31,9 +32,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return course
         course = Course.objects.all().annotate(
             course_duration=Sum('chapters__lessons__duration',
-                                filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
+                                filter=Q(chapters__lessons__lesson_status=lesson_status)),
             lessons_count=Count('chapters__lessons',
-                                filter=Q(chapters__lessons__lesson_status=Lesson.LessonStatus.READY)),
+                                filter=Q(chapters__lessons__lesson_status=lesson_status)),
             course_status=Value('inactive'))
         return course
 
