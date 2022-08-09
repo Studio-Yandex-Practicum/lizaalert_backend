@@ -85,6 +85,9 @@ class Location(models.Model):
         verbose_name = "Регион"
         verbose_name_plural = "Регионы"
 
+    def __str__(self):
+        return f"{self.region}"
+
 
 class Department(models.Model):
     title = models.CharField("Наименование направления", max_length=120)
@@ -126,7 +129,6 @@ class VolunteerBadge(models.Model):
 
 
 class VolunteerCourse(models.Model):
-
     volunteer = models.ForeignKey(
         "Volunteer", on_delete=models.CASCADE, related_name="volunter_courses", verbose_name="Волонтер"
     )
@@ -148,6 +150,9 @@ class VolunteerCourse(models.Model):
         constraints = (
             models.UniqueConstraint(fields=("volunteer", "course", "status"), name="unique_volunteer_course"),
         )
+
+    def __str__(self):
+        return f"{self.volunteer.user} {self.course.title}"
 
 
 class Volunteer(models.Model):
@@ -237,3 +242,6 @@ class Volunteer(models.Model):
     @property
     def level_confirmed(self):
         return self.volunteer_levels.filter(confirmed=True).order_by('-updated_at').first()
+
+    def __str__(self):
+        return f"{self.user.username}"

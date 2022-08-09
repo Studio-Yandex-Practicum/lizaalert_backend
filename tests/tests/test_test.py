@@ -1,5 +1,4 @@
 # проверяем что можем получить доступ к модулям
-from users.models import Level
 
 
 def test_db(db_conn):

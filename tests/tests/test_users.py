@@ -2,6 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from tests.tests.user_fixtures.level_fixtures import return_levels_data
+
 
 class TestLevel:
     url = reverse("level-list")
@@ -16,4 +18,4 @@ class TestLevel:
         response = user_client.get(self.url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == create_levels
+        assert response.json() == return_levels_data()
