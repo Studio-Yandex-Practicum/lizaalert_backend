@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Badge, Level, User, UserRole, Volunteer
+from .models import Badge, Level, User, UserRole, Volunteer, VolunteerCourse, Location
 
 
 class CustomUserAdmin(UserAdmin):
@@ -14,3 +14,5 @@ admin.site.register(Level)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(UserRole)
 admin.site.register(Volunteer)
+admin.site.register(VolunteerCourse)
+admin.site.register(Location)
