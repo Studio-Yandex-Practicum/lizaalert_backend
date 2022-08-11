@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Course, Chapter, Lesson, ChapterLesson, CourseStatus
+from .models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -12,7 +12,7 @@ class CourseAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    ordering = ('-created_at',)
+    ordering = ("-created_at",)
     empty_value_display = "-пусто-"
 
 
@@ -25,7 +25,7 @@ class ChapterLessonInline(admin.TabularInline):
 @admin.register(Chapter)
 class ChapterAdmin(admin.ModelAdmin):
     inlines = (ChapterLessonInline,)
-    ordering = ('-created_at',)
+    ordering = ("-created_at",)
 
 
 admin.site.register(Course, CourseAdmin)

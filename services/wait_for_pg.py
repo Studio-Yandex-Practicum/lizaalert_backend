@@ -1,6 +1,4 @@
-"""
-Check is postgres ready for work
-"""
+"""Check is postgres ready for work."""
 import logging
 import sys
 import time
@@ -15,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class DBConfig(pydantic.BaseSettings):
-    """get postgresql connection options"""
+    """Get postgresql connection options."""
 
     host: str = pydantic.Field(default="127.0.0.1", env="DB_HOST")
     db_name: str = pydantic.Field(env="DB_NAME")
@@ -33,7 +31,9 @@ def main():
     trys = 0
     while trys <= TRYS:
         try:
-            conn = psycopg2.connect(host=db_conf.host, user=db_conf.user, password=db_conf.password)
+            conn = psycopg2.connect(
+                host=db_conf.host, user=db_conf.user, password=db_conf.password
+            )
             conn.close()
             logging.info("Postgresql ready.")
             sys.exit(0)

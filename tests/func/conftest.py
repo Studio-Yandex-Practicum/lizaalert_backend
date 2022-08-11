@@ -9,7 +9,7 @@ SERVER_URL = "http://localhost:8000/admin"
 
 
 class DBConfig(pydantic.BaseSettings):
-    """get postgresql connection options"""
+    """Get postgresql connection options."""
 
     host: str = pydantic.Field(default="127.0.0.1", env="DB_HOST")
     db_name: str = pydantic.Field(env="DB_NAME")
@@ -25,7 +25,9 @@ class DBConfig(pydantic.BaseSettings):
 def db_conn():
     db_conf = DBConfig()
     try:
-        conn = psycopg2.connect(host=db_conf.host, user=db_conf.user, password=db_conf.password)
+        conn = psycopg2.connect(
+            host=db_conf.host, user=db_conf.user, password=db_conf.password
+        )
     except psycopg2.Error:
         logging.critical("Can't connect postgresql")
         sys.exit(1)

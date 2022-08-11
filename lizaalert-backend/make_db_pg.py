@@ -1,6 +1,4 @@
-"""
-Prepare db
-"""
+"""Prepare db."""
 
 import logging
 import os
@@ -22,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class DBConfig(pydantic.BaseSettings):
-    """get postgresql connection options"""
+    """Get postgresql connection options."""
 
     host: str = pydantic.Field(default="127.0.0.1", env="DB_HOST")
     db_name: str = pydantic.Field(env="DB_NAME")
@@ -37,7 +35,9 @@ class DBConfig(pydantic.BaseSettings):
 def refresh_db():
     db_conf = DBConfig()
     try:
-        conn = psycopg2.connect(host=db_conf.host, user=db_conf.user, password=db_conf.password)
+        conn = psycopg2.connect(
+            host=db_conf.host, user=db_conf.user, password=db_conf.password
+        )
     except psycopg2.Error:
         logging.critical("Can't connect postgresql")
         sys.exit(1)
@@ -61,10 +61,15 @@ def schema_migration():
     # add superuser
     from django.contrib.auth import get_user_model
 
-    User = get_user_model()
+    User = get_user_model()  # noqa: N806
 
     User.objects.create_user(
-        username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD, is_staff=True, is_active=True, is_superuser=True
+        username=USER_NAME,
+        email=USER_EMAIL,
+        password=USER_PASSWORD,
+        is_staff=True,
+        is_active=True,
+        is_superuser=True,
     )
 
 
