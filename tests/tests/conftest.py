@@ -2,12 +2,8 @@ import os
 
 if os.path.dirname(os.path.dirname(os.path.abspath(__file__))) == "/app":
     import logging
-    import sys
 
     import django
-    import psycopg2
-    import pydantic
-    import pytest
     from django.conf import settings
 
     def django_init():
@@ -24,7 +20,7 @@ if os.path.dirname(os.path.dirname(os.path.abspath(__file__))) == "/app":
     ]
 
     django_init()
-    
+
 else:
 
     pytest_plugins = [
@@ -33,4 +29,3 @@ else:
         "tests.tests.user_fixtures.level_fixtures",
         "tests.tests.user_fixtures.role_fixtures",
     ]
-
