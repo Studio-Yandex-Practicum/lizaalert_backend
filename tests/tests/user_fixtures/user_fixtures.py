@@ -60,7 +60,7 @@ def create_location():
 def create_volunteer(user, create_location):
     from users.models import Volunteer
     volunteer = Volunteer.objects.create(user=user, phone_number='+375291112233', birth_date=datetime.date.today(),
-                                        location=create_location)
+                                         location=create_location)
     return volunteer
 
 
