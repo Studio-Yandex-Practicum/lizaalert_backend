@@ -1,50 +1,41 @@
 version: '3'
 
-networks:
-  liza_alert:
-    driver: bridge
-
-
 services:
   postgres:
-    build: ./services/postgres
-    container_name: postgres
+    container_name: lizaalert_postgres
+    build: ./services/postgres/
     restart: always
-    networks:
-      - liza_alert
     ports:
-      - 15432:5432
+      - "5432:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data/
     env_file:
       - ./services/postgres/.env
 
-  admin_panel:
-    build: ./lizaalert-backend
+  backend:
+    container_name: lizaalert_backend
+    build: .
     restart: always
-    container_name: admin_panel
     env_file:
       - ./lizaalert-backend/.env
     volumes:
-      - static_volume:/home/app/admin/static
-    networks:
-      - liza_alert
+      - static_volume:/lizaalert/static/
+      - media_volume:/lizaalert/media/
     depends_on:
       - postgres
 
   nginx:
-    build: ./services/nginx
-    container_name: nginx
-    networks:
-      - liza_alert
+    container_name: lizaalert_nginx
+    build: ./services/nginx/
     volumes:
-      - static_volume:/home/app/admin/static
+      - static_volume:/var/html/static/
+      - media_volume:/var/html/media/
     ports:
-      - 8000:8000
+      - "8000:8000"
     depends_on:
-      - admin_panel
-
+      - backend
 
 volumes:
   postgres_volume:
   static_volume:
+  media_volume:
