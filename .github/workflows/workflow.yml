@@ -42,6 +42,7 @@ jobs:
 
       - name: Build and run app
         run: |
+          cp lizaalert-backend/env.sample lizaalert-backend/.env
           docker-compose up -d
           sleep 20
 
