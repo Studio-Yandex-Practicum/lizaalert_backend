@@ -62,7 +62,7 @@ def schema_migration():
     from django.contrib.auth import get_user_model
 
     User = get_user_model()
-    
+
     User.objects.create_user(
         username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD, is_staff=True, is_active=True, is_superuser=True
     )
