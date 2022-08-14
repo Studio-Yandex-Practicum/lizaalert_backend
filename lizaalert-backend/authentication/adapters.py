@@ -14,33 +14,33 @@ from rest_framework.exceptions import AuthenticationFailed
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_auto_signup_allowed(self, request, sociallogin):
-        """
-        Функция незначительно переписана, чтобы исключить 500 ошибку.
-        """
+        # Функция незначительно переписана, чтобы исключить 500 ошибку.
         auto_signup = app_settings.AUTO_SIGNUP
         if auto_signup:
             email = user_email(sociallogin.user)
             if email:
                 if account_settings.UNIQUE_EMAIL and email_address_exists(email):
                     # Мы в состоянии регистрации нового уникального SocialAccount().
-                    # Нужно создать под это нового пользователя и дать ему почту из SocialAccount().
-                    # Но оказывается, что такая почта уже существует в таблицах
-                    # EmailAddress или User, и при этом не связана ни с одним SocialAccount().
-                    # Скорее всего пользователь был создан через админку с указанием этой почты.
-                    # Выбрасываем ошибку, поскольку автоматическое разрешение таких конфликтов
-                    # не реализовано и произойдет редирект на несуществующий эндпоинт.
-                    # TODO Реализовать связывание нового соцаккаунта и существующего пользователя,
-                    # TODO считая, что мы доверяем админке, а другие пути в это состояние перекрыты.
-                    raise AuthenticationFailed(f"Пользователь с почтой {email} уже существует.")
+                    # Нужно создать под это нового пользователя и дать ему почту из
+                    # SocialAccount(). Но оказывается, что такая почта уже существует в
+                    # таблицах EmailAddress или User, и при этом не связана ни с одним
+                    # SocialAccount(). Скорее всего пользователь был создан через
+                    # админку с указанием этой почты. Выбрасываем ошибку, поскольку
+                    # автоматическое разрешение таких конфликтов не реализовано и
+                    # произойдет редирект на несуществующий эндпоинт.
+                    # TODO Реализовать связывание нового соцаккаунта и существующего
+                    # TODO пользователя, считая, что мы доверяем админке, а другие
+                    # TODO пути в это состояние перекрыты.
+                    raise AuthenticationFailed(
+                        f"Пользователь с почтой {email} уже существует."
+                    )
             elif app_settings.EMAIL_REQUIRED:
                 auto_signup = False
-        return auto_signup
+        return auto_signup  # noqa: R504
 
     def populate_user(self, request, sociallogin, data):
-        """
-        Изменен способ предзаполнения поля username нового пользователя
-        на случайно сгенерированный UUID.
-        """
+        # Изменен способ предзаполнения поля username нового пользователя
+        # на случайно сгенерированный UUID.
         username = str(uuid.uuid4())
         first_name = data.get("first_name")
         last_name = data.get("last_name")
@@ -63,10 +63,8 @@ class YandexCustomAdapter(YandexAuth2Adapter):
         authorize_url = "https://oauth.yandex.ru/authorize"
 
     def complete_login(self, request, app, token, **kwargs):
-        """
-        Изменен способ передачи токена при GET-запросе на более безопасный - через
-        header (согласно рекомендациям Yandex.API).
-        """
+        # Изменен способ передачи токена при GET-запросе на более безопасный - через
+        # header (согласно рекомендациям Yandex.API).
         resp = requests.get(
             self.profile_url,
             headers={"Authorization": "OAuth " + token.token},

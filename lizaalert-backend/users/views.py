@@ -12,5 +12,8 @@ class LevelViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ListRoles(views.APIView):
     def get(self, request):
-        results = [{"name": name, "description": description} for name, description in UserRole.Role.choices]
+        results = [
+            {"name": name, "description": description}
+            for name, description in UserRole.Role.choices
+        ]
         return Response({"results": results})
