@@ -1,20 +1,22 @@
-
-# Собирает и разворачивает на локальной машине все контейнеры, предварительно
-# удалив существующие volumes (БД, статика, медиа) и контейнеры. Применяет
-# миграции, собирает статику и создает суперпользователя.
+# Собирает и разворачивает на локальной машине все контейнеры и применят миграции,
+# предварительно удалив существующие volumes (БД, статика, медиа) и контейнеры.
 new:
 	-docker-compose down --volumes
 	docker-compose up --detach --build \
 	&& sleep 20 \
-	&& docker-compose exec backend python manage.py migrate \
-	&& docker-compose exec backend python manage.py collectstatic --no-input \
-	&& docker-compose exec backend python manage.py createsuperuser --no-input
+	&& docker-compose exec backend python manage.py migrate
 
-
-# Пересборка изменившихся контейнеров. Не трогает volumes (БД, статика, медиа).
+# Запуск с пересборкой изменившихся контейнеров. Не трогает volumes (БД, статика, медиа).
 run:
 	docker-compose up --detach --build
 
+# Собирает статику
+collect:
+	docker-compose exec backend python manage.py collectstatic --no-input
+
+# Создает суперпользователя
+superuser:
+	docker-compose exec backend python manage.py createsuperuser --no-input
 
 # Проверка кода на соответствие PEP8.
 check:
@@ -22,11 +24,9 @@ check:
 	-black --check .
 	-flake8 .
 
-
 # Запуск тестов.
 test:
-# TODO
-
+# TODO Сначала собирает контейнеры через docker-compose, потом запускает тест.
 
 # Удаляет все контейнеры и volumes.
 remove:
