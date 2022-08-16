@@ -25,15 +25,9 @@ class TimeStampedModel(models.Model):
 class Course(TimeStampedModel):
     title = models.CharField(max_length=120, verbose_name="Название курса")
     format = models.CharField(max_length=60, verbose_name="Формат курса")
-    start_date = models.DateField(
-        blank=True, null=True, verbose_name="Дата начала курса"
-    )
-    cover_path = models.FileField(
-        blank=True, null=True, verbose_name="Путь к обложке курса"
-    )
-    short_description = models.CharField(
-        max_length=120, verbose_name="Краткое описание курса"
-    )
+    start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
+    cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
+    short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
     level = models.ForeignKey(
         "users.Level",
         on_delete=models.PROTECT,
@@ -41,9 +35,7 @@ class Course(TimeStampedModel):
         related_name="course",
     )
     full_description = models.TextField(verbose_name="Полное описание курса")
-    user_created = models.ForeignKey(
-        User, on_delete=models.PROTECT, verbose_name="Создатель курса"
-    )
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
 
     class Meta:
         verbose_name = "Курс"
@@ -94,9 +86,7 @@ class Lesson(TimeStampedModel):
 
     title = models.CharField(max_length=120, verbose_name="название урока")
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
-    lesson_type = models.CharField(
-        max_length=20, verbose_name="тип урока", choices=LessonType.choices
-    )
+    lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")
     user_created = models.ForeignKey(
@@ -144,15 +134,9 @@ class Chapter(TimeStampedModel):
     текущего времени.
     """
 
-    title = models.CharField(
-        max_length=120, null=True, blank=True, verbose_name="название главы"
-    )
-    lessons = models.ManyToManyField(
-        Lesson, through="ChapterLesson", verbose_name="уроки главы"
-    )
-    course = models.ForeignKey(
-        Course, on_delete=models.PROTECT, verbose_name="Части", related_name="chapters"
-    )
+    title = models.CharField(max_length=120, null=True, blank=True, verbose_name="название главы")
+    lessons = models.ManyToManyField(Lesson, through="ChapterLesson", verbose_name="уроки главы")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, verbose_name="Части", related_name="chapters")
     user_created = models.ForeignKey(
         User,
         related_name="chapter_creator",
@@ -188,12 +172,8 @@ class ChapterLesson(models.Model):
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT)
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
-    order_number = models.PositiveSmallIntegerField(
-        "порядковый номер урока в главе", validators=[MinValueValidator(1)]
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name="дата добавления урока в главу"
-    )
+    order_number = models.PositiveSmallIntegerField("порядковый номер урока в главе", validators=[MinValueValidator(1)])
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="дата добавления урока в главу")
 
     class Meta:
         ordering = ("chapter", "order_number")

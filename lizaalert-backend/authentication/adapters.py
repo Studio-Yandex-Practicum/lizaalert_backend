@@ -31,9 +31,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     # TODO Реализовать связывание нового соцаккаунта и существующего
                     # TODO пользователя, считая, что мы доверяем админке, а другие
                     # TODO пути в это состояние перекрыты.
-                    raise AuthenticationFailed(
-                        f"Пользователь с почтой {email} уже существует."
-                    )
+                    raise AuthenticationFailed(f"Пользователь с почтой {email} уже существует.")
             elif app_settings.EMAIL_REQUIRED:
                 auto_signup = False
         return auto_signup  # noqa: R504

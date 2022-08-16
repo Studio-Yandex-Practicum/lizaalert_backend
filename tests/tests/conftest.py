@@ -26,9 +26,7 @@ class DBConfig(pydantic.BaseSettings):
 def db_conn():
     db_conf = DBConfig()
     try:
-        conn = psycopg2.connect(
-            host=db_conf.host, user=db_conf.user, password=db_conf.password
-        )
+        conn = psycopg2.connect(host=db_conf.host, user=db_conf.user, password=db_conf.password)
     except psycopg2.Error:
         logging.critical("Can't connect postgresql")
         sys.exit(1)

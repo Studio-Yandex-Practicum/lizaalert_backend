@@ -23,9 +23,7 @@ class TestCourseStatusAndLevel:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.parametrize("url, test_data", urls)
-    def test_coursestatus_list(
-        self, user_client, url, test_data, create_levels, create_statuses
-    ):
+    def test_coursestatus_list(self, user_client, url, test_data, create_levels, create_statuses):
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == test_data()
@@ -45,18 +43,14 @@ class TestCourse:
         assert response.json()["results"][0]["lessons_count"] == 2
         assert response.json()["results"][0]["course_duration"] == 3
 
-    def test_course_status_anonymous(
-        self, anonymous_client, create_chapter, create_volunteer_course
-    ):
+    def test_course_status_anonymous(self, anonymous_client, create_chapter, create_volunteer_course):
         response = anonymous_client.get(self.url)
         courses = response.json()["results"]
         course_status = [course["course_status"] == "inactive" for course in courses]
         assert response.status_code == status.HTTP_200_OK
         assert all(course_status)
 
-    def test_course_status_user(
-        self, user_client, create_chapter, create_volunteer_course
-    ):
+    def test_course_status_user(self, user_client, create_chapter, create_volunteer_course):
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"][0]["course_status"] == "active"

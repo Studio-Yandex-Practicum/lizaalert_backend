@@ -24,19 +24,13 @@ class UserRole(models.Model):
         TEACHER = "teacher", "Преподаватель"
         VOLUNTEER = "volunteer", "Волонтёр"
 
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Пользователь"
-    )
-    role = models.CharField(
-        choices=Role.choices, max_length=20, verbose_name="Роль пользователя"
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    role = models.CharField(choices=Role.choices, max_length=20, verbose_name="Роль пользователя")
 
     class Meta:
         verbose_name = "Роль пользователя"
         verbose_name_plural = "Роли пользователей"
-        constraints = (
-            models.UniqueConstraint(fields=("user", "role"), name="unique_user_role"),
-        )
+        constraints = (models.UniqueConstraint(fields=("user", "role"), name="unique_user_role"),)
 
     def __str__(self) -> str:
         return f"{self.user} ({self.role})"
@@ -48,9 +42,7 @@ class Level(models.Model):
         middle = "Бывалый", "experienced"
         professional = "Профессионал", "professional"
 
-    name = models.CharField(
-        "Наименование уровня", max_length=20, choices=LevelName.choices
-    )
+    name = models.CharField("Наименование уровня", max_length=20, choices=LevelName.choices)
     description = models.TextField(
         "Описание уровня и условия его достижения",
     )
@@ -92,11 +84,7 @@ class VolunteerLevel(models.Model):
         db_table = "volunteers_levels"
         verbose_name = "Уровень волонтера"
         verbose_name_plural = "Уровни волонтеров"
-        constraints = (
-            models.UniqueConstraint(
-                fields=("volunteer", "level"), name="unique_volunteer_level"
-            ),
-        )
+        constraints = (models.UniqueConstraint(fields=("volunteer", "level"), name="unique_volunteer_level"),)
 
 
 class Location(models.Model):
@@ -127,9 +115,7 @@ class Department(models.Model):
 
 class Badge(models.Model):
     name = models.CharField("Наименование значка", max_length=40)
-    description = models.TextField(
-        "Описание значка и условий его получения", blank=True, null=True
-    )
+    description = models.TextField("Описание значка и условий его получения", blank=True, null=True)
 
     class Meta:
         db_table = "badges"
@@ -192,9 +178,7 @@ class VolunteerCourse(models.Model):
         verbose_name = "Курс волонтера"
         verbose_name_plural = "Курсы волонтеров"
         constraints = (
-            models.UniqueConstraint(
-                fields=("volunteer", "course", "status"), name="unique_volunteer_course"
-            ),
+            models.UniqueConstraint(fields=("volunteer", "course", "status"), name="unique_volunteer_course"),
         )
 
     def __str__(self):
@@ -202,9 +186,7 @@ class VolunteerCourse(models.Model):
 
 
 class Volunteer(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь"
-    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь")
     phone_number = PhoneNumberField(verbose_name="Номер телефона", unique=True)
     birth_date = models.DateField("Дата рождения")
     location = models.ForeignKey(
@@ -222,12 +204,8 @@ class Volunteer(models.Model):
         related_name="volunteers",
         verbose_name="Направление",
     )
-    call_sign = models.CharField(
-        "Позывной на форуме", max_length=50, blank=True, null=True
-    )
-    photo = ThumbnailerImageField(
-        verbose_name="Путь к фотографии", blank=True, null=True
-    )
+    call_sign = models.CharField("Позывной на форуме", max_length=50, blank=True, null=True)
+    photo = ThumbnailerImageField(verbose_name="Путь к фотографии", blank=True, null=True)
     level = models.ManyToManyField(
         Level,
         through=VolunteerLevel,

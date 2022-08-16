@@ -73,13 +73,7 @@ def create_course(user, create_level):
 def create_chapter(user, create_lesson, create_course):
     from courses.models import Chapter, ChapterLesson
 
-    chapter = Chapter.objects.create(
-        title="Глава", user_created=user, user_modifier=user, course=create_course[0]
-    )
-    ChapterLesson.objects.create(
-        chapter=chapter, lesson=create_lesson[0], order_number=1
-    )
-    ChapterLesson.objects.create(
-        chapter=chapter, lesson=create_lesson[1], order_number=2
-    )
+    chapter = Chapter.objects.create(title="Глава", user_created=user, user_modifier=user, course=create_course[0])
+    ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[0], order_number=1)
+    ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[1], order_number=2)
     return chapter

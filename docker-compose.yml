@@ -3,10 +3,8 @@ version: '3'
 services:
   postgres:
     container_name: lizaalert_postgres
-    build: ./services/postgres/
+    image: postgres:14-alpine
     restart: always
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data/
     env_file:

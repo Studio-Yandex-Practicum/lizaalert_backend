@@ -9,9 +9,7 @@ env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = env.str(
-    "SECRET_KEY", "django-insecure-71lo1($*i%(=yl@51%3$1hd@!g-f=tojdt+c5agn$-oin+yu5w"
-)
+SECRET_KEY = env.str("SECRET_KEY", "django-insecure-71lo1($*i%(=yl@51%3$1hd@!g-f=tojdt+c5agn$-oin+yu5w")
 
 DEBUG = env.bool("DEBUG", False)
 
@@ -96,8 +94,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation"
-        ".UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation" ".UserAttributeSimilarityValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation" ".MinimumLengthValidator",
@@ -143,18 +140,14 @@ SIMPLE_JWT = {
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None
-REST_AUTH_SERIALIZERS = {
-    "JWT_SERIALIZER": "authentication.serializers.CustomJWTSerializer"
-}
+REST_AUTH_SERIALIZERS = {"JWT_SERIALIZER": "authentication.serializers.CustomJWTSerializer"}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_ADAPTER = "authentication.adapters.AccountAdapter"
 SOCIALACCOUNT_ADAPTER = "authentication.adapters.SocialAccountAdapter"
 SOCIALACCOUNT_PROVIDERS = {
     "yandex": {
         "APP": {
-            "client_id": env.str(
-                "YANDEX_CLIENT_ID", "a0693bfc6f9a4a8593e9cfc3a6b34c66"
-            ),
+            "client_id": env.str("YANDEX_CLIENT_ID", "a0693bfc6f9a4a8593e9cfc3a6b34c66"),
             "secret": env.str("YANDEX_SECRET", "d449d272d3f14c308610d3f65e5d3d1f"),
         },
         "VERIFIED_EMAIL": True,

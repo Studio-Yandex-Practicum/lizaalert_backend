@@ -7,7 +7,7 @@ description = ""
 authors = ["Lizaalert-backend-team"]
 
 [tool.poetry.dependencies]
-python = "^3.7.12"
+python = "^3.7"
 Django = "^3.2.12"
 djangorestframework = "^3.13.1"
 environs = "^9.5.0"
@@ -26,7 +26,7 @@ djangorestframework-simplejwt = "^5.1.0"
 flake8 = "^4.0.1"
 isort = "^5.10.1"
 black = "^22.3.0"
-pre-commit = "^2.18.1"
+pre-commit = "^2.20"
 pytest = "^7.1.2"
 pytest-django = "^4.5.2"
 requests = "^2.27.1"
@@ -42,6 +42,6 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ["py310"]
 extend-exclude = '\/migrations\/'

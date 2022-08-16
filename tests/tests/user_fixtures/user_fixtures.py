@@ -5,16 +5,12 @@ import pytest
 
 @pytest.fixture
 def user(django_user_model):
-    return django_user_model.objects.create_user(
-        username="TestUser", password="1234567"
-    )
+    return django_user_model.objects.create_user(username="TestUser", password="1234567")
 
 
 @pytest.fixture
 def user_2(django_user_model):
-    return django_user_model.objects.create_user(
-        username="TestUser2", password="1234567"
-    )
+    return django_user_model.objects.create_user(username="TestUser2", password="1234567")
 
 
 @pytest.fixture
@@ -71,10 +67,7 @@ def create_volunteer(user, create_location):
 def create_level():
     from users.models import Level
 
-    levels = [
-        Level.objects.create(name=choice[1], description=choice[0])
-        for choice in Level.LevelName.choices
-    ]
+    levels = [Level.objects.create(name=choice[1], description=choice[0]) for choice in Level.LevelName.choices]
     return levels
 
 
@@ -82,6 +75,4 @@ def create_level():
 def create_volunteer_course(create_volunteer, create_course, create_statuses):
     from users.models import VolunteerCourse
 
-    VolunteerCourse.objects.create(
-        volunteer=create_volunteer, course=create_course[0], status=create_statuses[0]
-    )
+    VolunteerCourse.objects.create(volunteer=create_volunteer, course=create_course[0], status=create_statuses[0])
