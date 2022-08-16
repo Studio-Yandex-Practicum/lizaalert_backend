@@ -7,7 +7,7 @@ description = ""
 authors = ["Lizaalert-backend-team"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.10"
 Django = "^3.2.12"
 djangorestframework = "^3.13.1"
 environs = "^9.5.0"
