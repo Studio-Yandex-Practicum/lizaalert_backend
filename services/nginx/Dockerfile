@@ -1,5 +1,5 @@
 # pull official base image
-FROM nginx:1.20.2-alpine
+FROM nginx:1.22-alpine
 # removing the default config and copying the working
 RUN rm /etc/nginx/conf.d/default.conf
 COPY ./nginx.conf /etc/nginx.conf

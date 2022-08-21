@@ -1,18 +1,18 @@
-from datetime import date
-
 from django.contrib.auth import get_user_model
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 
 User = get_user_model()
 
 
 class TimeStampedModel(models.Model):
     """
-    Абстрактная модель времени создания или изменения данных
+    Абстрактная модель времени создания или изменения данных.
 
-    created_at* - дата создания записи об уроке, автоматическое проставление текущего времени
-    updated_at* - дата обновления записи об уроке, автоматическое проставление текущего времени.
+    created_at* - дата создания записи об уроке, автоматическое проставление
+    текущего времени
+    updated_at* - дата обновления записи об уроке, автоматическое проставление
+    текущего времени.
     """
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -28,7 +28,12 @@ class Course(TimeStampedModel):
     start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
     cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
-    level = models.ForeignKey("users.Level", on_delete=models.PROTECT, verbose_name="Уровень", related_name="course")
+    level = models.ForeignKey(
+        "users.Level",
+        on_delete=models.PROTECT,
+        verbose_name="Уровень",
+        related_name="course",
+    )
     full_description = models.TextField(verbose_name="Полное описание курса")
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
 
@@ -91,16 +96,27 @@ class Lesson(TimeStampedModel):
 
     title = models.CharField(max_length=120, verbose_name="название урока")
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
-    lesson_type = models.CharField(max_length=20, verbose_name="тип урока",
-                                   choices=LessonType.choices)
+    lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")
-    user_created = models.ForeignKey(User, related_name="lesson_creator", on_delete=models.PROTECT,
-                                     verbose_name="пользователь, создавший урок")
-    user_modifier = models.ForeignKey(User, related_name="lesson_editor", on_delete=models.PROTECT,
-                                      verbose_name="пользователь, внёсший изменения в урок")
-    lesson_status = models.CharField(max_length=20, verbose_name="статус урока", choices=LessonStatus.choices,
-                                     default=LessonStatus.DRAFT)
+    user_created = models.ForeignKey(
+        User,
+        related_name="lesson_creator",
+        on_delete=models.PROTECT,
+        verbose_name="пользователь, создавший урок",
+    )
+    user_modifier = models.ForeignKey(
+        User,
+        related_name="lesson_editor",
+        on_delete=models.PROTECT,
+        verbose_name="пользователь, внёсший изменения в урок",
+    )
+    lesson_status = models.CharField(
+        max_length=20,
+        verbose_name="статус урока",
+        choices=LessonStatus.choices,
+        default=LessonStatus.DRAFT,
+    )
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
 
@@ -122,17 +138,27 @@ class Chapter(TimeStampedModel):
     lessons - уроки, входящие в главу
     user_created* - пользователь создавший главу
     user_modified* - пользователь последний редактировавший главу
-    created_at* - дата создания записи о главе, автоматическое проставление текущего времени
-    updated_at* - дата обновления записи о главе, автоматическое проставление текущего времени.
+    created_at* - дата создания записи о главе, автоматическое проставление
+    текущего времени
+    updated_at* - дата обновления записи о главе, автоматическое проставление
+    текущего времени.
     """
 
     title = models.CharField(max_length=120, null=True, blank=True, verbose_name="название главы")
-    lessons = models.ManyToManyField(Lesson, through='ChapterLesson', verbose_name="уроки главы")
+    lessons = models.ManyToManyField(Lesson, through="ChapterLesson", verbose_name="уроки главы")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, verbose_name="Части", related_name="chapters")
-    user_created = models.ForeignKey(User, related_name="chapter_creator", on_delete=models.PROTECT,
-                                     verbose_name="пользователь, создавший главу")
-    user_modifier = models.ForeignKey(User, related_name="chapter_editor", on_delete=models.PROTECT,
-                                      verbose_name="пользователь, внёсший изменения в главу")
+    user_created = models.ForeignKey(
+        User,
+        related_name="chapter_creator",
+        on_delete=models.PROTECT,
+        verbose_name="пользователь, создавший главу",
+    )
+    user_modifier = models.ForeignKey(
+        User,
+        related_name="chapter_editor",
+        on_delete=models.PROTECT,
+        verbose_name="пользователь, внёсший изменения в главу",
+    )
 
     class Meta:
         ordering = ("title",)
@@ -144,7 +170,7 @@ class Chapter(TimeStampedModel):
 
 
 class ChapterLesson(models.Model):
-    '''
+    """
     Модель связи глава-урок.
 
     Поля модели:
@@ -152,19 +178,20 @@ class ChapterLesson(models.Model):
     lesson* - тип ForeignKey к модели курса Lesson
     order_number* - порядковый номер урока в главе >= 1
     created_at* - дата создания записи о связи глава-урок.
-    '''
+    """
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT)
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
-    order_number = models.PositiveSmallIntegerField("порядковый номер урока в главе",
-                                                    validators=[MinValueValidator(1)])
+    order_number = models.PositiveSmallIntegerField("порядковый номер урока в главе", validators=[MinValueValidator(1)])
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="дата добавления урока в главу")
 
     class Meta:
         ordering = ("chapter", "order_number")
         constraints = [
-            models.UniqueConstraint(fields=["chapter", "lesson", "order_number"],
-                                    name="unique_chapter_lesson")
+            models.UniqueConstraint(
+                fields=["chapter", "lesson", "order_number"],
+                name="unique_chapter_lesson",
+            )
         ]
         verbose_name = "Урок"
         verbose_name_plural = "Урок"

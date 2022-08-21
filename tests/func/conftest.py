@@ -9,7 +9,7 @@ SERVER_URL = "http://localhost:8000/admin"
 
 
 class DBConfig(pydantic.BaseSettings):
-    """get postgresql connection options"""
+    """Get postgresql connection options."""
 
     host: str = pydantic.Field(default="127.0.0.1", env="DB_HOST")
     db_name: str = pydantic.Field(env="DB_NAME")
