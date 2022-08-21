@@ -17,10 +17,7 @@ from .serializers import YandexLoginSerializer
 
 
 class YandexLoginView(View):
-    """
-    Перенаправляет пользователя в авторизационный сервис для получения
-    кода подтверждения.
-    """
+    """Перенаправляет пользователя в авторизационный сервис для получения кода подтверждения."""
 
     provider = YandexCustomProvider
     adapter_class = YandexCustomAdapter
@@ -46,14 +43,13 @@ class YandexLoginView(View):
 
 
 class YandexLoginCallbackView(SocialLoginView):
-    """
+    """Создает access и refresh JWT-токены на основе ответа от Яндекса.
+
     Принимает код подтверждения от пользователя, затем меняет его
     на access_token в авторизационном сервисе. Дальше с помощью
-    этого access_token`а получает данные пользователя.
-
-    На основе полученных данных генерирует access и refresh JWT-токены
-    пользователю, если тот есть в БД. Иначе сначала создает нового
-    пользователя.
+    этого access_token`а получает данные пользователя. На основе полученных
+    данных генерирует access и refresh JWT-токены пользователю, если тот есть в БД.
+    Иначе сначала создает нового пользователя.
     """
 
     adapter_class = YandexCustomAdapter
@@ -73,9 +69,7 @@ class YandexLoginCallbackView(SocialLoginView):
 
 
 class LogoutView(APIView):
-    """
-    Удаляет session куки у пользователя.
-    """
+    """Удаляет session куки у пользователя."""
 
     permission_classes = (IsAuthenticated,)
 

@@ -6,12 +6,9 @@ from rest_framework.reverse import reverse
 
 
 class CustomJWTSerializer(serializers.Serializer):
-    """
-    Сериалайзер по умолчанию заменен на этот, чтобы исключить
-    лишнюю информацию в ответе и возвращать только access_token и
-    refresh_token.
-    """
-
+    # Сериалайзер по умолчанию заменен на этот, чтобы исключить
+    # лишнюю информацию в ответе и возвращать только access_token и
+    # refresh_token.
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
 

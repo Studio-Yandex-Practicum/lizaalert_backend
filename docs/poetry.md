@@ -12,9 +12,9 @@
 ### Способы добавления/удаления библиотек:
 Есть два рабочих способа добавления или удаления новой библиотеки  (обратите внимание, версии лучше указывать полностью фиксированные):  
 1) Через командную строку, например:  
-   `poetry add gunicorn="20.1.0" django="3.2.12"`
+   `poetry add gunicorn="^20.1.0" django="^3.2.12"`
 
-   `poetry add --dev flake8="4.0.1"`
+   `poetry add --dev flake8="^4.0.1"`
  
    `poetry remove flake8`  
   
@@ -23,10 +23,6 @@
 Например, можно добавить и удалить мелкую библиотеку без зависимостей:  
     `poetry add pycowsay && poetry remove pycowsay`
   
-#### Создание requirements.txt из poetry.lock 
-Это необходимо выполнять после любого изменения зависимостей, чтобы поддерживать в согласованном состоянии:  
-    `poetry export --without-hashes > ./lizaalert-backend/requirements.txt`
-
 
 #### Внимание!  
 **НЕ** используйте следующие команды, т.к. они полностью обновляют lock файл:  
@@ -37,8 +33,7 @@
 ### Концепция разрешения merge конфликтов:   
 1) 
 - ***poetry.lock*** - ВСЕГДА берем в неизменном виде из сливаемой ветки.    
-- ***pyproject.toml*** - можно взять в неизменном виде, а можно смержить, воркфлоу  отличается незначительно (об этом ниже).    
-- ***requirements.txt*** - без разницы, т.к. все равно нужно будет создать новый.   
+- ***pyproject.toml*** - можно взять в неизменном виде, а можно смержить, воркфлоу  отличается незначительно (об этом ниже).
   
 2) 
 - Если *pyproject.toml* взяли в неизменном виде, то нужно добавить свои библиотеки описанным выше первым способом:    
@@ -46,12 +41,7 @@
  - Если *pyproject.toml* смержили, т.е. в нем уже перечислены ваши добавленные 
    библиотеки, то применяем второй способ:   
    `poetry add pycowsay && poetry remove pycowsay`  
-  
-3) 
-- Создаем requirements.txt:  
-  
-   `poetry export --without-hashes > ./lizaalert-backend/requirements.txt`  
-  
+
   
  #### Один из возможных примеров разрешения merge конфликта:    
  `git merge main` *(сливаем ветку main к себе, возник конфликт)*    
@@ -59,7 +49,6 @@
 
  `...` *(разрешаем конфликты в других файлах и в pyproject.toml)*    
 
- `poetry add pycowsay && poetry remove pycowsay`    
- `poetry export --without-hashes > ./lizaalert-backend/requirements.txt`    
+ `poetry add pycowsay && poetry remove pycowsay`
  `git add .`    
 `git merge --continue` *(коммитим)*
