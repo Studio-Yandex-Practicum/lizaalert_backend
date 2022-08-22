@@ -6,7 +6,4 @@ from .views import LevelViewSet, ListRoles
 router = DefaultRouter()
 router.register(r"level", LevelViewSet, basename="level")
 
-urlpatterns = [
-    path("", include(router.urls)),
-    path("roles/", ListRoles.as_view())
-]
+urlpatterns = [path("", include(router.urls)), path("roles/", ListRoles.as_view())]

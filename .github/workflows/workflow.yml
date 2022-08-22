@@ -3,17 +3,19 @@ on:
   push:
     branches:
       - master
+      - dev
   pull_request:
 
 jobs:
-  lint:
-    name: Run Linters
+  check:
+    name: Check
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]  # ["3.8", "3.9", "3.10"]
+        python-version: ["3.10"]
+
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -31,34 +33,30 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Flake8 check
-        run: poetry run flake8
+        run: poetry run flake8 .
 
-      - name: Black (check only)
+      - name: Black check
         run: poetry run black --check .
 
-      - name: isort (check only)
+      - name: Isort check
         run: poetry run isort --check-only --skip-gitignore .
 
-
-  tests:
-    name: Run Tests
+  test:
+    name: Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10"]
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Build image
-      run: docker-compose -f docker-compose.test.yml build
-    
-    - name: Run Postgres
-      run: docker-compose -f docker-compose.test.yml up -d postgres
+      - name: Build and run app
+        run: |
+          cp lizaalert-backend/env.sample lizaalert-backend/.env
+          cp services/postgres/env.sample services/postgres/.env
+          docker-compose up -d
+          sleep 20
 
-    - name: Wait Postgres
-      uses: jakejarvis/wait-action@master
-      with:
-        time: "20s"
-
-    - name: Run tests
-      run: docker-compose -f docker-compose.test.yml run --rm tests
+      - name: Run tests
+        run: docker-compose exec -T backend pytest

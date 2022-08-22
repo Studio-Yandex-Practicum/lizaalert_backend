@@ -45,21 +45,28 @@ def anonymous_client():
 @pytest.fixture()
 def create_location():
     from users.models import Location
-    location = Location.objects.create(region='Москва')
+
+    location = Location.objects.create(region="Москва")
     return location
 
 
 @pytest.fixture()
 def create_volunteer(user, create_location):
     from users.models import Volunteer
-    volunteer = Volunteer.objects.create(user=user, phone_number='+375291112233', birth_date=datetime.date.today(),
-                                        location=create_location)
+
+    volunteer = Volunteer.objects.create(
+        user=user,
+        phone_number="+375291112233",
+        birth_date=datetime.date.today(),
+        location=create_location,
+    )
     return volunteer
 
 
 @pytest.fixture()
 def create_level():
     from users.models import Level
+
     levels = [Level.objects.create(name=choice[1], description=choice[0]) for choice in Level.LevelName.choices]
     return levels
 
@@ -67,5 +74,5 @@ def create_level():
 @pytest.fixture()
 def create_volunteer_course(create_volunteer, create_course, create_statuses):
     from users.models import VolunteerCourse
-    VolunteerCourse.objects.create(volunteer=create_volunteer, course=create_course[0], status=create_statuses[0])
 
+    VolunteerCourse.objects.create(volunteer=create_volunteer, course=create_course[0], status=create_statuses[0])
