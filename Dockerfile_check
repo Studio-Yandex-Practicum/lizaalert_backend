@@ -1,8 +1,0 @@
-FROM la_base_image:latest
-
-COPY setup.cfg app/setup.cfg
-COPY lizaalert-backend/ /app/lizaalert-backend/
-COPY services/ app/services/
-COPY tests/ /app/tests/
-
-ENTRYPOINT flake8

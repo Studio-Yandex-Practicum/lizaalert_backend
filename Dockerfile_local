@@ -1,7 +1,0 @@
-FROM la_base_image:latest
-
-COPY services/wait_for_pg.py /app/wait_for_pg.py
-COPY lizaalert-backend /app/
-COPY tests/tests/ /app/tests
-
-ENTRYPOINT python3 wait_for_pg.py; python3 make_db_pg.py; python3 manage.py runserver
