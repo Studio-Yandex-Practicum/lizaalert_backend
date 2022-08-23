@@ -27,7 +27,7 @@ check:
 
 # Запуск тестов.
 test:
-# TODO Сначала собирает контейнеры через docker-compose, потом запускает тест.
+	docker-compose exec backend pytest tests/
 
 # Удаляет все контейнеры и volumes.
 remove:

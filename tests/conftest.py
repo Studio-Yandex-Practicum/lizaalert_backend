@@ -15,8 +15,8 @@ def django_init():
 django_init()
 
 pytest_plugins = [
-    "tests.tests.user_fixtures.user_fixtures",
-    "tests.tests.user_fixtures.course_fixtures",
-    "tests.tests.user_fixtures.level_fixtures",
-    "tests.tests.user_fixtures.role_fixtures",
+    "tests.user_fixtures.user_fixtures",
+    "tests.user_fixtures.course_fixtures",
+    "tests.user_fixtures.level_fixtures",
+    "tests.user_fixtures.role_fixtures",
 ]

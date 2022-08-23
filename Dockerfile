@@ -27,8 +27,7 @@ RUN poetry config virtualenvs.create false \
 
 COPY pytest.ini .
 COPY setup.cfg .
-COPY conftest.py .
-COPY tests/ .
+COPY tests/ tests/
 COPY lizaalert-backend .
 
 CMD ["gunicorn", "-c", "/lizaalert/gunicorn_conf.py", "settings.wsgi"]
