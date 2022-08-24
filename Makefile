@@ -21,9 +21,9 @@ superuser:
 
 # Проверка кода на соответствие PEP8.
 check:
-	-isort --check .
-	-black --check .
-	-flake8 .
+	docker-compose exec backend isort --check .
+	docker-compose exec backend black --check .
+	docker-compose exec backend flake8 .
 
 # Запуск тестов.
 test:

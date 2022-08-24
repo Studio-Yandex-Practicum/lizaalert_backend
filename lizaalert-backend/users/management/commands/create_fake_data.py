@@ -2,7 +2,7 @@ from courses.course_factory import LessonWith3ChapterFactory
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from users.models import Level
-from users.user_factory import UserFactory, LevelFactory
+from users.user_factory import LevelFactory, UserFactory
 
 User = get_user_model()
 

@@ -1,6 +1,5 @@
-import os
-
 import logging
+import os
 
 import django
 from django.conf import settings
@@ -11,6 +10,7 @@ def django_init():
     django.setup()
     if not settings.configured:
         logging.critical("Can't load django settings !")
+
 
 django_init()
 

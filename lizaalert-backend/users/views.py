@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import views, viewsets, mixins, permissions
+from rest_framework import mixins, permissions, views, viewsets
 from rest_framework.response import Response
 
-from .models import Level, UserRole, User
+from .models import Level, User, UserRole
 from .serializers import LevelSerializer, UserRoleSerializer
 
 

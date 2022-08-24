@@ -1,5 +1,5 @@
-from django.db import models
 import pytest
+from django.db import models
 
 
 class TestRole(models.TextChoices):

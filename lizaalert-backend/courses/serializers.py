@@ -20,4 +20,3 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'level', 'short_description', 'lessons_count', 'course_duration',
                   'course_status', 'cover_path'
                   )
-

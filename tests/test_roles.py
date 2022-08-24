@@ -1,6 +1,5 @@
 import pytest
-
-from users.models import UserRole, User
+from users.models import User, UserRole
 
 
 class TestRoleAPI:
