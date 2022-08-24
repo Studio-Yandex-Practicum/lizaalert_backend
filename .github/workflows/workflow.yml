@@ -59,4 +59,4 @@ jobs:
           sleep 20
 
       - name: Run tests
-        run: docker-compose exec -T bacckend pytest tests/
+        run: docker-compose exec -T backend pytest tests/
