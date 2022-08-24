@@ -29,6 +29,7 @@ def token(user):
 @pytest.fixture
 def user_client(token):
     from rest_framework.test import APIClient
+
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token["access"]}')
     return client
@@ -60,8 +61,9 @@ def create_location():
 def create_volunteer(user, create_location):
     from users.models import Volunteer
 
-    volunteer = Volunteer.objects.create(user=user, phone_number='+375291112233', birth_date=datetime.date.today(),
-                                         location=create_location)
+    volunteer = Volunteer.objects.create(
+        user=user, phone_number="+375291112233", birth_date=datetime.date.today(), location=create_location
+    )
     return volunteer
 
 

@@ -17,8 +17,9 @@ class ListRoles(views.APIView):
         return Response({"results": results})
 
 
-class UserRoleViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin,
-                      mixins.ListModelMixin, mixins.DestroyModelMixin):
+class UserRoleViewSet(
+    viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin
+):
     serializer_class = UserRoleSerializer
     permission_classes = [permissions.AllowAny]
 

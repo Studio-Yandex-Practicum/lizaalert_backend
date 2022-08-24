@@ -29,10 +29,17 @@ def return_course_data():
 def create_lesson(user):
     from courses.models import Lesson
 
-    lessons = [Lesson.objects.create(title=f'Урок{i}', lesson_type=Lesson.LessonType.choices[0][0],
-                                     duration=i, user_created=user, user_modifier=user,
-                                     lesson_status=Lesson.LessonStatus.choices[1][0])
-               for i in range(1, 3)]
+    lessons = [
+        Lesson.objects.create(
+            title=f"Урок{i}",
+            lesson_type=Lesson.LessonType.choices[0][0],
+            duration=i,
+            user_created=user,
+            user_modifier=user,
+            lesson_status=Lesson.LessonStatus.choices[1][0],
+        )
+        for i in range(1, 3)
+    ]
 
     return lessons
 
@@ -42,10 +49,24 @@ def create_course(user, create_level):
     from courses.models import Course
 
     start_date = datetime.date.today() + datetime.timedelta(days=3)
-    course1 = Course.objects.create(title='Course1', format='Курс', start_date=start_date, short_description='Курс',
-                                    level=create_level[0], user_created=user, full_description='Курс')
-    course2 = Course.objects.create(title='Course2', format='Курс', start_date=start_date, short_description='Курс',
-                                    level=create_level[1], user_created=user, full_description='Курс', )
+    course1 = Course.objects.create(
+        title="Course1",
+        format="Курс",
+        start_date=start_date,
+        short_description="Курс",
+        level=create_level[0],
+        user_created=user,
+        full_description="Курс",
+    )
+    course2 = Course.objects.create(
+        title="Course2",
+        format="Курс",
+        start_date=start_date,
+        short_description="Курс",
+        level=create_level[1],
+        user_created=user,
+        full_description="Курс",
+    )
     return course1, course2
 
 

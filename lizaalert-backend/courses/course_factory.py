@@ -54,17 +54,21 @@ class ChapterLessonFactory(factory.django.DjangoModelFactory):
 
 class LessonWithChapterFactory(LessonFactory):
     membership = factory.RelatedFactory(
-        ChapterLessonFactory, factory_related_name="lesson",
+        ChapterLessonFactory,
+        factory_related_name="lesson",
     )
 
 
 class LessonWith3ChapterFactory(ChapterFactory):
     membership1 = factory.RelatedFactory(
-        ChapterLessonFactory, factory_related_name="chapter",
+        ChapterLessonFactory,
+        factory_related_name="chapter",
     )
     membership2 = factory.RelatedFactory(
-        ChapterLessonFactory, factory_related_name="chapter",
+        ChapterLessonFactory,
+        factory_related_name="chapter",
     )
     membership3 = factory.RelatedFactory(
-        ChapterLessonFactory, factory_related_name="chapter",
+        ChapterLessonFactory,
+        factory_related_name="chapter",
     )
