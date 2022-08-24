@@ -1,7 +1,6 @@
 import factory
 from django.contrib.auth import get_user_model
-
-from .models import Level, Location, Volunteer
+from users.models import Level, Location, Volunteer
 
 
 User = get_user_model()
