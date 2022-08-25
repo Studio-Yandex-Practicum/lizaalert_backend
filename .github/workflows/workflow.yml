@@ -39,7 +39,7 @@ jobs:
         run: poetry run black --check .
 
       - name: Isort check
-        run: poetry run isort --check-only --skip-gitignore .
+        run: poetry run isort --profile black --no-lines-before LOCALFOLDER --check-only --skip-gitignore .
 
   test:
     name: Test
