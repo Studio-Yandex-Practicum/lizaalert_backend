@@ -1,6 +1,7 @@
 from rest_framework import serializers
+from rest_framework.fields import ReadOnlyField
 
-from .models import Course, CourseStatus, Chapter, Lesson
+from .models import Course, CourseStatus, Chapter, Lesson, ChapterLesson
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
@@ -26,23 +27,27 @@ class CourseSerializer(CourseCommonFieldsMixin):
 
 class LessonInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка уроков курса"""
+    lesson_type = ReadOnlyField(source='lesson.lesson_type')
+    lesson_status = ReadOnlyField(source='lesson.lesson_status')
+    duration = ReadOnlyField(source='lesson.duration')
+    title = ReadOnlyField(source='lesson.title')
 
     class Meta:
-        model = Lesson
-        fields = ('lesson_type', 'lesson_status',)
+        model = ChapterLesson
+        fields = ('id', 'order_number', 'lesson_type', 'lesson_status', 'duration', 'title', )
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка частей курса"""
-    lessons = LessonInlineSerializer(read_only=True, many=True)
+    lessons = LessonInlineSerializer(source='chapterlesson_set', read_only=True, many=True)
 
     class Meta:
         model = Chapter
-        fields = ('title', 'lessons')
+        fields = ('title', 'lessons', )
 
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
-    chapters = ChapterInlineSerializer(read_only=True, many=True)
+    chapters = ChapterInlineSerializer(many=True)
 
     class Meta:
         model = Course
