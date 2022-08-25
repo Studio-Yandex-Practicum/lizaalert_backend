@@ -1,6 +1,7 @@
 import random
 
 import factory.fuzzy
+
 from courses.models import Chapter, ChapterLesson, Course, Lesson
 from users import models
 
