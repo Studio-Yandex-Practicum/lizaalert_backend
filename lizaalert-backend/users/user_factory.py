@@ -1,9 +1,7 @@
-"""Factories to help in tests."""
-
-import factory.fuzzy
+import factory
 from django.contrib.auth import get_user_model
 
-from .models import Location, Volunteer, Level
+from users.models import Level, Location, Volunteer
 
 User = get_user_model()
 factory.Faker._DEFAULT_LOCALE = "en_US"
@@ -14,6 +12,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         """Factory configuration."""
+
         model = User
 
     first_name = factory.Faker("first_name")

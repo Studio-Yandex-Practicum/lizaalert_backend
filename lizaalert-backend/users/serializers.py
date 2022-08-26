@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import Badge, Location, Level, Volunteer
+from .models import Badge, Location, Level, Volunteer, UserRole
 
 
 User = get_user_model()
@@ -86,3 +86,11 @@ class LevelSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         return obj.get_name_display()
+
+
+class UserRoleSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = UserRole
+        fields = ["id", "role", "user"]

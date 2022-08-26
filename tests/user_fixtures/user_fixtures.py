@@ -2,6 +2,8 @@ import datetime
 
 import pytest
 
+from users.models import UserRole
+
 
 @pytest.fixture
 def user(django_user_model):
@@ -35,6 +37,12 @@ def user_client(token):
 
 
 @pytest.fixture
+def user_admin_teacher_role(user, role_admin, role_teacher):
+    UserRole.objects.create(user=user, role=role_admin)
+    UserRole.objects.create(user=user, role=role_teacher)
+
+
+@pytest.fixture
 def anonymous_client():
     from rest_framework.test import APIClient
 
@@ -55,10 +63,7 @@ def create_volunteer(user, create_location):
     from users.models import Volunteer
 
     volunteer = Volunteer.objects.create(
-        user=user,
-        phone_number="+375291112233",
-        birth_date=datetime.date.today(),
-        location=create_location,
+        user=user, phone_number="+375291112233", birth_date=datetime.date.today(), location=create_location
     )
     return volunteer
 
