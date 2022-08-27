@@ -46,7 +46,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
 
 class ChapterInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка частей курса."""
-    
+
     lessons = LessonInlineSerializer(source='chapterlesson_set', read_only=True, many=True)
 
     class Meta:
