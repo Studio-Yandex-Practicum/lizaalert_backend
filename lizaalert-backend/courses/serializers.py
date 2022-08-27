@@ -19,9 +19,16 @@ class CourseStatusSerializer(serializers.ModelSerializer):
 class CourseSerializer(CourseCommonFieldsMixin):
     class Meta:
         model = Course
-        fields = ('id', 'title', 'level', 'short_description', 'lessons_count', 'course_duration',
-                  'course_status', 'cover_path'
-                  )
+        fields = (
+            "id",
+            "title",
+            "level",
+            "short_description",
+            "lessons_count",
+            "course_duration",
+            "course_status",
+            "cover_path",
+        )
 
 
 class LessonInlineSerializer(serializers.ModelSerializer):
@@ -42,7 +49,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chapter
-        fields = ('title', 'lessons', )
+        fields = ('id', 'title', 'lessons', )
 
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
