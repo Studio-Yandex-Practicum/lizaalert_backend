@@ -1,3 +1,4 @@
+import datetime
 import random
 
 import factory.fuzzy
@@ -14,6 +15,10 @@ class CourseFactory(factory.django.DjangoModelFactory):
     format = factory.Sequence(lambda n: "Курс{}".format(n))
     level = factory.fuzzy.FuzzyChoice(models.Level.objects.all())
     cover_path = factory.django.ImageField()
+    start_date = factory.fuzzy.FuzzyDate(
+        start_date=datetime.date.today() - datetime.timedelta(days=5),
+        end_date=datetime.date.today() + datetime.timedelta(days=100),
+    )
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
     user_created = factory.fuzzy.FuzzyChoice(models.User.objects.all())
