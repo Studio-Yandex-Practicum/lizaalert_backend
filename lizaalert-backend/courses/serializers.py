@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Course, CourseStatus, Chapter, ChapterLesson
+from .models import Chapter, ChapterLesson, Course, CourseStatus
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):

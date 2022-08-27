@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import Course, CourseStatus, Lesson
 from .pagination import CourseSetPagination
-from .serializers import CourseSerializer, CourseStatusSerializer, CourseDetailSerializer
+from .serializers import CourseDetailSerializer, CourseSerializer, CourseStatusSerializer
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
