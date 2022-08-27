@@ -14,6 +14,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         """Factory configuration."""
+
         model = User
 
     first_name = factory.Faker("first_name")
