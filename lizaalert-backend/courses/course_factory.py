@@ -1,9 +1,9 @@
-"""Factories to help in tests."""
 import random
 import datetime
 
 import factory.fuzzy
-from courses.models import Course, Lesson, ChapterLesson, Chapter
+
+from courses.models import Chapter, ChapterLesson, Course, Lesson
 from users import models
 
 

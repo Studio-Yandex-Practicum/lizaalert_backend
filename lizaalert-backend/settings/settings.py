@@ -21,7 +21,16 @@ ALLOWED_HOSTS = env.list(
         "localhost",
     ],
 )
-CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://0.0.0.0:8000"]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:80",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:80",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -35,6 +44,7 @@ INSTALLED_APPS = [
     "easy_thumbnails",
     "phonenumber_field",
     "drf_yasg",
+    "corsheaders",
     # 3-rd party authentication apps
     "allauth",
     "allauth.account",
@@ -51,6 +61,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",

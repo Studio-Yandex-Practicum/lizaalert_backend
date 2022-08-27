@@ -40,6 +40,7 @@ def create_lesson(user):
         )
         for i in range(1, 3)
     ]
+
     return lessons
 
 
