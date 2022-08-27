@@ -1,3 +1,4 @@
+
 # Собирает и разворачивает на локальной машине все контейнеры и применят миграции,
 # предварительно удалив существующие volumes (БД, статика, медиа) и контейнеры.
 new:
@@ -20,14 +21,15 @@ superuser:
 
 # Проверка кода на соответствие PEP8.
 check:
-	-isort --check .
-	-black --check .
-	-flake8 .
+	docker-compose exec backend isort --check .
+	docker-compose exec backend black --check .
+	docker-compose exec backend flake8 .
 
 # Запуск тестов.
 test:
-# TODO Сначала собирает контейнеры через docker-compose, потом запускает тест.
+	docker-compose exec backend pytest tests/
 
 # Удаляет все контейнеры и volumes.
 remove:
 	-docker-compose down --volumes
+
