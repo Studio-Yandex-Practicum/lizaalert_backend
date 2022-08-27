@@ -34,24 +34,35 @@ class CourseSerializer(CourseCommonFieldsMixin):
 class LessonInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка уроков курса."""
 
-    lesson_type = serializers.ReadOnlyField(source='lesson.lesson_type')
-    lesson_status = serializers.ReadOnlyField(source='lesson.lesson_status')
-    duration = serializers.ReadOnlyField(source='lesson.duration')
-    title = serializers.ReadOnlyField(source='lesson.title')
+    lesson_type = serializers.ReadOnlyField(source="lesson.lesson_type")
+    lesson_status = serializers.ReadOnlyField(source="lesson.lesson_status")
+    duration = serializers.ReadOnlyField(source="lesson.duration")
+    title = serializers.ReadOnlyField(source="lesson.title")
 
     class Meta:
         model = ChapterLesson
-        fields = ('id', 'order_number', 'lesson_type', 'lesson_status', 'duration', 'title', )
+        fields = (
+            "id",
+            "order_number",
+            "lesson_type",
+            "lesson_status",
+            "duration",
+            "title",
+        )
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка частей курса."""
 
-    lessons = LessonInlineSerializer(source='chapterlesson_set', read_only=True, many=True)
+    lessons = LessonInlineSerializer(source="chapterlesson_set", read_only=True, many=True)
 
     class Meta:
         model = Chapter
-        fields = ('id', 'title', 'lessons', )
+        fields = (
+            "id",
+            "title",
+            "lessons",
+        )
 
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
@@ -61,6 +72,15 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
     class Meta:
         model = Course
         fields = (
-            'id', 'title', 'level', 'full_description', 'knowledge', 'start_date', 'cover_path', 'lessons_count',
-            'course_duration', 'chapters', 'knowledge'
+            "id",
+            "title",
+            "level",
+            "full_description",
+            "knowledge",
+            "start_date",
+            "cover_path",
+            "lessons_count",
+            "course_duration",
+            "chapters",
+            "knowledge",
         )

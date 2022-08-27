@@ -55,7 +55,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         return course
 
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action == "retrieve":
             return CourseDetailSerializer
         return CourseSerializer
 
