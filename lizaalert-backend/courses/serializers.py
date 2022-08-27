@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from .models import Course, CourseStatus
+from .models import Chapter, ChapterLesson, Course, CourseStatus
+
+
+class CourseCommonFieldsMixin(serializers.ModelSerializer):
+    level = serializers.StringRelatedField(read_only=True)
+    lessons_count = serializers.IntegerField()
+    course_duration = serializers.IntegerField()
+    course_status = serializers.StringRelatedField(read_only=True)
 
 
 class CourseStatusSerializer(serializers.ModelSerializer):
@@ -9,12 +16,7 @@ class CourseStatusSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CourseSerializer(serializers.ModelSerializer):
-    level = serializers.StringRelatedField(read_only=True)
-    lessons_count = serializers.IntegerField()
-    course_duration = serializers.IntegerField()
-    course_status = serializers.StringRelatedField(read_only=True)
-
+class CourseSerializer(CourseCommonFieldsMixin):
     class Meta:
         model = Course
         fields = (
@@ -26,4 +28,59 @@ class CourseSerializer(serializers.ModelSerializer):
             "course_duration",
             "course_status",
             "cover_path",
+        )
+
+
+class LessonInlineSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для вложенного списка уроков курса."""
+
+    lesson_type = serializers.ReadOnlyField(source="lesson.lesson_type")
+    lesson_status = serializers.ReadOnlyField(source="lesson.lesson_status")
+    duration = serializers.ReadOnlyField(source="lesson.duration")
+    title = serializers.ReadOnlyField(source="lesson.title")
+
+    class Meta:
+        model = ChapterLesson
+        fields = (
+            "id",
+            "order_number",
+            "lesson_type",
+            "lesson_status",
+            "duration",
+            "title",
+        )
+
+
+class ChapterInlineSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для вложенного списка частей курса."""
+
+    lessons = LessonInlineSerializer(source="chapterlesson_set", read_only=True, many=True)
+
+    class Meta:
+        model = Chapter
+        fields = (
+            "id",
+            "title",
+            "lessons",
+        )
+
+
+class CourseDetailSerializer(CourseCommonFieldsMixin):
+    chapters = ChapterInlineSerializer(many=True)
+    knowledge = serializers.JSONField()
+
+    class Meta:
+        model = Course
+        fields = (
+            "id",
+            "title",
+            "level",
+            "full_description",
+            "knowledge",
+            "start_date",
+            "cover_path",
+            "lessons_count",
+            "course_duration",
+            "chapters",
+            "knowledge",
         )

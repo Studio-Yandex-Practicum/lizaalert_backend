@@ -5,11 +5,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import Course, CourseStatus, Lesson
 from .pagination import CourseSetPagination
-from .serializers import CourseSerializer, CourseStatusSerializer
+from .serializers import CourseDetailSerializer, CourseSerializer, CourseStatusSerializer
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CourseSerializer
     permission_classes = [
         AllowAny,
     ]
@@ -54,6 +53,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             course_status=Value("inactive"),
         )
         return course
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return CourseDetailSerializer
+        return CourseSerializer
 
 
 class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):

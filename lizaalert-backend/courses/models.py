@@ -35,6 +35,7 @@ class Course(TimeStampedModel):
         related_name="course",
     )
     full_description = models.TextField(verbose_name="Полное описание курса")
+    knowledge = models.JSONField(blank=True, null=True)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
 
     class Meta:
