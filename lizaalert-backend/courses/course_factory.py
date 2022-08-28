@@ -1,10 +1,22 @@
 import datetime
+import json
 import random
 
 import factory.fuzzy
 
 from courses.models import Chapter, ChapterLesson, Course, Lesson
 from users import models
+
+
+class JSONFactory(factory.DictFactory):
+    """
+    Use with factory.Dict to make JSON strings.
+    """
+
+    @classmethod
+    def _generate(cls, create, attrs):
+        obj = super()._generate(create, attrs)
+        return json.dumps(obj)
 
 
 class CourseFactory(factory.django.DjangoModelFactory):
@@ -14,6 +26,9 @@ class CourseFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: "Курс{}".format(random.randrange(10)))
     format = factory.Sequence(lambda n: "Курс{}".format(n))
     level = factory.fuzzy.FuzzyChoice(models.Level.objects.all())
+    knowledge = factory.Dict(
+        {"title": factory.Faker("sentence"), "description": factory.Faker("text")}, dict_factory=JSONFactory
+    )
     cover_path = factory.django.ImageField()
     start_date = factory.fuzzy.FuzzyDate(
         start_date=datetime.date.today() - datetime.timedelta(days=5),
