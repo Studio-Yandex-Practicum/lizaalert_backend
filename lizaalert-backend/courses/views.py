@@ -1,11 +1,13 @@
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from .models import Course, CourseStatus, Lesson
 from .pagination import CourseSetPagination
-from .serializers import CourseDetailSerializer, CourseSerializer, CourseStatusSerializer
+from .serializers import CourseDetailSerializer, CourseSerializer, CourseStatusSerializer, CourseLessonListSerializer
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -64,3 +66,11 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CourseStatus.objects.all()
     serializer_class = CourseStatusSerializer
     permission_classes = [IsAuthenticated]
+
+
+class CourseLessonListViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CourseLessonListSerializer
+
+    def get_queryset(self):
+        out = Lesson.objects.filter(chapter__course__id=self.kwargs['courses_pk'])
+        return out
