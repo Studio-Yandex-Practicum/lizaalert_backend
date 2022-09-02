@@ -1,12 +1,18 @@
 from django.urls import include, path
+from rest_framework_nested import routers
 from rest_framework.routers import DefaultRouter
-
-from .views import CourseStatusViewSet, CourseViewSet
+from .views import CourseStatusViewSet, CourseViewSet, CourseLessonListViewSet
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="courses")
 router.register(r"courses_statuses", CourseStatusViewSet, basename="courses_statuses")
 
+
+domains_router = routers.NestedSimpleRouter(router, r'courses', lookup='courses')
+domains_router.register(r'lessons', CourseLessonListViewSet, basename='course-chapters-list')
+
+
 urlpatterns = [
     path("", include(router.urls)),
+    path(r'', include(domains_router.urls)),
 ]
