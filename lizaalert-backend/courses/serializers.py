@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Chapter, ChapterLesson, Course, CourseStatus
+from .models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
@@ -84,3 +84,10 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "chapters",
             "knowledge",
         )
+
+
+class CourseLessonListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Lesson
+        fields = ('id', 'title', 'description', 'lesson_type', 'tags', 'duration', "additional", "diploma", )
