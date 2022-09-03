@@ -1,7 +1,8 @@
 from django.urls import include, path
-from rest_framework_nested import routers
 from rest_framework.routers import DefaultRouter
-from .views import CourseStatusViewSet, CourseViewSet, CourseLessonListViewSet
+from rest_framework_nested import routers
+
+from .views import CourseLessonListViewSet, CourseStatusViewSet, CourseViewSet
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="courses")
