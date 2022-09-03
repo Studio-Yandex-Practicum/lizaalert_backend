@@ -9,9 +9,7 @@ from users import models
 
 
 class JSONFactory(factory.DictFactory):
-    """
-    Use with factory.Dict to make JSON strings.
-    """
+    """Use with factory.Dict to make JSON strings."""
 
     @classmethod
     def _generate(cls, create, attrs):
