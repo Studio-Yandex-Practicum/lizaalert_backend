@@ -1,9 +1,7 @@
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets
-from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 
 from .models import Course, CourseStatus, Lesson
 from .pagination import CourseSetPagination
