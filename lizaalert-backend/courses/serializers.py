@@ -87,7 +87,15 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 
 
 class CourseLessonListSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Lesson
-        fields = ('id', 'title', 'description', 'lesson_type', 'tags', 'duration', "additional", "diploma", )
+        fields = (
+            "id",
+            "title",
+            "description",
+            "lesson_type",
+            "tags",
+            "duration",
+            "additional",
+            "diploma",
+        )
