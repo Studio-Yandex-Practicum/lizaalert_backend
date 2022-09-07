@@ -22,6 +22,15 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+class ProgressStatus(models.TextChoices):
+    """Абстрактный класс по определению статуса прохождения урока, главы, курса, возможно тестов
+    """
+    FINISHED = "Finished", "Пройден"
+
+    class Meta:
+        abstract = True
+
+
 class Course(TimeStampedModel):
     title = models.CharField(max_length=120, verbose_name="Название курса")
     format = models.CharField(max_length=60, verbose_name="Формат курса")
@@ -189,3 +198,76 @@ class ChapterLesson(models.Model):
 
     def __str__(self):
         return f"Chapter {self.id}: {self.lesson.title}"
+
+
+class LessonProgressStatus(TimeStampedModel):
+    """
+    Класс для хранения прогресса студента при прохождении уроков в главе и курсе. Наследуется от TimeStampedModel.
+
+    Поля модели:
+
+    lesson - тип ForeignKey к модели  Lesson
+    volunteer - тип ForeignKey к модели user.volunteer
+    lessonstatus - cтатус прохождения урока (в настоящий момент только finished)
+    version_number - номер версии урока(предусматриваем для будующего использования, значение по умолчанию 1)
+    """
+
+    class LessonStatuses(ProgressStatus):
+        pass
+
+    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_status")
+    volunteer = models.ForeignKey(
+        users.Volunteer, on_delete=models.PROTECT, related_name="volunteer", verbose_name="Волонтер",
+    )
+    lessonstatus = models.CharField(max_length=20, verbose_name="прогресс урока",
+                                    choices=LessonProgressStatus.choices,
+                                    )
+    version_number = models.PositiveSmallIntegerField("Номер версии урока", validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return f"Lesson {self.lesson.title} {self.volunteer.name}"
+
+
+class ChapterProgressStatus(TimeStampedModel):
+    """
+    Класс для хранения прогресса студента при прохождении глав в курсе. Наследуется от TimeStampedModel.
+
+    Поля модели:
+
+    chapter - тип ForeignKey к модели  Chapter
+    volunteer - тип ForeignKey к модели user.volunteer
+    chapterstatus - cтатус прохождения урока (в настоящий момент только finished)
+    """
+    class ChapterStatuses(ProgressStatus):
+        pass
+
+    chapter = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_status")
+    volunteer = models.ForeignKey(
+        users.Volunteer, on_delete=models.PROTECT, related_name="volunteer", verbose_name="Волонтер",
+    )
+    lessonstatus = models.CharField(max_length=20, verbose_name="прогресс урока",
+                                    choices=ChapterProgressStatus.choices,
+                                    )
+
+
+class CourseProgressStatus(TimeStampedModel):
+    """
+    Класс для хранения прогресса студента при прохождении глав в курсе. Наследуется от TimeStampedModel.
+
+    Поля модели:
+
+    chapter - тип ForeignKey к модели  Chapter
+    volunteer - тип ForeignKey к модели user.volunteer
+    chapterstatus - cтатус прохождения урока (в настоящий момент только finished)
+    """
+
+    class CourseStatuses(ProgressStatus):
+        pass
+
+    chapter = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_status")
+    volunteer = models.ForeignKey(
+        users.Volunteer, on_delete=models.PROTECT, related_name="volunteer", verbose_name="Волонтер",
+    )
+    lessonstatus = models.CharField(max_length=20, verbose_name="прогресс урока",
+                                    choices=CourseStatuses.choices,
+                                    )
