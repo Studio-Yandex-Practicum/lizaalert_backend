@@ -22,6 +22,14 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+class ChapterManager(models.Manager):
+    def all_complete(self, lesson_id):
+        chapter = Chapter.objects.get(id=lesson_id)
+        for lesson in chapter.lessons.all():
+            print(lesson.lesson_progress.all())
+        # return self.filter(id=lesson_id) == ChapterLesson.objects.filter()
+
+
 class ProgressStatus(models.TextChoices):
     """Абстрактный класс по определению статуса прохождения урока, главы, курса, возможно тестов
     """
@@ -212,20 +220,22 @@ class LessonProgressStatus(TimeStampedModel):
     version_number - номер версии урока(предусматриваем для будующего использования, значение по умолчанию 1)
     """
 
-    class LessonStatuses(ProgressStatus):
-        pass
+    class ProgressStatus(models.TextChoices):
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестов
+        """
+        FINISHED = "Finished", "Пройден"
 
-    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_status")
-    volunteer = models.ForeignKey(
-        users.Volunteer, on_delete=models.PROTECT, related_name="volunteer", verbose_name="Волонтер",
+    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
+    user = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="userlessonstatus", verbose_name="userlessonstatus",
     )
-    lessonstatus = models.CharField(max_length=20, verbose_name="прогресс урока",
-                                    choices=LessonProgressStatus.choices,
-                                    )
+    lesson_progress = models.CharField(max_length=20, verbose_name="прогресс урока",
+                                       choices=ProgressStatus.choices,
+                                       )
     version_number = models.PositiveSmallIntegerField("Номер версии урока", validators=[MinValueValidator(1)])
 
     def __str__(self):
-        return f"Lesson {self.lesson.title} {self.volunteer.name}"
+        return f"Lesson {self.lesson.title} {self.user.username}"
 
 
 class ChapterProgressStatus(TimeStampedModel):
@@ -238,16 +248,19 @@ class ChapterProgressStatus(TimeStampedModel):
     volunteer - тип ForeignKey к модели user.volunteer
     chapterstatus - cтатус прохождения урока (в настоящий момент только finished)
     """
-    class ChapterStatuses(ProgressStatus):
-        pass
 
-    chapter = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_status")
-    volunteer = models.ForeignKey(
-        users.Volunteer, on_delete=models.PROTECT, related_name="volunteer", verbose_name="Волонтер",
+    class ProgressStatus(models.TextChoices):
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестов
+        """
+        FINISHED = "Finished", "Пройден"
+
+    chapter = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="chapter_progress")
+    user = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="userchapterstatus", verbose_name="userchapterstatus",
     )
-    lessonstatus = models.CharField(max_length=20, verbose_name="прогресс урока",
-                                    choices=ChapterProgressStatus.choices,
-                                    )
+    chapterprogress = models.CharField(max_length=20, verbose_name="прогресс главы",
+                                       choices=ProgressStatus.choices,
+                                       )
 
 
 class CourseProgressStatus(TimeStampedModel):
@@ -261,13 +274,15 @@ class CourseProgressStatus(TimeStampedModel):
     chapterstatus - cтатус прохождения урока (в настоящий момент только finished)
     """
 
-    class CourseStatuses(ProgressStatus):
-        pass
+    class ProgressStatus(models.TextChoices):
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестов
+        """
+        FINISHED = "Finished", "Пройден"
 
-    chapter = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_status")
-    volunteer = models.ForeignKey(
-        users.Volunteer, on_delete=models.PROTECT, related_name="volunteer", verbose_name="Волонтер",
+    chapter = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="course_progress")
+    user = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="usercoursestatus", verbose_name="coursestatus",
     )
-    lessonstatus = models.CharField(max_length=20, verbose_name="прогресс урока",
-                                    choices=CourseStatuses.choices,
-                                    )
+    courseprogress = models.CharField(max_length=20, verbose_name="прогресс курса",
+                                      choices=ProgressStatus.choices,
+                                      )
