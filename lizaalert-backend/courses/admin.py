@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
+from .models import Chapter, ChapterLesson, Course, CourseStatus, Lesson, LessonProgressStatus, ChapterProgressStatus
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -26,6 +26,16 @@ class ChapterLessonInline(admin.TabularInline):
 class ChapterAdmin(admin.ModelAdmin):
     inlines = (ChapterLessonInline,)
     ordering = ("-created_at",)
+
+
+@admin.register(LessonProgressStatus)
+class LessonProgressStatusAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ChapterProgressStatus)
+class ChapterProgressStatusAdmin(admin.ModelAdmin):
+    pass
 
 
 admin.site.register(Course, CourseAdmin)
