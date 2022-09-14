@@ -10,19 +10,17 @@ services:
       - ./services/postgres/.env
 
   backend:
-    image: local/lizaalert_backend
+    image: cr.yandex/crpph3mqagnq011414qt/lizaalert_backend:latest
     restart: always
     env_file:
       - ./lizaalert-backend/.env
     volumes:
-      - ./lizaaler-backend:/app/
       - static_volume:/app/static/
       - media_volume:/app/media/
     depends_on:
       - postgres
 
   nginx:
-    container_name: lizaalert_nginx
     build: ./services/nginx/
     volumes:
       - static_volume:/var/html/static/
