@@ -238,7 +238,7 @@ class ChapterProgressStatus(TimeStampedModel):
     """
 
     class ProgressStatus(models.TextChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестовю"""
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
         FINISHED = "Finished", "Пройден"
 
@@ -268,7 +268,7 @@ class CourseProgressStatus(TimeStampedModel):
     """
 
     class ProgressStatus(models.TextChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестовю"""
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
         FINISHED = "Finished", "Пройден"
 
