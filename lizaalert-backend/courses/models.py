@@ -234,10 +234,11 @@ class ChapterProgressStatus(TimeStampedModel):
 
     chapter - тип ForeignKey к модели  Chapter
     user - тип ForeignKey к модели User
-    userchapterprogress - cтатус прохождения главы (в настоящий момент только finished)."""
+    userchapterprogress - cтатус прохождения главы (в настоящий момент только finished).
+    """
 
     class ProgressStatus(models.TextChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестов"""
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестовю"""
 
         FINISHED = "Finished", "Пройден"
 
@@ -263,12 +264,11 @@ class CourseProgressStatus(TimeStampedModel):
 
     chapter - тип ForeignKey к модели  Chapter
     user - тип ForeignKey к модели User
-    usercourseprogress - cтатус прохождения курса (в настоящий момент только finished)."""
+    usercourseprogress - cтатус прохождения курса (в настоящий момент только finished).
+    """
 
     class ProgressStatus(models.TextChoices):
-        """
-        класс по определению статуса прохождения урока, главы, курса, возможно тестов
-        """
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестовю"""
 
         FINISHED = "Finished", "Пройден"
 
