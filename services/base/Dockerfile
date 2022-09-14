@@ -3,7 +3,7 @@ FROM python:3.10-slim-buster
 ENV PYTHONUNBUFFERED=1
 
 # get poetry
-RUN pip install poetry
+RUN pip install poetry gunicorn
 
 WORKDIR /app/
 
