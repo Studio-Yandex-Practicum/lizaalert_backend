@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Chapter, ChapterLesson, Course, CourseStatus, Lesson, LessonProgressStatus, ChapterProgressStatus
+from .models import Chapter, ChapterLesson, ChapterProgressStatus, Course, CourseStatus, Lesson, LessonProgressStatus
 
 
 class CourseAdmin(admin.ModelAdmin):
