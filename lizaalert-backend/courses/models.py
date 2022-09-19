@@ -206,7 +206,9 @@ class LessonProgressStatus(TimeStampedModel):
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        FINISHED = "Finished", "Пройден"
+        NOTSTARTED = 0, "Не начат"
+        INPROGRESS = 1, "Начат"
+        FINISHED = 2, "Пройден"
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
     user = models.ForeignKey(
@@ -249,7 +251,7 @@ class ChapterProgressStatus(TimeStampedModel):
         User,
         on_delete=models.PROTECT,
         related_name="user_chapter_status",
-        verbose_name="use_rchapter_status",
+        verbose_name="user_chapter_status",
     )
     userchapterprogress = models.CharField(
         max_length=20,
