@@ -212,8 +212,8 @@ class LessonProgressStatus(TimeStampedModel):
     user = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
-        related_name="userlessonstatus",
-        verbose_name="userlessonstatus",
+        related_name="user_lesson_status",
+        verbose_name="user_lesson_status",
     )
     userlessonprogress = models.CharField(
         max_length=20,
@@ -240,14 +240,16 @@ class ChapterProgressStatus(TimeStampedModel):
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        FINISHED = "Finished", "Пройден"
+        NOTSTARTED = 0, "Не начат"
+        INPROGRESS = 1, "Начат"
+        FINISHED = 2, "Пройден"
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT, related_name="chapter_progress")
     user = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
-        related_name="userchapterstatus",
-        verbose_name="userchapterstatus",
+        related_name="user_chapter_status",
+        verbose_name="use_rchapter_status",
     )
     userchapterprogress = models.CharField(
         max_length=20,
@@ -270,14 +272,16 @@ class CourseProgressStatus(TimeStampedModel):
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        FINISHED = "Finished", "Пройден"
+        NOTSTARTED = 0, "Не начат"
+        INPROGRESS = 1, "Начат"
+        FINISHED = 2, "Пройден"
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course_progress")
     user = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
-        related_name="usercoursestatus",
-        verbose_name="coursestatus",
+        related_name="user_course_status",
+        verbose_name="course_status",
     )
     usercourseprogress = models.CharField(
         max_length=20,
