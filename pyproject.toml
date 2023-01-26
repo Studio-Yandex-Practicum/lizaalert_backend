@@ -22,6 +22,8 @@ dj-rest-auth = "^2.2.4"
 django-allauth = "^0.50.0"
 djangorestframework-simplejwt = "^5.1.0"
 django-cors-headers = "^3.13.0"
+drf-nested-routers = "^0.93.4"
+factory-boy = "^3.2.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"

@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import Course, CourseStatus, Lesson
 from .pagination import CourseSetPagination
-from .serializers import CourseDetailSerializer, CourseSerializer, CourseStatusSerializer
+from .serializers import CourseDetailSerializer, CourseLessonListSerializer, CourseSerializer, CourseStatusSerializer
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -64,3 +64,11 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CourseStatus.objects.all()
     serializer_class = CourseStatusSerializer
     permission_classes = [IsAuthenticated]
+
+
+class CourseLessonListViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CourseLessonListSerializer
+
+    def get_queryset(self):
+        out = Lesson.objects.filter(chapter__course__id=self.kwargs["courses_pk"])
+        return out
