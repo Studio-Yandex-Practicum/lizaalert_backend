@@ -10,6 +10,6 @@ router.register(r"users/(?P<user_id>\d+)/roles", UserRoleViewSet, basename="user
 
 urlpatterns = [
     path("profile/", VolunteerAPIview.as_view(), name="profile"),
-    path("level/", LevelViewSet.as_view(), basename="level"),
-    path("roles/", ListRoles.as_view())
+    path("roles/", ListRoles.as_view()),
+    path("", include(router.urls)),
 ]
