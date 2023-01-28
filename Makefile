@@ -33,3 +33,19 @@ test:
 remove:
 	-docker-compose down --volumes
 
+build:
+	docker build -f services/base/Dockerfile -t local/lizaalert_backend-base . 
+	docker build -f services/local/Dockerfile -t local/lizaalert_backend . 
+
+push:
+	make build
+	docker tag local/lizaalert_backend cr.yandex/crpph3mqagnq011414qt/lizaalert_backend:latest
+	docker push cr.yandex/crpph3mqagnq011414qt/lizaalert_backend:latest
+
+update-ci:
+	docker build -f services/base/Dockerfile -t local/lizaalert_backend-base . 
+	docker build -f services/ci/Dockerfile -t local/lizaalert_backend-ci . 
+	docker tag local/lizaalert_backend-ci cr.yandex/crpph3mqagnq011414qt/lizaalert_backend-ci:latest
+
+up:
+	docker-compose up -d
