@@ -1,9 +1,28 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, views, viewsets
+from rest_framework import mixins, permissions, status, viewsets, views
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Level, User, UserRole
-from .serializers import LevelSerializer, UserRoleSerializer
+from .models import Level, Volunteer, User, UserRole
+from .serializers import LevelSerializer, VolunteerSerializer, UserRoleSerializer
+
+
+class VolunteerAPIview(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        volunteer = get_object_or_404(Volunteer, user=request.user)
+        serializer = VolunteerSerializer(volunteer, context={"request": request})
+        return Response(serializer.data)
+
+    def patch(self, request):
+        volunteer = get_object_or_404(Volunteer, user=request.user)
+        serializer = VolunteerSerializer(volunteer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LevelViewSet(viewsets.ReadOnlyModelViewSet):

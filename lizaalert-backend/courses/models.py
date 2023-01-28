@@ -47,8 +47,18 @@ class Course(TimeStampedModel):
 
 
 class CourseStatus(models.Model):
+    class SlugStatus(models.TextChoices):
+        ACTIVE = "active"
+        COMPLETE = "complete"
+        REGISTRATION = "registration"
+
     name = models.CharField("Статус курса", max_length=50, editable=False)
-    slug = models.SlugField(max_length=20, editable=False)
+    slug = models.CharField(
+        max_length=20,
+        choices=SlugStatus.choices,
+        default=SlugStatus.ACTIVE,
+        editable=False
+    )
 
     class Meta:
         db_table = "course_status"

@@ -7,7 +7,33 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class User(AbstractUser):
-    pass
+    patronymic = models.CharField("Отчество", blank=True, max_length=20)
+
+
+class UserRole(models.Model):
+    """
+    Роль пользователя.
+
+    Отношение зарегистрированного пользователя и его роли в образовательной системе
+    "ЛизаАлерт". Используется для разграничения прав доступа к учебным материалам.
+    """
+
+    class Role(models.TextChoices):
+        MAIN_ADMIN = "main admin", "Главный Администратор"
+        ADMIN = "admin", "Администратор"
+        TEACHER = "teacher", "Преподаватель"
+        VOLUNTEER = "volunteer", "Волонтёр"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    role = models.CharField(choices=Role.choices, max_length=20, verbose_name="Роль пользователя")
+
+    class Meta:
+        verbose_name = "Роль пользователя"
+        verbose_name_plural = "Роли пользователей"
+        constraints = (models.UniqueConstraint(fields=("user", "role"), name="unique_user_role"),)
+
+    def __str__(self) -> str:
+        return f"{self.user} ({self.role})"
 
 
 class UserRole(models.Model):
@@ -186,12 +212,15 @@ class VolunteerCourse(models.Model):
 
 
 class Volunteer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пользователь")
-    phone_number = PhoneNumberField(verbose_name="Номер телефона", unique=True)
-    birth_date = models.DateField("Дата рождения")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, blank=True, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
+    phone_number = PhoneNumberField(verbose_name="Номер телефона", blank=True, null=True)
+    birth_date = models.DateField("Дата рождения", blank=True, null=True)
     location = models.ForeignKey(
         Location,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
         related_name="volunteers",
         verbose_name="Географический регион",
@@ -210,6 +239,7 @@ class Volunteer(models.Model):
         Level,
         through=VolunteerLevel,
         blank=True,
+        null=True,
         related_name="volunteers",
         verbose_name="Уровень",
     )
@@ -217,6 +247,7 @@ class Volunteer(models.Model):
         Badge,
         through=VolunteerBadge,
         blank=True,
+        null=True,
         related_name="volunteers",
         verbose_name="Значки",
     )
@@ -234,6 +265,14 @@ class Volunteer(models.Model):
         db_table = "volunteers"
         verbose_name = "Волонтер"
         verbose_name_plural = "Волонтеры"
+
+    @property
+    def count_pass_course(self):
+        return len(self.volunter_courses.filter(status="complete"))
+
+    @property
+    def level_confirmed(self):
+        return self.volunteer_levels.filter(confirmed=True).order_by("-updated_at").first()
 
     def __str__(self):
         return f"{self.user.username}"
