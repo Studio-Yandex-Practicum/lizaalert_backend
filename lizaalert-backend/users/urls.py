@@ -1,8 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import LevelViewSet, ListRoles, VolunteerAPIview, UserRoleViewSet
-
+from .views import LevelViewSet, ListRoles, UserRoleViewSet, VolunteerAPIview
 
 router = DefaultRouter()
 router.register(r"level", LevelViewSet, basename="level")
