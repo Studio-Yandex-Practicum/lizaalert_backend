@@ -8,4 +8,5 @@ class UsersConfig(AppConfig):
 
     def ready(self):
         from . import signals
+
         post_save.connect(signals.create_volunteer)

@@ -1,11 +1,11 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, status, viewsets, views
+from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Level, Volunteer, User, UserRole
-from .serializers import LevelSerializer, VolunteerSerializer, UserRoleSerializer
+from .models import Level, User, UserRole, Volunteer
+from .serializers import LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
 
 class VolunteerAPIview(APIView):
@@ -37,7 +37,10 @@ class ListRoles(views.APIView):
 
 
 class UserRoleViewSet(
-    viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
 ):
     serializer_class = UserRoleSerializer
     permission_classes = [permissions.AllowAny]

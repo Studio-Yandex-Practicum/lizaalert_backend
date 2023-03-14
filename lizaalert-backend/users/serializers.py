@@ -2,8 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import Badge, Location, Level, Volunteer, UserRole
-
+from .models import Badge, Level, Location, UserRole, Volunteer
 
 User = get_user_model()
 

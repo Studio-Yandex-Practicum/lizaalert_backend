@@ -1,7 +1,6 @@
+from courses.course_factory import LessonWith3ChapterFactory
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-
-from courses.course_factory import LessonWith3ChapterFactory
 from users.models import Level
 from users.user_factory import LevelFactory, UserFactory
 
@@ -25,4 +24,9 @@ class Command(BaseCommand):
             LessonWith3ChapterFactory()
 
     def add_arguments(self, parser):
-        parser.add_argument("--courses", type=int, default=5, help="Number of records generated with script")
+        parser.add_argument(
+            "--courses",
+            type=int,
+            default=5,
+            help="Number of records generated with script",
+        )

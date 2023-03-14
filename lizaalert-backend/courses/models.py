@@ -57,7 +57,7 @@ class CourseStatus(models.Model):
         max_length=20,
         choices=SlugStatus.choices,
         default=SlugStatus.ACTIVE,
-        editable=False
+        editable=False,
     )
 
     class Meta:
