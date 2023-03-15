@@ -9,7 +9,7 @@ on:
 jobs:
   check:
     name: Check
-    runs-on: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
+    image: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -25,7 +25,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
+    image: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
