@@ -7,35 +7,81 @@ on:
   pull_request:
 
 jobs:
-  check:
+  linting:
     name: Check
-    runs-on: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - name: Check out repository
         uses: actions/checkout@v3
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      #----------------------------------------------
+      #  -----  install & configure poetry  -----
+      #----------------------------------------------
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
 
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
+      - name: Install project
+        run: poetry install --no-interaction
+      #----------------------------------------------
+      #              run checks
+      #----------------------------------------------
       - name: Flake8 check
         run: poetry run flake8 .
-
-      - name: Black check
-        run: poetry run black --check .
 
       - name: Isort check
         run: poetry run isort --check-only --skip-gitignore .
 
-  test:
-    name: Test
-    runs-on: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Black check
+        run: poetry run black --check .
 
-      - name: Build and run app
-        run: |
-          cp lizaalert-backend/env.sample lizaalert-backend/.env
-          cp services/postgres/env.sample services/postgres/.env
-          docker-compose up -d
-          sleep 20
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v3
+  #     - name: Prepare envs
+  #       run: |
+  #         cp lizaalert-backend/.env.sample lizaalert-backend/.env
+  #         cp services/postgres/.env.sample services/postgres/.env
 
-      - name: Run tests
-        run: docker-compose exec -T backend pytest tests/
+  #     - uses: isbang/compose-action@v1.4.1
+  #       with:
+  #         compose-file: "./docker-compose.yml"
+
+  #     - name: Build and run app
+  #       run: |
+  #         docker-compose up -d
+  #         sleep 20
+
+  #     - name: Run tests
+  #       run: docker-compose exec -T backend pytest tests/

@@ -3,6 +3,7 @@ import json
 import random
 
 import factory.fuzzy
+
 from courses.models import Chapter, ChapterLesson, Course, Lesson
 from users import models
 
@@ -24,7 +25,10 @@ class CourseFactory(factory.django.DjangoModelFactory):
     format = factory.Sequence(lambda n: "Курс{}".format(n))
     level = factory.fuzzy.FuzzyChoice(models.Level.objects.all())
     knowledge = factory.Dict(
-        {"title": factory.Faker("sentence"), "description": factory.Faker("text"),},
+        {
+            "title": factory.Faker("sentence"),
+            "description": factory.Faker("text"),
+        },
         dict_factory=JSONFactory,
     )
     cover_path = factory.django.ImageField()

@@ -16,7 +16,10 @@ DEBUG = env.bool("DEBUG", False)
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     [
-        "51.250.35.214",
+        "api.la-testing.ru",
+        "admin.la-testing.ru",
+        "docs.la-testing.ru",
+        "swagger.la-testing.ru",
         "0.0.0.0",
         "127.0.0.1",
         "localhost",
@@ -100,7 +103,10 @@ DATABASES = {
         "PASSWORD": env.str("DB_PASSWORD", "password"),
         "HOST": env.str("DB_HOST", "localhost"),
         "PORT": env.int("DB_PORT", 5432),
-        "OPTIONS": {"options": f"-c search_path=public{',' + DB_SCHEME}"},
+        "OPTIONS": {
+            "sslmode": env.str("DB_SSLMODE", "disable"),
+            # "options": f"-c search_path=public{',' + DB_SCHEME}",
+        },
     }
 }
 

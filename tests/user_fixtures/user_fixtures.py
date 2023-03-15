@@ -65,7 +65,8 @@ def create_volunteer(user, create_location):
     volunteer = Volunteer.objects.create(
         user=user, phone_number="+375291112233", birth_date=datetime.date.today(), location=create_location
     )
-    return volunteer
+    yield volunteer
+    # Volunteer.objects.filter(id=volunteer.id).delete()
 
 
 @pytest.fixture()
@@ -73,7 +74,8 @@ def create_level():
     from users.models import Level
 
     levels = [Level.objects.create(name=choice[1], description=choice[0]) for choice in Level.LevelName.choices]
-    return levels
+    yield levels
+    # Level.objects.filter(id__in=[level.id for level in levels]).delete()
 
 
 @pytest.fixture()

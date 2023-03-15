@@ -21,9 +21,13 @@ superuser:
 
 # Проверка кода на соответствие PEP8.
 check:
-	docker-compose exec backend isort --check .
-	docker-compose exec backend black --check .
-	docker-compose exec backend flake8 .
+	poetry run isort --check .
+	poetry run flake8 .
+	poetry run black --check .
+
+black:
+	poetry run isort .
+	poetry run black .
 
 # Запуск тестов.
 test:
@@ -39,13 +43,17 @@ build:
 
 push:
 	make build
-	docker tag local/lizaalert_backend cr.yandex/crpph3mqagnq011414qt/lizaalert_backend:latest
-	docker push cr.yandex/crpph3mqagnq011414qt/lizaalert_backend:latest
+	docker tag local/lizaalert_backend cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
+	docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
 
 update-ci:
 	docker build -f services/base/Dockerfile -t local/lizaalert_backend-base . 
 	docker build -f services/ci/Dockerfile -t local/lizaalert_backend-ci . 
-	docker tag local/lizaalert_backend-ci cr.yandex/crpph3mqagnq011414qt/lizaalert_backend-ci:latest
+	docker tag local/lizaalert_backend-ci cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
+
+update-nginx:
+	docker build -f services/nginx/Dockerfile -t cr.yandex/crpabbati0r6r7i5ee8c/nginx:latest .
+	docker push cr.yandex/crpabbati0r6r7i5ee8c/nginx:latest
 
 up:
 	docker-compose up -d
