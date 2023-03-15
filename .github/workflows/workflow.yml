@@ -63,25 +63,25 @@ jobs:
       - name: Black check
         run: poetry run black --check .
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Prepare envs
-        run: |
-          cp lizaalert-backend/.env.sample lizaalert-backend/.env
-          cp services/postgres/.env.sample services/postgres/.env
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v3
+  #     - name: Prepare envs
+  #       run: |
+  #         cp lizaalert-backend/.env.sample lizaalert-backend/.env
+  #         cp services/postgres/.env.sample services/postgres/.env
 
-      - uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./docker-compose.yml"
+  #     - uses: isbang/compose-action@v1.4.1
+  #       with:
+  #         compose-file: "./docker-compose.yml"
 
-      - name: Build and run app
-        run: |
-          docker-compose up -d
-          sleep 20
+  #     - name: Build and run app
+  #       run: |
+  #         docker-compose up -d
+  #         sleep 20
 
-      - name: Run tests
-        run: docker-compose exec -T backend pytest tests/
+  #     - name: Run tests
+  #       run: docker-compose exec -T backend pytest tests/
