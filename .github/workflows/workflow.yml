@@ -66,10 +66,12 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    container: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      - uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./docker-compose.yml"
 
       - name: Build and run app
         run: |
