@@ -16,6 +16,7 @@ services:
       - ./lizaalert-backend/.env
     volumes:
       - ./lizaalert-backend:/app/
+      - ./tests:/app/tests
       - static_volume:/app/static/
       - media_volume:/app/media/
     depends_on:
