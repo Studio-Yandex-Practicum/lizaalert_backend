@@ -21,9 +21,13 @@ superuser:
 
 # Проверка кода на соответствие PEP8.
 check:
-	docker-compose exec backend isort --check .
-	docker-compose exec backend black --check .
-	docker-compose exec backend flake8 .
+	poetry run isort --check .
+	poetry run flake8 .
+	poetry run black --check .
+
+black:
+	poetry run isort .
+	poetry run black .
 
 # Запуск тестов.
 test:

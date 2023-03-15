@@ -10,7 +10,6 @@ jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
-    container: cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend-ci:latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -18,11 +17,11 @@ jobs:
       - name: Flake8 check
         run: poetry run flake8 .
 
-      - name: Black check
-        run: poetry run black --check .
-
       - name: Isort check
         run: poetry run isort --check-only --skip-gitignore .
+
+      - name: Black check
+        run: poetry run black --check .
 
   test:
     name: Test
