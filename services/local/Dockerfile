@@ -2,8 +2,9 @@ FROM local/lizaalert_backend-base
 
 EXPOSE 8000/tcp
 
-COPY tests/ tests/
-COPY lizaalert-backend .
+COPY src/manage.py .
+COPY src/gunicorn_conf.py .
+COPY src/lizaalert-backend ./lizaalert
 
 # устанавливаем сертификат для подключения к БД
 RUN mkdir ~/.postgresql

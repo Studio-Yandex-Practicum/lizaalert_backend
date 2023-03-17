@@ -21,13 +21,13 @@ superuser:
 
 # Проверка кода на соответствие PEP8.
 check:
-	poetry run isort --check .
-	poetry run flake8 .
-	poetry run black --check .
+	isort --check ./src
+	flake8 ./src
+	black --check ./src
 
 black:
-	poetry run isort .
-	poetry run black .
+	isort ./src
+	black ./src
 
 # Запуск тестов.
 test:

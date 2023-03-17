@@ -7,11 +7,11 @@ RUN pip install poetry gunicorn
 
 WORKDIR /app/
 
-COPY pyproject.toml .
-COPY poetry.lock .
+COPY src/pyproject.toml .
+COPY src/poetry.lock .
 
 RUN poetry config virtualenvs.create false \ 
     && poetry install --no-interaction --no-ansi
 
-COPY pytest.ini .
-COPY setup.cfg .
+COPY src/pytest.ini .
+COPY src/setup.cfg .
