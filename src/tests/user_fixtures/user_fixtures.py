@@ -76,10 +76,3 @@ def create_level():
     levels = [Level.objects.create(name=choice[1], description=choice[0]) for choice in Level.LevelName.choices]
     yield levels
     # Level.objects.filter(id__in=[level.id for level in levels]).delete()
-
-
-@pytest.fixture()
-def create_volunteer_course(create_volunteer, create_course, create_statuses):
-    from lizaalert.users.models import VolunteerCourse
-
-    VolunteerCourse.objects.create(volunteer=create_volunteer, course=create_course[0], status=create_statuses[0])

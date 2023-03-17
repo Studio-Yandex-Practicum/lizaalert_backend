@@ -1,5 +1,3 @@
-import datetime
-
 import pytest
 
 statuses = [
@@ -42,39 +40,3 @@ def create_lesson(user):
     ]
 
     return lessons
-
-
-@pytest.fixture()
-def create_course(user, create_level):
-    from lizaalert.courses.models import Course
-
-    start_date = datetime.date.today() + datetime.timedelta(days=3)
-    course1 = Course.objects.create(
-        title="Course1",
-        format="Курс",
-        start_date=start_date,
-        short_description="Курс",
-        level=create_level[0],
-        user_created=user,
-        full_description="Курс",
-    )
-    course2 = Course.objects.create(
-        title="Course2",
-        format="Курс",
-        start_date=start_date,
-        short_description="Курс",
-        level=create_level[1],
-        user_created=user,
-        full_description="Курс",
-    )
-    return course1, course2
-
-
-@pytest.fixture()
-def create_chapter(user, create_lesson, create_course):
-    from lizaalert.courses.models import Chapter, ChapterLesson
-
-    chapter = Chapter.objects.create(title="Глава", user_created=user, user_modifier=user, course=create_course[0])
-    ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[0], order_number=1)
-    ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[1], order_number=2)
-    return chapter
