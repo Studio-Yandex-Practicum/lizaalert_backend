@@ -21,10 +21,10 @@ superuser:
 
 # Проверка кода на соответствие PEP8.
 check:
-	cd src && \
-	isort --check . && \
-	flake8 . && \
-	black --check . && \
+	cd src
+	isort --check .
+	flake8 .
+	black --check .
 	cd ..
 
 black:

@@ -1,9 +1,15 @@
+from courses.course_factory import LessonWith3ChapterFactory
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+<<<<<<< HEAD:src/lizaalert/users/management/commands/create_fake_data.py
 
 from lizaalert.users.models import Level
 from tests.factories.courses import LessonWith3ChapterFactory
 from tests.factories.users import LevelFactory, UserFactory
+=======
+from users.models import Level
+from users.user_factory import LevelFactory, UserFactory
+>>>>>>> d76e934 (107 change hierachi):lizaalert-backend/users/management/commands/create_fake_data.py
 
 User = get_user_model()
 
