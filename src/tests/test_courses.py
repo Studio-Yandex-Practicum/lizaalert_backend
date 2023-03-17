@@ -2,6 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from tests.factories.courses import ChapterFactory, ChapterLessonFactory, CourseStatusFactory
+from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
 from tests.user_fixtures.level_fixtures import return_levels_data
 
@@ -23,7 +25,9 @@ class TestCourseStatusAndLevel:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.parametrize("url, test_data", urls)
-    def test_coursestatus_list(self, user_client, url, test_data, create_levels, create_statuses):
+    def test_coursestatus_list(self, user_client, url, test_data):
+        _ = [LevelFactory() for _ in range(3)]
+        _ = [CourseStatusFactory() for _ in range(3)]
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == test_data()
@@ -33,11 +37,19 @@ class TestCourseStatusAndLevel:
 class TestCourse:
     url = reverse("courses-list")
 
-    def test_not_found_courselist(self, user_client, create_chapter):
+    def test_not_found_courselist(self, user_client):
+        _ = ChapterFactory()
         response = user_client.get(self.url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_count_lessons_count_duration(self, user_client, create_chapter):
+    def test_count_lessons_count_duration(self, user_client):
+
+        chapter = ChapterFactory()
+        _ = (
+            ChapterLessonFactory(chapter=chapter, lesson__duration=1),
+            ChapterLessonFactory(chapter=chapter, lesson__duration=2),
+        )
+
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"][0]["lessons_count"] == 2

@@ -1,5 +1,6 @@
 import pytest
-from users.models import User, UserRole
+
+from lizaalert.users.models import User, UserRole
 
 
 class TestRoleAPI:

@@ -1,10 +1,10 @@
 import datetime
 import json
-import random
 
 import factory.fuzzy
-from courses.models import Chapter, ChapterLesson, Course, Lesson
-from users import models
+
+from lizaalert.courses.models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
+from tests.factories.users import LevelFactory, UserFactory
 
 
 class JSONFactory(factory.DictFactory):
@@ -20,9 +20,9 @@ class CourseFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Course
 
-    title = factory.Sequence(lambda n: "Курс{}".format(random.randrange(10)))
-    format = factory.Sequence(lambda n: "Курс{}".format(n))
-    level = factory.fuzzy.FuzzyChoice(models.Level.objects.all())
+    title = factory.Sequence(lambda n: "Курс {}".format(n))
+    format = factory.Sequence(lambda n: "Курс {}".format(n))
+    level = factory.SubFactory(LevelFactory)
     knowledge = factory.Dict(
         {
             "title": factory.Faker("sentence"),
@@ -37,7 +37,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     )
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
-    user_created = factory.fuzzy.FuzzyChoice(models.User.objects.all())
+    user_created = factory.SubFactory(UserFactory)
 
 
 class LessonFactory(factory.django.DjangoModelFactory):
@@ -50,8 +50,8 @@ class LessonFactory(factory.django.DjangoModelFactory):
     lesson_status = Lesson.LessonStatus.READY
     tags = factory.Faker("words", nb=5)
     duration = factory.fuzzy.FuzzyInteger(0, 10)
-    user_created = factory.fuzzy.FuzzyChoice(models.User.objects.all())
-    user_modifier = factory.fuzzy.FuzzyChoice(models.User.objects.all())
+    user_created = factory.SubFactory(UserFactory)
+    user_modifier = factory.SubFactory(UserFactory)
 
 
 class ChapterFactory(factory.django.DjangoModelFactory):
@@ -60,8 +60,16 @@ class ChapterFactory(factory.django.DjangoModelFactory):
 
     title = factory.Sequence(lambda n: "Часть{}".format(n))
     course = factory.SubFactory(CourseFactory)
-    user_created = factory.fuzzy.FuzzyChoice(models.User.objects.all())
-    user_modifier = factory.fuzzy.FuzzyChoice(models.User.objects.all())
+    user_created = factory.SubFactory(UserFactory)
+    user_modifier = factory.SubFactory(UserFactory)
+
+
+class CourseStatusFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = CourseStatus
+
+    name = factory.Sequence(lambda n: "Статус {}".format(n))
+    slug = factory.fuzzy.FuzzyChoice(list(CourseStatus.SlugStatus))
 
 
 class ChapterLessonFactory(factory.django.DjangoModelFactory):

@@ -1,6 +1,7 @@
 import factory
 from django.contrib.auth import get_user_model
-from users.models import Level, Location, Volunteer
+
+from lizaalert.users.models import Level, Location, Volunteer
 
 User = get_user_model()
 factory.Faker._DEFAULT_LOCALE = "en_US"

@@ -10,8 +10,7 @@ WORKDIR /app/
 COPY src/pyproject.toml .
 COPY src/poetry.lock .
 
-RUN poetry config virtualenvs.create false \ 
-    && poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
 
 COPY src/pytest.ini .
 COPY src/setup.cfg .
