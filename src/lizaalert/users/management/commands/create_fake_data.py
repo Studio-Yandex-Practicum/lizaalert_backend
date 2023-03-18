@@ -5,7 +5,6 @@ from lizaalert.users.models import Level
 from tests.factories.courses import LessonWith3ChapterFactory
 from tests.factories.users import LevelFactory, UserFactory
 
-
 User = get_user_model()
 
 
