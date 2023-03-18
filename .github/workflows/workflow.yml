@@ -45,33 +45,23 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
-        with:
-          path: src/
+        run: cd src && poetry install --no-interaction
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
       - name: Install project
-        run: poetry install --no-interaction
-        with:
-          path: src/
+        run: cd src && poetry install --no-interaction
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
       - name: Flake8 check
-        run: poetry run flake8 .
-        with:
-          path: src/
+        run: cd src && poetry run flake8 .
 
       - name: Isort check
-        run: poetry run isort --check-only --skip-gitignore .
-        with:
-          path: src/
+        run: cd src && poetry run isort --check-only --skip-gitignore .
 
       - name: Black check
-        run: poetry run black --check .
-        with:
-          path: src/
+        run: cd src && poetry run black --check .
 
   # test:
   #   name: Test
