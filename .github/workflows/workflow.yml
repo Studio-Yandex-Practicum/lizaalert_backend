@@ -39,29 +39,29 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/src/poetry.lock') }}
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
+        run: cd src && poetry install --no-interaction
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
       - name: Install project
-        run: poetry install --no-interaction
+        run: cd src && poetry install --no-interaction
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
       - name: Flake8 check
-        run: poetry run flake8 .
+        run: cd src && poetry run flake8 .
 
       - name: Isort check
-        run: poetry run isort --check-only --skip-gitignore .
+        run: cd src && poetry run isort --check-only --skip-gitignore .
 
       - name: Black check
-        run: poetry run black --check .
+        run: cd src && poetry run black --check .
 
   # test:
   #   name: Test
@@ -71,7 +71,7 @@ jobs:
   #       uses: actions/checkout@v3
   #     - name: Prepare envs
   #       run: |
-  #         cp lizaalert-backend/.env.sample lizaalert-backend/.env
+  #         cp .env.sample .env
   #         cp services/postgres/.env.sample services/postgres/.env
 
   #     - uses: isbang/compose-action@v1.4.1

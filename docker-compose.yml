@@ -13,10 +13,9 @@ services:
     image: local/lizaalert_backend
     restart: always
     env_file:
-      - ./lizaalert-backend/.env
+      - .env
     volumes:
-      - ./lizaalert-backend:/app/
-      - ./tests:/app/tests
+      - ./src:/app/
       - static_volume:/app/static/
       - media_volume:/app/media/
     depends_on:
