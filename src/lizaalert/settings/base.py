@@ -177,4 +177,4 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 USE_X_FORWARDED_HOST = True
 
-API_URL=env.str("API_URL", None)
+API_URL = env.str("API_URL", None)
