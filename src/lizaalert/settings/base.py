@@ -27,11 +27,15 @@ ALLOWED_HOSTS = env.list(
 )
 
 CORS_ALLOWED_ORIGINS = [
+    "https://swagger.la-testing.ru",
+    "https://docs.la-testing.ru",
     "http://localhost:3000",
     "http://localhost:80",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://swagger.la-testing.ru",
+    "https://docs.la-testing.ru",
     "http://localhost:3000",
     "http://localhost:80",
 ]
@@ -172,3 +176,5 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 USE_X_FORWARDED_HOST = True
+
+API_URL = env.str("API_URL", None)

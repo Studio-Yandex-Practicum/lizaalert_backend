@@ -21,6 +21,7 @@ if settings.DEBUG:
             default_version="project",
             description=("API description for LizaAlert volunteer training platform"),
         ),
+        url=settings.API_URL,
         public=True,
     )
 
