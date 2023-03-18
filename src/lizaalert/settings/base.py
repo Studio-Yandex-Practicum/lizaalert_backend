@@ -162,10 +162,10 @@ SIMPLE_JWT = {
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None
-REST_AUTH_SERIALIZERS = {"JWT_SERIALIZER": "authentication.serializers.CustomJWTSerializer"}
+REST_AUTH_SERIALIZERS = {"JWT_SERIALIZER": "lizaalert.authentication.serializers.CustomJWTSerializer"}
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_ADAPTER = "authentication.adapters.AccountAdapter"
-SOCIALACCOUNT_ADAPTER = "authentication.adapters.SocialAccountAdapter"
+ACCOUNT_ADAPTER = "lizaalert.authentication.adapters.AccountAdapter"
+SOCIALACCOUNT_ADAPTER = "lizaalert.authentication.adapters.SocialAccountAdapter"
 SOCIALACCOUNT_PROVIDERS = {
     "yandex": {
         "APP": {
