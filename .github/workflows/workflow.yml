@@ -39,29 +39,39 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/src/poetry.lock') }}
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
+        with:
+          path: src/
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
       - name: Install project
         run: poetry install --no-interaction
+        with:
+          path: src/
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
       - name: Flake8 check
         run: poetry run flake8 .
+        with:
+          path: src/
 
       - name: Isort check
         run: poetry run isort --check-only --skip-gitignore .
+        with:
+          path: src/
 
       - name: Black check
         run: poetry run black --check .
+        with:
+          path: src/
 
   # test:
   #   name: Test
