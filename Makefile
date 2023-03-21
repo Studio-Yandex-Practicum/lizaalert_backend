@@ -42,6 +42,7 @@ remove:
 build:
 	docker build -f services/base/Dockerfile -t local/lizaalert_backend-base . 
 	docker build -f services/local/Dockerfile -t local/lizaalert_backend . 
+	docker build -f services/nginx/local.Dockerfile -t local/lizaalert_nginx .
 
 push:
 	make build

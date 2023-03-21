@@ -22,8 +22,7 @@ services:
       - postgres
 
   nginx:
-    container_name: lizaalert_nginx
-    build: ./services/nginx/
+    image: local/lizaalert_nginx
     volumes:
       - static_volume:/var/html/static/
       - media_volume:/var/html/media/
