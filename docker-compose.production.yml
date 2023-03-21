@@ -14,7 +14,6 @@ services:
   nginx:
     image: cr.yandex/crpabbati0r6r7i5ee8c/nginx:latest
     volumes:
-      - ./services/nginx/conf.d:/etc/nginx/conf.d/
       - ./services/nginx/letsencrypt:/etc/letsencrypt/
       - static_volume:/var/html/static/
       - media_volume:/var/html/media/
