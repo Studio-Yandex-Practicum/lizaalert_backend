@@ -2,6 +2,7 @@ from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
 from lizaalert.courses.models import Course, CourseStatus, Lesson
 from lizaalert.courses.pagination import CourseSetPagination
@@ -12,11 +13,16 @@ from lizaalert.courses.serializers import (
     CourseStatusSerializer,
 )
 
+from lizaalert.courses.filters import CourseFilter
+
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [
         AllowAny,
     ]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = CourseFilter
+    filterset_fields = ("level", "course_format")
     pagination_class = CourseSetPagination
 
     def get_queryset(self):

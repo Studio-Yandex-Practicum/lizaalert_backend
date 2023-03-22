@@ -7,7 +7,7 @@ from .models import Course
 class CourseFilter(filters.FilterSet):
     """Кастомный фильтр для модели Course."""
     format = django_filters.CharFilter(
-        field_name="format",
+        field_name="course_format",
         lookup_expr="icontains"
     )
 
@@ -18,4 +18,4 @@ class CourseFilter(filters.FilterSet):
 
     class Meta:
         model = Course
-        fields = ("level", "format",)
+        fields = ("level", "course_format",)
