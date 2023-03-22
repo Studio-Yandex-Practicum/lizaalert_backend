@@ -6,6 +6,7 @@ from .models import Course
 
 class CourseFilter(filters.FilterSet):
     """Кастомный фильтр для модели Course."""
+
     format = django_filters.CharFilter(
         field_name="course_format",
         lookup_expr="icontains"
