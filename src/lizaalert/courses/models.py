@@ -24,7 +24,7 @@ class TimeStampedModel(models.Model):
 
 class Course(TimeStampedModel):
     title = models.CharField(max_length=120, verbose_name="Название курса")
-    format = models.CharField(max_length=60, verbose_name="Формат курса")
+    course_format = models.CharField(max_length=60, verbose_name="Формат курса")
     start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
     cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
