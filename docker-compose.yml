@@ -5,7 +5,7 @@ services:
     image: postgres:14-alpine
     restart: always
     volumes:
-      - postgres_volume:/var/lib/postgresql/data/
+      - ./postgres_volume:/var/lib/postgresql/data/
     env_file:
       - ./services/postgres/.env
 
@@ -15,23 +15,19 @@ services:
     env_file:
       - .env
     volumes:
-      - ./src:/app/
-      - static_volume:/app/static/
-      - media_volume:/app/media/
+      - ./src/lizaalert:/app/lizaalert
+      - ./src/tests:/app/tests
+      - ./static_volume:/app/static/
+      - ./media_volume:/app/media/
     depends_on:
       - postgres
 
   nginx:
     image: local/lizaalert_nginx
     volumes:
-      - static_volume:/var/html/static/
-      - media_volume:/var/html/media/
+      - ./static_volume:/var/html/static/
+      - ./media_volume:/var/html/media/
     ports:
       - "8000:8000"
     depends_on:
       - backend
-
-volumes:
-  postgres_volume:
-  static_volume:
-  media_volume:

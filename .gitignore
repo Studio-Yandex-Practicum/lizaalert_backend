@@ -1,3 +1,7 @@
+media_volume
+postgres_volume
+static_volume
+
 # Created by https://www.gitignore.io
 
 ### OSX ###
