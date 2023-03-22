@@ -1,9 +1,10 @@
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
 
+from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import Course, CourseStatus, Lesson
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.serializers import (
@@ -12,8 +13,6 @@ from lizaalert.courses.serializers import (
     CourseSerializer,
     CourseStatusSerializer,
 )
-
-from lizaalert.courses.filters import CourseFilter
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
