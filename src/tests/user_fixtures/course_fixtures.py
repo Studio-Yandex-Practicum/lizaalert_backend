@@ -51,7 +51,7 @@ def create_course(user, create_level):
     start_date = datetime.date.today() + datetime.timedelta(days=3)
     course1 = Course.objects.create(
         title="Course1",
-        format="Курс",
+        course_format="Курс",
         start_date=start_date,
         short_description="Курс",
         level=create_level[0],
@@ -60,7 +60,7 @@ def create_course(user, create_level):
     )
     course2 = Course.objects.create(
         title="Course2",
-        format="Курс",
+        course_format="Курс",
         start_date=start_date,
         short_description="Курс",
         level=create_level[1],
