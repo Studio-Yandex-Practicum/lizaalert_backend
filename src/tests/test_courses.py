@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from tests.factories.courses import ChapterFactory, ChapterLessonFactory, CourseStatusFactory
+from tests.factories.courses import CourseFactory, ChapterFactory, ChapterLessonFactory, CourseStatusFactory
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
 from tests.user_fixtures.level_fixtures import return_levels_data
@@ -43,7 +43,6 @@ class TestCourse:
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
     def test_count_lessons_count_duration(self, user_client):
-
         chapter = ChapterFactory()
         _ = (
             ChapterLessonFactory(chapter=chapter, lesson__duration=1),
@@ -66,3 +65,22 @@ class TestCourse:
     #     response = user_client.get(self.url)
     #     assert response.status_code == status.HTTP_200_OK
     #     assert response.json()["results"][0]["course_status"] == "active"
+
+    def test_filter_courses_by_course_format(self, user_client):
+        course = CourseFactory()
+        course_format = course.course_format
+        params = {"course_format": course_format}
+        response = user_client.get(self.url, params)
+        courses = response.json()["results"]
+        assert response.status_code == status.HTTP_200_OK
+        assert len(courses) != 0
+
+    def test_test_filter_courses_by_level(self, user_client):
+        course = CourseFactory()
+        level = course.level.name
+        params = {"level": level}
+        response = user_client.get(self.url, params)
+        courses = response.json()["results"]
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"][0]["level"] == level
+        assert len(courses) != 0
