@@ -14,7 +14,7 @@ from lizaalert.courses.models import (
 class CourseAdmin(admin.ModelAdmin):
     list_display = (
         "title",
-        "format",
+        "course_format",
         "short_description",
         "user_created",
         "created_at",

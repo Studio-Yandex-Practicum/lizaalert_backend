@@ -21,7 +21,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
         model = Course
 
     title = factory.Sequence(lambda n: "Курс {}".format(n))
-    format = factory.Sequence(lambda n: "Курс {}".format(n))
+    course_format = factory.Sequence(lambda n: "Курс {}".format(n))
     level = factory.SubFactory(LevelFactory)
     knowledge = factory.Dict(
         {

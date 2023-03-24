@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "drf_yasg",
     "corsheaders",
+    "django_filters",
     # 3-rd party authentication apps
     "allauth",
     "allauth.account",
@@ -152,7 +153,6 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 }
-
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),

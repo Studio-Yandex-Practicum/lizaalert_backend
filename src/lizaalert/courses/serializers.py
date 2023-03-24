@@ -23,6 +23,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "id",
             "title",
             "level",
+            "course_format",
             "short_description",
             "lessons_count",
             "course_duration",
