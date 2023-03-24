@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from tests.factories.courses import CourseFactory, ChapterFactory, ChapterLessonFactory, CourseStatusFactory
+from tests.factories.courses import ChapterFactory, ChapterLessonFactory, CourseFactory, CourseStatusFactory
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
 from tests.user_fixtures.level_fixtures import return_levels_data
