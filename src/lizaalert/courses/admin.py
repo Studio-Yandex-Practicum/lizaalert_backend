@@ -16,6 +16,7 @@ class CourseAdmin(admin.ModelAdmin):
         "title",
         "course_format",
         "short_description",
+        "faq",
         "user_created",
         "created_at",
         "updated_at",
