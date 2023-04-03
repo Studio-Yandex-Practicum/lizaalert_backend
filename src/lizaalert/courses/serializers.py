@@ -29,6 +29,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "course_duration",
             "course_status",
             "cover_path",
+            "faq",
         )
 
 
@@ -77,13 +78,13 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "title",
             "level",
             "full_description",
+            "faq",
             "knowledge",
             "start_date",
             "cover_path",
             "lessons_count",
             "course_duration",
             "chapters",
-            "knowledge",
         )
 
 
