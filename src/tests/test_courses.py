@@ -84,3 +84,18 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"][0]["level"] == level
         assert len(courses) != 0
+
+    def test_field_faq_is_courses_list(self, user_client):
+        course = CourseFactory()
+        course_faq = course.faq
+        response = user_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"][0]["faq"] == course_faq
+
+    def test_field_faq_is_course(self, user_client):
+        course = CourseFactory()
+        course_id = course.pk
+        course_faq = course.faq
+        response = user_client.get(self.url, {"id": course_id})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"][0]["faq"] == course_faq

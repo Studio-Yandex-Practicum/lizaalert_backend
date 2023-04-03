@@ -37,6 +37,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     )
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
+    faq = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
     user_created = factory.SubFactory(UserFactory)
 
 
