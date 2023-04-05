@@ -104,10 +104,8 @@ class CourseLessonListSerializer(serializers.ModelSerializer):
 
 
 class LessonDetailSerializer(serializers.ModelSerializer):
-    """
-    Сериалайзер класс для отображения деталей урока, в том числе:
-    next_lesson и prev_lesson.
-    """
+    """Сериалайзер класс для отображения деталей урока, в том числе:
+    next_lesson и prev_lesson."""
 
     next_lesson = serializers.SerializerMethodField()
     prev_lesson = serializers.SerializerMethodField()
