@@ -2,7 +2,13 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from tests.factories.courses import ChapterFactory, ChapterLessonFactory, CourseFactory, CourseStatusFactory
+from tests.factories.courses import (
+    ChapterFactory,
+    ChapterLessonFactory,
+    CourseFactory,
+    CourseStatusFactory,
+    LessonFactory,
+)
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
 from tests.user_fixtures.level_fixtures import return_levels_data
@@ -100,6 +106,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"][0]["faq"] == course_faq
 
+
 @pytest.mark.django_db(transaction=True)
 class TestLessonDetailView:
     # устанавливаем URL для доступа к представлению урока
@@ -123,5 +130,5 @@ class TestLessonDetailView:
         assert response.json()["duration"] == lesson.duration
         assert response.json()["additional"] == lesson.additional
         assert response.json()["diploma"] == lesson.diploma
-        assert response.json()["next_lesson"] == None
-        assert response.json()["prev_lesson"] == None
+        assert response.json()["next_lesson"] is None
+        assert response.json()["prev_lesson"] is None
