@@ -101,3 +101,39 @@ class CourseLessonListSerializer(serializers.ModelSerializer):
             "additional",
             "diploma",
         )
+
+
+class LessonDetailSerializer(serializers.ModelSerializer):
+    """ Сериалайзер класс для отображения деталей урока, в том числе:
+    next_lesson и prev_lesson """
+    next_lesson = serializers.SerializerMethodField()
+    prev_lesson = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lesson
+        fields = (
+            "id",
+            "title",
+            "description",
+            "lesson_type",
+            "tags",
+            "duration",
+            "additional",
+            "diploma",
+            "next_lesson",
+            "prev_lesson"
+        )
+
+    def get_next_lesson(self, obj):
+        try:
+            next_lesson = Lesson.objects.filter(chapter=obj.chapter, id__gt=obj.id).order_by('id').first()
+            return next_lesson.id
+        except AttributeError:
+            return None
+
+    def get_prev_lesson(self, obj):
+        try:
+            prev_lesson = Lesson.objects.filter(chapter=obj.chapter, id__lt=obj.id).order_by('-id').first()
+            return prev_lesson.id
+        except AttributeError:
+            return None

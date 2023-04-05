@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
-from lizaalert.courses.views import CourseLessonListViewSet, CourseStatusViewSet, CourseViewSet
+from lizaalert.courses.views import CourseLessonListViewSet, CourseStatusViewSet, CourseViewSet, LessonDetailView
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="courses")
@@ -16,4 +16,5 @@ domains_router.register(r"lessons", CourseLessonListViewSet, basename="course-ch
 urlpatterns = [
     path("", include(router.urls)),
     path(r"", include(domains_router.urls)),
+    path("lessons/<int:id>/", LessonDetailView.as_view(), name="lesson_detail"),
 ]

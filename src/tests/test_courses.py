@@ -99,3 +99,29 @@ class TestCourse:
         response = user_client.get(self.url, {"id": course_id})
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"][0]["faq"] == course_faq
+
+@pytest.mark.django_db(transaction=True)
+class TestLessonDetailView:
+    # устанавливаем URL для доступа к представлению урока
+    url = reverse("lesson_detail", args=[1])
+
+    def test_lesson_detail_view(self, user_client):
+        # создаем объект Lesson с помощью фабрики
+        lesson = LessonFactory()
+
+        # делаем GET запрос к уроку по его ID
+        response = user_client.get(reverse("lesson_detail", args=[lesson.id]))
+
+        # проверяем, что ответ имеет код 200 OK
+        assert response.status_code == status.HTTP_200_OK
+        # проверяем, что данные ответа соответствуют ожидаемым значениям
+        assert response.json()["id"] == lesson.id
+        assert response.json()["title"] == lesson.title
+        assert response.json()["description"] == lesson.description
+        assert response.json()["lesson_type"] == lesson.lesson_type
+        assert eval(response.json()["tags"]) == lesson.tags
+        assert response.json()["duration"] == lesson.duration
+        assert response.json()["additional"] == lesson.additional
+        assert response.json()["diploma"] == lesson.diploma
+        assert response.json()["next_lesson"] == None
+        assert response.json()["prev_lesson"] == None
