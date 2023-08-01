@@ -5,6 +5,7 @@ EXPOSE 8000/tcp
 COPY src/manage.py .
 COPY src/gunicorn_conf.py .
 COPY src/lizaalert ./lizaalert
+COPY src/tests ./tests
 
 # устанавливаем сертификат для подключения к БД
 RUN mkdir ~/.postgresql
