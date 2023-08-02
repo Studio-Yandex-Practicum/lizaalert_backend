@@ -29,9 +29,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.username
 
     class Meta:
-        ordering = ('-id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+        ordering = ("-id",)
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
 
 class UserRole(models.Model):
