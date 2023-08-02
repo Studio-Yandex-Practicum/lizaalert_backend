@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     # 3-rd party authentication apps
+    "djoser",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -148,33 +149,34 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.User"
 
+AUTHENTICATION_CLASSES = [
+    "djoser.views.TokenCreateView",
+]
+
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
+    "SET_PASSWORD_RETYPE": True,
+}
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ]
+    ],
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
+    "TOKEN_OBTAIN_SERIALIZER": "lizaalert.authentication.serializers.CustomTokenObtainPairSerializer",
 }
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None
-REST_AUTH_SERIALIZERS = {"JWT_SERIALIZER": "lizaalert.authentication.serializers.CustomJWTSerializer"}
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_ADAPTER = "lizaalert.authentication.adapters.AccountAdapter"
-SOCIALACCOUNT_ADAPTER = "lizaalert.authentication.adapters.SocialAccountAdapter"
-SOCIALACCOUNT_PROVIDERS = {
-    "yandex": {
-        "APP": {
-            "client_id": env.str("YANDEX_CLIENT_ID", "a0693bfc6f9a4a8593e9cfc3a6b34c66"),
-            "secret": env.str("YANDEX_SECRET", "d449d272d3f14c308610d3f65e5d3d1f"),
-        },
-        "VERIFIED_EMAIL": True,
-    }
-}
+
 USE_X_FORWARDED_HOST = True
 
 API_URL = env.str("API_URL", None)
