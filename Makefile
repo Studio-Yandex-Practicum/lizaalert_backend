@@ -45,9 +45,12 @@ build:
 	docker build -f services/nginx/local.Dockerfile -t local/lizaalert_nginx .
 
 push:
-	make build
 	docker tag local/lizaalert_backend cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
 	docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
+
+build_push:
+	make build
+	make push
 
 update-ci:
 	docker build -f services/base/Dockerfile -t local/lizaalert_backend-base . 
