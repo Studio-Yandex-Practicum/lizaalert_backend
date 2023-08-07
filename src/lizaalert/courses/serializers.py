@@ -1,9 +1,7 @@
 from rest_framework import serializers
 
 from lizaalert.courses.models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
-
 from lizaalert.users.models import Level
-
 from lizaalert.users.serializers import LevelSerializer
 
 
