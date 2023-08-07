@@ -3,6 +3,8 @@ from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import Course, CourseStatus, Lesson
@@ -14,9 +16,6 @@ from lizaalert.courses.serializers import (
     CourseStatusSerializer,
     FilterSerializer,
 )
-
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
