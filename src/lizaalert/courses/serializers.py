@@ -2,6 +2,10 @@ from rest_framework import serializers
 
 from lizaalert.courses.models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
 
+from lizaalert.users.models import Level
+
+from lizaalert.users.serializers import LevelSerializer
+
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
     level = serializers.StringRelatedField(read_only=True)
@@ -101,3 +105,21 @@ class CourseLessonListSerializer(serializers.ModelSerializer):
             "additional",
             "diploma",
         )
+
+
+class FilterSerializer(serializers.Serializer):
+    slug = serializers.CharField()
+    name = serializers.CharField()
+    options = serializers.SerializerMethodField()
+
+    def get_options(self, obj):
+        if obj["slug"] == "level":
+            levels = Level.objects.all()
+            serializer = LevelSerializer(levels, many=True)
+        elif obj["slug"] == "course_status":
+            statuses = CourseStatus.objects.all()
+            serializer = CourseStatusSerializer(statuses, many=True)
+        else:
+            return []
+
+        return serializer.data
