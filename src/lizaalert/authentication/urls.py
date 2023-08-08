@@ -1,12 +1,9 @@
-from allauth.socialaccount.providers.oauth2.urls import default_urlpatterns
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
 
 from lizaalert.authentication.provider import YandexCustomProvider
-from lizaalert.authentication.views import LogoutView
+from . import views
+
 
 urlpatterns = [
-    path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("logout/", LogoutView.as_view(), name="auth_logout"),
+    path("auth/users/reset_password/", views.reset_password, name="reset_password"),
 ]
-urlpatterns += default_urlpatterns(YandexCustomProvider)
