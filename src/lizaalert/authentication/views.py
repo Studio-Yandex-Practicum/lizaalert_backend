@@ -28,4 +28,5 @@ def reset_password(request):
         f"Ваш новый пароль: {new_password}. \
         Для безопасности поменяйте его в личном кабинете",
     )
+    
     return JsonResponse({"message": "Password reset successfully"})
