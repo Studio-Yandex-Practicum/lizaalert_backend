@@ -1,6 +1,5 @@
 from django.conf import settings
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from easy_thumbnails.fields import ThumbnailerImageField
@@ -9,16 +8,10 @@ from phonenumber_field.modelfields import PhoneNumberField
 from .managers import UserManager
 
 
-class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=255, unique=True, verbose_name="username")
+class User(AbstractUser):
     email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=100, blank=True, verbose_name="имя")
-    last_name = models.CharField(max_length=100, blank=True, verbose_name="фамилия")
     patronymic = models.CharField(max_length=100, blank=True, verbose_name="отчество")
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
     phone = models.CharField(max_length=20, null=True, blank=True, verbose_name="телефон")
-    registration_date = models.DateTimeField(auto_now_add=True, verbose_name="зарегистрирован")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
