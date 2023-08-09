@@ -170,7 +170,6 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
-    "TOKEN_OBTAIN_SERIALIZER": "lizaalert.authentication.serializers.CustomTokenObtainPairSerializer",
 }
 SITE_ID = 1
 REST_USE_JWT = True
