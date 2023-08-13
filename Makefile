@@ -1,4 +1,6 @@
-
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
 # Собирает и разворачивает на локальной машине все контейнеры и применят миграции,
 # предварительно удалив существующие volumes (БД, статика, медиа) и контейнеры.
 new:
