@@ -21,6 +21,7 @@ services:
       - ./media_volume:/app/media/
     depends_on:
       - postgres
+    command: python -Wd manage.py runserver 0.0.0.0:8000 # Added for development
 
   nginx:
     image: local/lizaalert_nginx
