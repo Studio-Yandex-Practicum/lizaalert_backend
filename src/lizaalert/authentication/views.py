@@ -1,82 +1,56 @@
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from dj_rest_auth.registration.views import SocialLoginView
-from django.contrib.auth import logout
-from django.http import HttpResponseRedirect
-from django.shortcuts import reverse
-from django.utils.http import urlencode
-from django.views import View
+import random
+import string
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from lizaalert.authentication.adapters import YandexCustomAdapter
-from lizaalert.authentication.provider import YandexCustomProvider
-from lizaalert.authentication.serializers import YandexLoginSerializer
+from .serializers import UserSerializer
+from .utils import send_new_password
 
-
-class YandexLoginView(View):
-    """Перенаправляет пользователя в авторизационный сервис для получения кода подтверждения."""
-
-    provider = YandexCustomProvider
-    adapter_class = YandexCustomAdapter
-
-    def get_redirect_url(self):
-        url = self.request.build_absolute_uri(reverse(self.provider.id + "_callback"))
-        return url
-
-    def get_client_id(self, request):
-        app = self.provider(request).get_app(request)
-        client_id = app.client_id
-        return client_id
-
-    def get(self, request):
-        auth_url = self.adapter_class.authorize_url
-        params = {
-            "response_type": "code",
-            "client_id": self.get_client_id(request),
-            "redirect_uri": self.get_redirect_url(),
-        }
-        auth_url_with_params = "%s?%s" % (auth_url, urlencode(params))
-        return HttpResponseRedirect(auth_url_with_params)
+User = get_user_model()
 
 
-class YandexLoginCallbackView(SocialLoginView):
-    """Создает access и refresh JWT-токены на основе ответа от Яндекса.
+@api_view(["POST"])
+def reset_password(request):
+    email = request.data.get("email")
+    try:
+        user = User.objects.get(email=email)
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "User not found"})
+    new_password = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(12))
+    user.set_password(new_password)
+    user.save()
+    send_new_password(
+        email,
+        f"Ваш новый пароль: {new_password}. \
+        Для безопасности поменяйте его в личном кабинете",
+    )
 
-    Принимает код подтверждения от пользователя, затем меняет его
-    на access_token в авторизационном сервисе. Дальше с помощью
-    этого access_token`а получает данные пользователя. На основе полученных
-    данных генерирует access и refresh JWT-токены пользователю, если тот есть в БД.
-    Иначе сначала создает нового пользователя.
-    """
-
-    adapter_class = YandexCustomAdapter
-    client_class = OAuth2Client
-    serializer_class = YandexLoginSerializer
-    http_method_names = ("get",)
-
-    def get(self, request):
-        if "code" not in request.GET:
-            error = request.GET.get("error")
-            raise AuthenticationFailed(error)
-        code = request.GET["code"]
-        self.serializer = self.get_serializer(data={"code": code})
-        self.serializer.is_valid(raise_exception=True)
-        self.login()
-        return self.get_response()
+    return JsonResponse({"message": "Password reset successfully"})
 
 
-class LogoutView(APIView):
-    """Удаляет session куки у пользователя."""
+@api_view(["POST"])
+def custom_register(request):
+    serializer = UserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
 
-    permission_classes = (IsAuthenticated,)
+    refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
 
-    def post(self, request):
-        logout(request)
-        return Response(status=status.HTTP_200_OK)
+    response_data = {
+        "user": {
+            "username": user.username,
+            "email": user.email,
+            "id": user.id,
+        },
+        "access_token": access_token,
+        "refresh_token": str(refresh),
+    }
 
-
-oauth2_login = YandexLoginView.as_view()
-oauth2_callback = YandexLoginCallbackView.as_view()
+    return Response(response_data, status=status.HTTP_201_CREATED)

@@ -5,9 +5,26 @@ from django.db import models
 from easy_thumbnails.fields import ThumbnailerImageField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from .managers import UserManager
+
 
 class User(AbstractUser):
-    patronymic = models.CharField("Отчество", blank=True, max_length=20)
+    email = models.EmailField(unique=True)
+    patronymic = models.CharField(max_length=100, blank=True, verbose_name="отчество")
+    phone = models.CharField(max_length=20, null=True, blank=True, verbose_name="телефон")
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.username
+
+    class Meta:
+        ordering = ("-id",)
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
 
 class UserRole(models.Model):
