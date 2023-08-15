@@ -3,11 +3,10 @@ from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import Course, CourseStatus, Lesson
+from lizaalert.users.models import Level
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.serializers import (
     CourseDetailSerializer,
@@ -87,9 +86,6 @@ class CourseLessonListViewSet(viewsets.ReadOnlyModelViewSet):
         return out
 
 
-class FilterListView(APIView):
-    def get(self, request):
-        filters = [{"slug": "level", "name": "Уровень"}, {"slug": "course_status", "name": "Статус"}]
-
-        serializer = FilterSerializer(filters, many=True)
-        return Response(serializer.data)
+class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = [Level, CourseStatus]
+    serializer_class = FilterSerializer
