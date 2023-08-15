@@ -12,7 +12,9 @@ from lizaalert.courses.serializers import (
     CourseLessonListSerializer,
     CourseSerializer,
     CourseStatusSerializer,
+    FilterSerializer,
 )
+from lizaalert.users.models import Level
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -82,3 +84,8 @@ class CourseLessonListViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         out = Lesson.objects.filter(chapter__course__id=self.kwargs["courses_pk"])
         return out
+
+
+class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = [Level, CourseStatus]
+    serializer_class = FilterSerializer

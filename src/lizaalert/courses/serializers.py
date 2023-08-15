@@ -101,3 +101,23 @@ class CourseLessonListSerializer(serializers.ModelSerializer):
             "additional",
             "diploma",
         )
+
+
+class OptionSerializer(serializers.Serializer):
+    id = serializers.PrimaryKeyRelatedField(read_only=True)
+    name = serializers.CharField()
+
+
+class FilterSerializer(serializers.Serializer):
+    slug = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    options = serializers.SerializerMethodField()
+
+    def get_name(self, model):
+        return model._meta.verbose_name
+
+    def get_slug(self, model):
+        return model._meta.model_name
+
+    def get_options(self, model):
+        return OptionSerializer(model.objects.all(), many=True).data
