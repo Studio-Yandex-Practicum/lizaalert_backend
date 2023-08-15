@@ -6,7 +6,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import Course, CourseStatus, Lesson
-from lizaalert.users.models import Level
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.serializers import (
     CourseDetailSerializer,
@@ -15,6 +14,7 @@ from lizaalert.courses.serializers import (
     CourseStatusSerializer,
     FilterSerializer,
 )
+from lizaalert.users.models import Level
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
