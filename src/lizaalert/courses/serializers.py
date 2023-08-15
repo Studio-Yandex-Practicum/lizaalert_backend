@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
 from lizaalert.courses.models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
-from lizaalert.users.models import Level
-from lizaalert.users.serializers import LevelSerializer
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
@@ -105,19 +103,21 @@ class CourseLessonListSerializer(serializers.ModelSerializer):
         )
 
 
-class FilterSerializer(serializers.Serializer):
-    slug = serializers.CharField()
+class OptionSerializer(serializers.Serializer):
+    id = serializers.PrimaryKeyRelatedField(read_only=True)
     name = serializers.CharField()
+
+
+class FilterSerializer(serializers.Serializer):
+    slug = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
     options = serializers.SerializerMethodField()
 
-    def get_options(self, obj):
-        if obj["slug"] == "level":
-            levels = Level.objects.all()
-            serializer = LevelSerializer(levels, many=True)
-        elif obj["slug"] == "course_status":
-            statuses = CourseStatus.objects.all()
-            serializer = CourseStatusSerializer(statuses, many=True)
-        else:
-            return []
+    def get_name(self, model):
+        return model._meta.verbose_name
 
-        return serializer.data
+    def get_slug(self, model):
+        return model._meta.model_name
+
+    def get_options(self, model):
+        return OptionSerializer(model.objects.all(), many=True).data
