@@ -1,0 +1,38 @@
+name: Deploy to Remote Server
+on:
+  workflow_run:
+    workflows: ["Code Style Checks & Tests"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy to Remote Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker image
+        run: |
+          docker build -t cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest .
+          docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
+
+      - name: Deploy to Remote Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          script: |
+            sudo docker pull cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
+            sudo docker-compose stop
+            sudo docker-compose rm backend
+            sudo docker-compose up -d
