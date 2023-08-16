@@ -35,7 +35,7 @@ black:
 
 # Запуск тестов.
 test:
-	docker-compose exec backend pytest tests/
+	docker-compose run --rm backend pytest tests/
 
 # Удаляет все контейнеры и volumes.
 remove:
