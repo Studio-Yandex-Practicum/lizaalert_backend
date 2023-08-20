@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from lizaalert.courses.models import (
+    FAQ,
     Chapter,
     ChapterLesson,
     ChapterProgressStatus,
@@ -8,10 +9,9 @@ from lizaalert.courses.models import (
     CourseFaq,
     CourseKnowledge,
     CourseStatus,
-    FAQ,
     Knowledge,
     Lesson,
-    LessonProgressStatus
+    LessonProgressStatus,
 )
 
 
