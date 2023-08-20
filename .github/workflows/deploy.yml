@@ -18,6 +18,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Copy environment files
+        run: |
+          cp .env.sample lizaalert-backend/.env
+          cp .env.sample services/postgres/.env    
+
       - name: Build and Push Docker image
         run: |
           docker-compose build backend
