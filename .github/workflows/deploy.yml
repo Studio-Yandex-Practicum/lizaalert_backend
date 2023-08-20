@@ -20,7 +20,8 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          docker build -t cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest -f services/local/Dockerfile .
+          docker-compose build backend
+          docker tag services/local cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
           docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
 
       - name: Deploy to Remote Server
