@@ -69,10 +69,10 @@ class LessonInlineSerializer(serializers.ModelSerializer):
 
         Здесь не подойдет boolean field, надо переделать в дальнейшей реализации статусов.
         """
-        user = self.context.get('request').user.id
+        user = self.context.get("request").user.id
         lesson_status = LessonProgressStatus(user=user, lesson=obj.lesson)
         #  проверить данный код, ибо у нас есть 3 статуса, boolean значение тут не пойдет
-        if lesson_status.userlessonprogress == 'FINISHED':
+        if lesson_status.userlessonprogress == "FINISHED":
             return True
         return False
 
@@ -96,7 +96,7 @@ class FaqInlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FAQ
-        fields = ("__all__")
+        fields = "__all__"
 
 
 class KnowledgeInlineSerializer(serializers.ModelSerializer):
@@ -104,7 +104,7 @@ class KnowledgeInlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Knowledge
-        fields = ("__all__")
+        fields = "__all__"
 
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
