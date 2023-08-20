@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
 from lizaalert.courses.models import (
-    Chapter, ChapterLesson, Course, FAQ, Knowledge,
-    CourseStatus, Lesson, LessonProgressStatus
+    FAQ, Chapter, ChapterLesson, Course,
+    CourseStatus, Knowledge, Lesson,
+    LessonProgressStatus
 )
 
 
