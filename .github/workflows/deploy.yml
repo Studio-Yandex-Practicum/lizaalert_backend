@@ -19,11 +19,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build lizaalert_backend-base image
-        run: docker build -t lizaalert_backend-base -f services/base/Dockerfile .
+        run: docker build -t local/lizaalert_backend-base -f services/base/Dockerfile .
+
+      - name: Build lizaalert_backend image
+        run: docker build -t local/lizaalert_backend -f services/local/Dockerfile .
 
       - name: Build and Push Docker image
         run: |
-          docker build -t cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest -f services/local/Dockerfile .
+          docker tag local/lizaalert_backend cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
           docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
       - name: Deploy to Remote Server
         uses: appleboy/ssh-action@master
@@ -34,6 +37,4 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo docker pull cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
-            sudo docker-compose stop
-            sudo docker-compose rm backend
-            sudo docker-compose up -d
+            sudo docker-compose restart
