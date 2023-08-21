@@ -6,8 +6,9 @@ on:
       - completed
   push:
     branches:
-      - master
-      - dev
+#      - master
+#      - dev
+      - CI/CD
 
 jobs:
   deploy:
