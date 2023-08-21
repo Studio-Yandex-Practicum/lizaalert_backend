@@ -3,4 +3,5 @@ pytest_plugins = [
     "tests.user_fixtures.course_fixtures",
     "tests.user_fixtures.level_fixtures",
     "tests.user_fixtures.role_fixtures",
+    "tests.user_fixtures.filters_fixtures",
 ]
