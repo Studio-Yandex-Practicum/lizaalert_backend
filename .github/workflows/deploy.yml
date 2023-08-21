@@ -1,13 +1,13 @@
 name: Deploy to Remote Server
 on:
-  # workflow_run:
-  #   workflows: ["Code Style Checks & Tests"]
-  #   types:
-  #     - completed
+  workflow_run:
+    workflows: ["Code Style Checks & Tests"]
+    types:
+      - completed
   push:
     branches:
-#      - master
-#      - dev
+      - master
+      - dev
       - CI/CD
 
 jobs:
@@ -18,12 +18,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Build lizaalert_backend-base image
+        run: docker build -t lizaalert_backend-base -f services/base/Dockerfile .
+
       - name: Build and Push Docker image
         run: |
-          docker-compose build backend
-          docker tag services/local cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
+          docker build -t cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest -f services/local/Dockerfile .
           docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
-
       - name: Deploy to Remote Server
         uses: appleboy/ssh-action@master
         with:
