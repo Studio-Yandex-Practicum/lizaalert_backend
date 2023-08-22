@@ -43,4 +43,5 @@ jobs:
           script: |
             sudo docker pull cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
             sudo -i
-            docker-compose -f liza_backend/docker-compose.yml restart
+            cd liza_backend/
+            docker-compose restart
