@@ -24,6 +24,12 @@ jobs:
       - name: Build lizaalert_backend image
         run: docker build -t local/lizaalert_backend -f services/local/Dockerfile .
 
+      - name: Log in to Yandex Container Registry
+        run: |
+          echo ${{ secrets.YCR_PRIVATE_KEY }} > key.json
+          cat key.json | docker login --username json_key --password-stdin cr.yandex
+          rm key.json
+
       - name: Build and Push Docker image
         run: |
           docker tag local/lizaalert_backend cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
