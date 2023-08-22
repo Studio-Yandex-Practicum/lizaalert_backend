@@ -42,4 +42,5 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo docker pull cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
+            sudo -i
             sudo docker-compose -f /liza_backend/docker-compose.yml restart
