@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Quiz
+from .models import Question, Quiz
 
 
 class QuizSerializer(serializers.ModelSerializer):
@@ -14,4 +14,17 @@ class QuizSerializer(serializers.ModelSerializer):
             "duration_minutes",
             "passing_score",
             "max_attempts",
+        )
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = (
+            "id",
+            "question_type",
+            "quiz",
+            "title",
+            "answers",
+            "order_number",
         )
