@@ -19,6 +19,10 @@ class Quiz(models.Model):
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     deleted_at = models.DateTimeField("Дата удаления", null=True, blank=True)
 
+    class Meta:
+        verbose_name = "Квиз"
+        verbose_name_plural = "Квизы"
+
 
 class Question(models.Model):
     QUESTION_TYPES = [
@@ -27,13 +31,31 @@ class Question(models.Model):
         ("text_answer", "Text Answer"),
     ]
 
-    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES)
-    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL)
-    title = models.CharField(max_length=255)
-    answers = models.JSONField()
-    order_number = models.PositiveIntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
+    question_type = models.CharField("Тип вопроса", max_length=20, choices=QUESTION_TYPES)
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, verbose_name="Квиз")
+    title = models.CharField("Заголовок", max_length=255)
+    answers = models.JSONField("[id, title, description, right_answer:bool]")
+    order_number = models.PositiveIntegerField("Порядковый номер")
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    deleted_at = models.DateTimeField("Дата удаления", null=True, blank=True)
 
     class Meta:
         ordering = ["-order_number"]
+        verbose_name = "Вопрос"
+        verbose_name_plural = "Вопросы"
+
+
+class UserAnswer(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    answers = models.JSONField("Ответы пользователя")
+    result = models.JSONField("Результат проверки ответов")
+    retry_count = models.PositiveIntegerField("Количество попыток", default=0)
+    score = models.PositiveIntegerField("Количество баллов", default=0)
+    final_result = models.CharField("Окончательный результат", max_length=255)
+    start_time = models.TimeField("Время начала выполнения", null=True, blank=True)
+    date_completed = models.TimeField("Время завершения выполнения", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Ответ пользователя"
+        verbose_name_plural = "Ответы пользователей"
