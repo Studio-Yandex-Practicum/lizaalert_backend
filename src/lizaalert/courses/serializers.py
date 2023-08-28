@@ -31,7 +31,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "course_status",
             "cover_path",
             "faq",
-            "user_status"
+            "user_status",
         )
 
 
