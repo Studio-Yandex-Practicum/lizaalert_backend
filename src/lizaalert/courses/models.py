@@ -22,19 +22,22 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
-class FAQ(models.Model):
+class FAQ(TimeStampedModel):
     """
     Класс для хранения списка часто задаваемых вопросов.
 
-    question - часто задаваемый вопрос (уникальное значение)
-    answer - ответ на заданный вопрос.
+    question - часто задаваемый вопрос
+    answer - ответ на заданный вопрос
+    created_at - дата создания вопроса
+    updated_at - дата обновленя вопроса
+    user_created - пользователь, создавший вопрос/ответ.
     """
 
     question = models.CharField(max_length=250, verbose_name="Вопрос")
     answer = models.CharField(max_length=1000, verbose_name="Ответ")
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель вопроса")
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["question"], name="unique_question")]
         verbose_name = "FAQ"
         verbose_name_plural = "FAQ"
 
@@ -42,16 +45,20 @@ class FAQ(models.Model):
         return self.question
 
 
-class Knowledge(models.Model):
+class Knowledge(TimeStampedModel):
     """
     Класс для хранения списка умений получаемых на курсе.
 
     title - название умения (уникальное значение)
-    description - развернутое описание умения.
+    description - развернутое описание умения
+    created_at - дата создания умения
+    updated_at - дата обновленя умения
+    user_created - пользователь, создавший умение.
     """
 
     title = models.CharField(max_length=250, verbose_name="Название умения")
     description = models.CharField(max_length=1000, verbose_name="Описание умения")
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель умения")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["title"], name="unique_knowledge")]
@@ -349,9 +356,15 @@ class CourseFaq(models.Model):
     faq = models.ForeignKey(FAQ, on_delete=models.PROTECT)
     course = models.ForeignKey(Course, on_delete=models.PROTECT)
 
+    class Meta:
+        ordering = ("faq",)
+
 
 class CourseKnowledge(models.Model):
     """Модель связи умение-курс."""
 
     knowledge = models.ForeignKey(Knowledge, on_delete=models.PROTECT)
     course = models.ForeignKey(Course, on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ("knowledge",)

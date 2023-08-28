@@ -78,3 +78,25 @@ def create_chapter(user, create_lesson, create_course):
     ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[0], order_number=1)
     ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[1], order_number=2)
     return chapter
+
+
+@pytest.fixture()
+def create_faq(user, create_course):
+    from lizaalert.courses.models import FAQ, CourseFaq
+
+    faq1 = FAQ.objects.create(question="Вопрос", answer="Ответ", user_created=user)
+    faq2 = FAQ.objects.create(question="Вопрос2", answer="Ответ2", user_created=user)
+    CourseFaq.objects.create(faq=faq1, course=create_course[0])
+    CourseFaq.objects.create(faq=faq2, course=create_course[0])
+    return faq1
+
+
+@pytest.fixture()
+def create_knowledge(user, create_course):
+    from lizaalert.courses.models import Knowledge, CourseKnowledge
+
+    knowledge1 = Knowledge.objects.create(title="Знание", description="Описание", user_created=user)
+    knowledge2 = Knowledge.objects.create(title="Знание2", description="Описание2", user_created=user)
+    CourseKnowledge.objects.create(knowledge=knowledge1, course=create_course[0])
+    CourseKnowledge.objects.create(knowledge=knowledge2, course=create_course[0])
+    return knowledge1

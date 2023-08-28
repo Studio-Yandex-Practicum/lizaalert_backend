@@ -39,6 +39,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "course_status",
             "cover_path",
             "faq",
+            "knowledge",
         )
 
 
@@ -65,7 +66,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
 
     def get_lesson_completed(self, obj):
         """
-        Возввращает статус конкретного урока.
+        Возвращает статус конкретного урока.
 
         Здесь не подойдет boolean field, надо переделать в дальнейшей реализации статусов.
         """

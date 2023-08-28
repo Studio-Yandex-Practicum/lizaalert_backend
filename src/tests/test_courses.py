@@ -20,7 +20,7 @@ class TestCourseStatusAndLevel:
         response = user_client.get(url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_anonimous(self, client):
+    def test_anonymous(self, client):
         response = client.get(self.urls[0][0])
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -85,17 +85,56 @@ class TestCourse:
         assert response.json()["results"][0]["level"] == level
         assert len(courses) != 0
 
-    def test_field_faq_is_courses_list(self, user_client):
-        course = CourseFactory()
-        course_faq = course.faq
-        response = user_client.get(self.url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["faq"] == course_faq
+    def test_lesson_completed_field(
+        self,
+        user_client,
+    ):
+        """
+        Тест, что поле lesson_completed возвращает корректный результат.
 
-    def test_field_faq_is_course(self, user_client):
+        Необходимо доделать тесты/фабрики для связи Chapter и Course
+        Необходимо реализовать данный тест после того как будет решена логика работы
+        lesson_completed_field.
+        """
+        chapter = ChapterFactory()
+        _ = (
+            ChapterLessonFactory(chapter=chapter, lesson__duration=1),
+            ChapterLessonFactory(chapter=chapter, lesson__duration=2),
+        )
         course = CourseFactory()
         course_id = course.pk
-        course_faq = course.faq
+        response = user_client.get(f"{self.url}{course_id}/")
+        print(response.json())
+        assert 0 == 1
+
+    def test_field_faq_in_courses_list(self, user_client, create_faq):
+        """Тест, что объекты FAQ появляются в списке курсов."""
+        response = user_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"][0]["faq"][0] == 1
+        assert response.json()["results"][0]["faq"][1] == 2
+
+    def test_field_faq_in_course(self, user_client, create_faq):
+        """Тест, что объекты FAQ появляются в конкретном курсе."""
+        course = CourseFactory()
+        course_id = course.pk
         response = user_client.get(self.url, {"id": course_id})
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["faq"] == course_faq
+        assert response.json()["results"][0]["faq"][0] == 3
+        assert response.json()["results"][0]["faq"][1] == 4
+
+    def test_field_knowledge_in_courses_list(self, user_client, create_knowledge):
+        """Тест, что объекты Knowledge появляются в списке курсов."""
+        response = user_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"][0]["knowledge"][0] == 1
+        assert response.json()["results"][0]["knowledge"][1] == 2
+
+    def test_field_knowledge_in_course(self, user_client, create_knowledge):
+        """Тест, что объекты Knowledge появляются в конкретном курсе."""
+        course = CourseFactory()
+        course_id = course.pk
+        response = user_client.get(self.url, {"id": course_id})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"][0]["knowledge"][0] == 3
+        assert response.json()["results"][0]["knowledge"][1] == 4
