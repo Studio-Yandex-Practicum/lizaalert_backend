@@ -63,7 +63,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 filter=Q(chapters__lessons__lesson_status=lesson_status),
             ),
             course_status=Value("inactive"),
-            user_status=Value("not_enrolled")
+            user_status=Value("not_enrolled"),
         )
         return course
 
