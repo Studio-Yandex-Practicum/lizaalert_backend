@@ -93,7 +93,7 @@ def create_faq(user, create_course):
 
 @pytest.fixture()
 def create_knowledge(user, create_course):
-    from lizaalert.courses.models import Knowledge, CourseKnowledge
+    from lizaalert.courses.models import CourseKnowledge, Knowledge
 
     knowledge1 = Knowledge.objects.create(title="Знание", description="Описание", user_created=user)
     knowledge2 = Knowledge.objects.create(title="Знание2", description="Описание2", user_created=user)
