@@ -149,6 +149,7 @@ class Lesson(TimeStampedModel):
     lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="квиз")
     user_created = models.ForeignKey(
         User,
         related_name="lesson_creator",
@@ -197,7 +198,6 @@ class Chapter(TimeStampedModel):
     title = models.CharField(max_length=120, null=True, blank=True, verbose_name="название главы")
     lessons = models.ManyToManyField(Lesson, through="ChapterLesson", verbose_name="уроки главы")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, verbose_name="Части", related_name="chapters")
-    quiz = models.OneToOneField(Quiz, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="квиз главы")
     user_created = models.ForeignKey(
         User,
         related_name="chapter_creator",

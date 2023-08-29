@@ -29,6 +29,7 @@ class QuestionListView(generics.ListAPIView):
 class RunQuizView(generics.CreateAPIView):
     """
     Обрабатывает начало прохождения квиза для пользователя.
+    
     Если запись UserAnswer для того же пользователя и квиза уже существует,
     обновляется время в поле start_time. Если нет, создается новая запись UserAnswer.
 
