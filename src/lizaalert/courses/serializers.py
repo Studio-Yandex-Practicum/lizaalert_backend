@@ -1,5 +1,5 @@
-from rest_framework import serializers
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 
 from lizaalert.courses.models import (
     FAQ,
