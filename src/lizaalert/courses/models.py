@@ -30,12 +30,12 @@ class FAQ(TimeStampedModel):
     answer - ответ на заданный вопрос
     created_at - дата создания вопроса
     updated_at - дата обновленя вопроса
-    user_created - пользователь, создавший вопрос/ответ.
+    author - пользователь, создавший вопрос/ответ.
     """
 
     question = models.CharField(max_length=250, verbose_name="Вопрос")
     answer = models.CharField(max_length=1000, verbose_name="Ответ")
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель вопроса")
+    author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель вопроса")
 
     class Meta:
         verbose_name = "FAQ"
@@ -53,12 +53,12 @@ class Knowledge(TimeStampedModel):
     description - развернутое описание умения
     created_at - дата создания умения
     updated_at - дата обновленя умения
-    user_created - пользователь, создавший умение.
+    author - пользователь, создавший умение.
     """
 
     title = models.CharField(max_length=250, verbose_name="Название умения")
     description = models.CharField(max_length=1000, verbose_name="Описание умения")
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель умения")
+    author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель умения")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["title"], name="unique_knowledge")]

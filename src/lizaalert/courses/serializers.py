@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
 from lizaalert.courses.models import (
     FAQ,
@@ -71,7 +72,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
         Здесь не подойдет boolean field, надо переделать в дальнейшей реализации статусов.
         """
         user = self.context.get("request").user.id
-        lesson_status = LessonProgressStatus(user=user, lesson=obj.lesson)
+        lesson_status = get_object_or_404(LessonProgressStatus, user=user, lesson=obj.lesson)
         #  проверить данный код, ибо у нас есть 3 статуса, boolean значение тут не пойдет
         if lesson_status.userlessonprogress == "FINISHED":
             return True

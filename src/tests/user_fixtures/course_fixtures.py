@@ -84,8 +84,8 @@ def create_chapter(user, create_lesson, create_course):
 def create_faq(user, create_course):
     from lizaalert.courses.models import FAQ, CourseFaq
 
-    faq1 = FAQ.objects.create(question="Вопрос", answer="Ответ", user_created=user)
-    faq2 = FAQ.objects.create(question="Вопрос2", answer="Ответ2", user_created=user)
+    faq1 = FAQ.objects.create(question="Вопрос", answer="Ответ", author=user)
+    faq2 = FAQ.objects.create(question="Вопрос2", answer="Ответ2", author=user)
     CourseFaq.objects.create(faq=faq1, course=create_course[0])
     CourseFaq.objects.create(faq=faq2, course=create_course[0])
     return faq1
@@ -95,8 +95,8 @@ def create_faq(user, create_course):
 def create_knowledge(user, create_course):
     from lizaalert.courses.models import CourseKnowledge, Knowledge
 
-    knowledge1 = Knowledge.objects.create(title="Знание", description="Описание", user_created=user)
-    knowledge2 = Knowledge.objects.create(title="Знание2", description="Описание2", user_created=user)
+    knowledge1 = Knowledge.objects.create(title="Знание", description="Описание", author=user)
+    knowledge2 = Knowledge.objects.create(title="Знание2", description="Описание2", author=user)
     CourseKnowledge.objects.create(knowledge=knowledge1, course=create_course[0])
     CourseKnowledge.objects.create(knowledge=knowledge2, course=create_course[0])
     return knowledge1
