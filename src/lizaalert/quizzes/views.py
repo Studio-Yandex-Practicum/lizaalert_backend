@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from courses.models import Lesson
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from ..courses.models import Lesson
 from .models import Question, Quiz, UserAnswer
-from .serializers import QuestionSerializer, QuizSerializer, UserAnswerSerializer
+from .serializers import QuizSerializer, UserAnswerSerializer
 
 
 class QuizDetailView(generics.RetrieveAPIView):
@@ -17,13 +17,14 @@ class QuizDetailView(generics.RetrieveAPIView):
         lesson = Lesson.objects.get(pk=lesson_id)
         return lesson.quiz
 
-
-class QuestionListView(generics.ListAPIView):
-    serializer_class = QuestionSerializer
-
     def get_queryset(self):
         lesson_id = self.kwargs["lesson_id"]
         return Question.objects.filter(quiz__lesson_id=lesson_id)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["include_questions"] = True
+        return context
 
 
 class RunQuizView(generics.CreateAPIView):

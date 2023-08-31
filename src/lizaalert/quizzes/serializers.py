@@ -3,31 +3,40 @@ from rest_framework import serializers
 from .models import Question, Quiz, UserAnswer
 
 
-class QuizSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Quiz
-        fields = (
-            "id",
-            "author",
-            "title",
-            "description",
-            "duration_minutes",
-            "passing_score",
-            "max_attempts",
-        )
-
-
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = (
             "id",
-            "question_type",
-            "quiz",
             "title",
             "answers",
-            "order_number",
+            "question_type",
         )
+
+
+class QuizSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Quiz
+        fields = (
+            "id",
+            "slug",
+            "title",
+            "description",
+            "status",
+            "passing_score",
+            "retries",
+            "in_progress",
+            "deadline",
+            "questions",
+        )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if self.context.get("include_questions"):
+            representation["questions"] = QuestionSerializer(instance.question_set.all(), many=True).data
+        return representation
 
 
 class UserAnswerSerializer(serializers.ModelSerializer):
