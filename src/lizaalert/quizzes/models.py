@@ -1,13 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from .managers import QuestionManager
+from .mixins import TimeStampedMixin
+
 User = get_user_model()
 
 
-class Quiz(models.Model):
+class Quiz(TimeStampedMixin):
     author = models.ForeignKey(
         User,
         blank=True,
+        null=True,
         on_delete=models.SET_NULL,
         verbose_name="Автор",
     )
@@ -15,37 +19,41 @@ class Quiz(models.Model):
     description = models.TextField("Вопрос")
     duration_minutes = models.PositiveIntegerField("Кол-во минут для сдачи", default=0)
     passing_score = models.PositiveIntegerField("Кол-во баллов для прохождения", default=0)
-    max_attempts = models.PositiveIntegerField("Число попыток", default=1)
-    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
-    deleted_at = models.DateTimeField("Дата удаления", null=True, blank=True)
+    retries = models.PositiveIntegerField("Число попыток", default=0)
+    slug = models.SlugField(unique=True)
+    status = models.CharField("Статус", max_length=20)
+    in_progress = models.BooleanField("В процессе", default=False)
+    deadline = models.DateTimeField("Срок выполнения")
 
     class Meta:
         verbose_name = "Квиз"
         verbose_name_plural = "Квизы"
 
+    def __str__(self):
+        return self.title
 
-class Question(models.Model):
+
+class Question(TimeStampedMixin):
     QUESTION_TYPES = [
-        ("single_choice", "Single Choice"),
-        ("multiple_choice", "Multiple Choice"),
+        ("checkbox", "checkbox"),
+        ("radio", "radio"),
         ("text_answer", "Text Answer"),
     ]
 
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, verbose_name="Квиз")
     question_type = models.CharField("Тип вопроса", max_length=20, choices=QUESTION_TYPES)
-    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, verbose_name="Квиз")
     title = models.CharField("Заголовок", max_length=255)
     answers = models.JSONField("[id, title, description, right_answer:bool]")
     order_number = models.PositiveIntegerField("Порядковый номер")
-    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
-    deleted_at = models.DateTimeField("Дата удаления", null=True, blank=True)
+    objects = QuestionManager()
 
     class Meta:
-        ordering = ["-order_number"]
+        ordering = ["order_number"]
         verbose_name = "Вопрос"
         verbose_name_plural = "Вопросы"
 
 
-class UserAnswer(models.Model):
+class UserAnswer(TimeStampedMixin):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     answers = models.JSONField("Ответы пользователя")
