@@ -22,6 +22,53 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+class FAQ(TimeStampedModel):
+    """
+    Класс для хранения списка часто задаваемых вопросов.
+
+    question - часто задаваемый вопрос
+    answer - ответ на заданный вопрос
+    created_at - дата создания вопроса
+    updated_at - дата обновленя вопроса
+    author - пользователь, создавший вопрос/ответ.
+    """
+
+    question = models.CharField(max_length=250, verbose_name="Вопрос")
+    answer = models.CharField(max_length=1000, verbose_name="Ответ")
+    author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель вопроса")
+
+    class Meta:
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQ"
+
+    def __str__(self):
+        return self.question
+
+
+class Knowledge(TimeStampedModel):
+    """
+    Класс для хранения списка умений получаемых на курсе.
+
+    title - название умения (уникальное значение)
+    description - развернутое описание умения
+    created_at - дата создания умения
+    updated_at - дата обновленя умения
+    author - пользователь, создавший умение.
+    """
+
+    title = models.CharField(max_length=250, verbose_name="Название умения")
+    description = models.CharField(max_length=1000, verbose_name="Описание умения")
+    author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель умения")
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["title"], name="unique_knowledge")]
+        verbose_name = "Умение"
+        verbose_name_plural = "Умения"
+
+    def __str__(self):
+        return self.title
+
+
 class Course(TimeStampedModel):
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
@@ -35,8 +82,8 @@ class Course(TimeStampedModel):
         related_name="course",
     )
     full_description = models.TextField(verbose_name="Полное описание курса")
-    knowledge = models.JSONField(blank=True, null=True)
-    faq = models.TextField(blank=True, verbose_name="FAQ")
+    knowledge = models.ManyToManyField(Knowledge, through="CourseKnowledge", verbose_name="Умения", null=True)
+    faq = models.ManyToManyField(FAQ, through="CourseFaq", verbose_name="Часто задаваемые вопросы", null=True)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
 
     class Meta:
@@ -301,3 +348,23 @@ class CourseProgressStatus(TimeStampedModel):
         verbose_name="прогресс курса",
         choices=ProgressStatus.choices,
     )
+
+
+class CourseFaq(models.Model):
+    """Модель связи вопрос-курс."""
+
+    faq = models.ForeignKey(FAQ, on_delete=models.PROTECT)
+    course = models.ForeignKey(Course, on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ("faq",)
+
+
+class CourseKnowledge(models.Model):
+    """Модель связи умение-курс."""
+
+    knowledge = models.ForeignKey(Knowledge, on_delete=models.PROTECT)
+    course = models.ForeignKey(Course, on_delete=models.PROTECT)
+
+    class Meta:
+        ordering = ("knowledge",)
