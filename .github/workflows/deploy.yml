@@ -4,6 +4,10 @@ on:
     workflows: ["Code Style Checks & Tests"]
     types:
       - completed
+  push:
+    branches:
+      - master
+      - dev
 
 jobs:
   deploy:
@@ -13,15 +17,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Log in to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build lizaalert_backend-base image
+        run: docker build -t local/lizaalert_backend-base -f services/base/Dockerfile .
+
+      - name: Build lizaalert_backend image
+        run: docker build -t local/lizaalert_backend -f services/local/Dockerfile .
+
+      - name: Log in to Yandex Container Registry
+        env:
+          YCR_PRIVATE_KEY: ${{ secrets.YCR_PRIVATE_KEY }}
+        run: echo "$YCR_PRIVATE_KEY" | docker login --username json_key --password-stdin cr.yandex
 
       - name: Build and Push Docker image
         run: |
-          docker build -t cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest .
+          docker tag local/lizaalert_backend cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
           docker push cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
 
       - name: Deploy to Remote Server
@@ -33,6 +42,4 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo docker pull cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
-            sudo docker-compose stop
-            sudo docker-compose rm backend
-            sudo docker-compose up -d
+            sudo bash -c "docker-compose -f /root/liza_backend/docker-compose.yml up -d"
