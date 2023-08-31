@@ -72,10 +72,11 @@ class LessonInlineSerializer(serializers.ModelSerializer):
         Здесь не подойдет boolean field, надо переделать в дальнейшей реализации статусов.
         """
         user = self.context.get("request").user.id
-        lesson_status = get_object_or_404(LessonProgressStatus, user=user, lesson=obj.lesson)
-        #  проверить данный код, ибо у нас есть 3 статуса, boolean значение тут не пойдет
-        if lesson_status.userlessonprogress == "FINISHED":
-            return True
+        if user:
+            lesson_status = get_object_or_404(LessonProgressStatus, user=user, lesson=obj.lesson)
+            #  проверить данный код, ибо у нас есть 3 статуса, boolean значение тут не пойдет
+            if lesson_status.userlessonprogress == "FINISHED":
+                return True
         return False
 
 
