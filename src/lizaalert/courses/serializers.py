@@ -1,6 +1,16 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from lizaalert.courses.models import Chapter, ChapterLesson, Course, CourseStatus, Lesson
+from lizaalert.courses.models import (
+    FAQ,
+    Chapter,
+    ChapterLesson,
+    Course,
+    CourseStatus,
+    Knowledge,
+    Lesson,
+    LessonProgressStatus,
+)
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
@@ -30,6 +40,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "course_status",
             "cover_path",
             "faq",
+            "knowledge",
         )
 
 
@@ -40,6 +51,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     lesson_status = serializers.ReadOnlyField(source="lesson.lesson_status")
     duration = serializers.ReadOnlyField(source="lesson.duration")
     title = serializers.ReadOnlyField(source="lesson.title")
+    lesson_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = ChapterLesson
@@ -50,7 +62,21 @@ class LessonInlineSerializer(serializers.ModelSerializer):
             "lesson_status",
             "duration",
             "title",
+            "lesson_completed",
         )
+
+    def get_lesson_completed(self, obj):
+        """
+        Возвращает статус конкретного урока.
+
+        Здесь не подойдет boolean field, надо переделать в дальнейшей реализации статусов.
+        """
+        user = self.context.get("request").user.id
+        lesson_status = get_object_or_404(LessonProgressStatus, user=user, lesson=obj.lesson)
+        #  проверить данный код, ибо у нас есть 3 статуса, boolean значение тут не пойдет
+        if lesson_status.userlessonprogress == "FINISHED":
+            return True
+        return False
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):
@@ -67,9 +93,26 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
         )
 
 
+class FaqInlineSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для вложенных FAQ."""
+
+    class Meta:
+        model = FAQ
+        fields = "__all__"
+
+
+class KnowledgeInlineSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для вложенных умений."""
+
+    class Meta:
+        model = Knowledge
+        fields = "__all__"
+
+
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    knowledge = serializers.JSONField()
+    faq = FaqInlineSerializer(many=True)
+    knowledge = KnowledgeInlineSerializer(many=True)
 
     class Meta:
         model = Course
