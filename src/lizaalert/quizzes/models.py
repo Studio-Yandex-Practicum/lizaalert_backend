@@ -1,13 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from lizaalert.courses.models import TimeStampedModel
 from lizaalert.quizzes.managers import QuestionManager
-from .mixins import TimeStampedMixin
 
 User = get_user_model()
 
 
-class Quiz(TimeStampedMixin):
+class Quiz(TimeStampedModel):
     author = models.ForeignKey(
         User,
         blank=True,
@@ -33,7 +33,7 @@ class Quiz(TimeStampedMixin):
         return self.title
 
 
-class Question(TimeStampedMixin):
+class Question(TimeStampedModel):
     QUESTION_TYPES = [
         ("checkbox", "checkbox"),
         ("radio", "radio"),
@@ -53,7 +53,7 @@ class Question(TimeStampedMixin):
         verbose_name_plural = "Вопросы"
 
 
-class UserAnswer(TimeStampedMixin):
+class UserAnswer(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     answers = models.JSONField("Ответы пользователя")
