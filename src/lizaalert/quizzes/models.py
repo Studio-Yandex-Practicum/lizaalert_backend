@@ -20,7 +20,6 @@ class Quiz(TimeStampedModel):
     duration_minutes = models.PositiveIntegerField("Кол-во минут для сдачи", default=0)
     passing_score = models.PositiveIntegerField("Кол-во баллов для прохождения", default=0)
     retries = models.PositiveIntegerField("Число попыток", default=0)
-    slug = models.SlugField(unique=True)
     status = models.CharField("Статус", max_length=20)
     in_progress = models.BooleanField("В процессе", default=False)
     deadline = models.DateTimeField("Срок выполнения")
@@ -43,12 +42,11 @@ class Question(TimeStampedModel):
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, verbose_name="Квиз")
     question_type = models.CharField("Тип вопроса", max_length=20, choices=QUESTION_TYPES)
     title = models.CharField("Заголовок", max_length=255)
-    answers = models.JSONField("[id, title, description, right_answer:bool]")
+    answers = models.TextField("Ответы")
     order_number = models.PositiveIntegerField("Порядковый номер")
     objects = QuestionManager()
 
     class Meta:
-        ordering = ["order_number"]
         verbose_name = "Вопрос"
         verbose_name_plural = "Вопросы"
 
