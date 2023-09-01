@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from ..quizzes.models import Quiz
+from lizaalert.quizzes.models import Quiz
 
 User = get_user_model()
 

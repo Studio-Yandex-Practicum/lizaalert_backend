@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import QuizDetailView, RunQuizView
+from lizaalert.quizzes.views import QuizDetailView, RunQuizView
 
 urlpatterns = [
     path("lesson/<int:lesson_id>/quiz/", QuizDetailView.as_view(), name="quiz"),

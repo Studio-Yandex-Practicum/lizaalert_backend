@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Question, Quiz, UserAnswer
+from lizaalert.quizzes.models import Question, Quiz, UserAnswer
 
 
 class QuestionSerializer(serializers.ModelSerializer):

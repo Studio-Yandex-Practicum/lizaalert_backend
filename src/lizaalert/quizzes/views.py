@@ -4,9 +4,9 @@ from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from ..courses.models import Lesson
-from .models import Question, Quiz, UserAnswer
-from .serializers import QuizSerializer, UserAnswerSerializer
+from lizaalert.courses.models import Lesson
+from lizaalert.quizzes.models import Question, Quiz, UserAnswer
+from lizaalert.quizzes.serializers import QuizSerializer, UserAnswerSerializer
 
 
 class QuizDetailView(generics.RetrieveAPIView):

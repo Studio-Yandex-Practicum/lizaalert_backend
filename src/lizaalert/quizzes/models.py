@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from .managers import QuestionManager
+from lizaalert.quizzes.managers import QuestionManager
 from .mixins import TimeStampedMixin
 
 User = get_user_model()
