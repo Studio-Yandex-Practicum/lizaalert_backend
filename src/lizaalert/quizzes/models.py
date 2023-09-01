@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from lizaalert.courses.models import TimeStampedModel
+from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.quizzes.managers import QuestionManager
 
 User = get_user_model()
