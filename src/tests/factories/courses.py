@@ -107,12 +107,6 @@ class LessonWith3ChapterFactory(ChapterFactory):
     )
 
 
-class CourseWithAll(CourseFactory):
-    chapters = factory.RelatedFactory(
-        ChapterLessonFactory,
-    )
-
-
 class FaqFactory(factory.django.DjangoModelFactory):
     """Test factory for FAQ model."""
 

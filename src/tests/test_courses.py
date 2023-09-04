@@ -9,8 +9,6 @@ from tests.factories.courses import (
     CourseStatusFactory,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
-    LessonFactory,
-    CourseWithAll
 )
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
@@ -93,37 +91,17 @@ class TestCourse:
         """
         Тест, что поле lesson_completed возвращает корректный результат.
 
-        Необходимо доделать тесты/фабрики для связи Chapter и Course
-        Необходимо реализовать данный тест после того как будет решена логика работы
+        Необходимо доработать данный тест после того как будет решена логика работы
         lesson_completed_field.
         """
-        # course = CourseFactory()
-        # lessons = (
-        #     LessonFactory(),
-        #     LessonFactory(),
-        # )
-        # lesson1 = LessonFactory()
-        # chapter = ChapterLessonFactory(chapter_course=course)
-        # chapter.lessons.set(lesson1)
 
-        # course = CourseFactory()
-        # course = ChapterLessonCourseFactory()
-        # course_id = course.course.pk
-        # response = user_client.get(f"{self.url}{course_id}/")
-        # print(response.json())
-        # data = LessonWithChapterFactory()
-        
-        # chapter = [ChapterFactory()]
-        # course = CourseFactory()
-        # course.chapters.set(chapter)
-        # _ = (
-        #     ChapterLessonFactory(chapter=chapter[0], lesson__duration=1),
-        #     ChapterLessonFactory(chapter=chapter[0], lesson__duration=2),
-        # )
         course = CourseFactory()
-        chapters = [ChapterLessonFactory()]
-        course.chapters.set(chapters)
+        chapter = ChapterFactory(course=course)
+        # если мы закомментируем строчку ниже, то по response1 будет приходить корректный объект, но без
+        # lessons, если мы ее раскомментируем, то будет приходить 404
+        _ = ChapterLessonFactory(chapter=chapter)
         course_id = course.pk
+        # респонсы и принты ниже показывают нам что мы создали
         response1 = user_client.get(f"{self.url}{course_id}/")
         response = user_client.get(self.url)
         print(response1.json())
