@@ -94,7 +94,6 @@ class TestCourse:
         Необходимо доработать данный тест после того как будет решена логика работы
         lesson_completed_field.
         """
-
         course = CourseFactory()
         chapter = ChapterFactory(course=course)
         # если мы закомментируем строчку ниже, то по response1 будет приходить корректный объект, но без
