@@ -95,16 +95,27 @@ class Course(TimeStampedModel):
 
 
 class CourseStatus(models.Model):
-    class SlugStatus(models.TextChoices):
-        ACTIVE = "active"
-        COMPLETE = "complete"
-        REGISTRATION = "registration"
+    """
+    Класс для хранения статуса курсов.
+
+    Draft - курс находится в разработке, не готов к публикации.
+    Published - курс готов, опубликован, пользователь может записаться на курс.
+    Archive - курс готов, но снят с публикации, не виден пользователю.
+    """
+
+    class CourseStatusChoices(models.TextChoices):
+        """Класс для выбора статуса курса."""
+
+        DRAFT = "draft", "в разработке"
+        PUBLISHED = "published", "опубликован"
+        ARCHIVE = "archive", "в архиве"
 
     name = models.CharField("Статус курса", max_length=50, editable=False)
-    slug = models.CharField(
+    slug = models.CharField("Слаг курса", max_length=50, editable=False)
+    type_status = models.CharField(
         max_length=20,
-        choices=SlugStatus.choices,
-        default=SlugStatus.ACTIVE,
+        choices=CourseStatusChoices.choices,
+        default=CourseStatusChoices.DRAFT,
         editable=False,
     )
 
@@ -112,9 +123,10 @@ class CourseStatus(models.Model):
         db_table = "course_status"
         verbose_name = "Статус курса"
         verbose_name_plural = "Статус курсов"
+        constraints = [models.UniqueConstraint(fields=["slug"], name="unique_slug_status")]
 
     def __str__(self):
-        return f"{self.slug}"
+        return f"{self.type_status}"
 
 
 class Lesson(TimeStampedModel):
