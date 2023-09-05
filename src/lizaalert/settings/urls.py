@@ -10,6 +10,7 @@ admin.site.site_title = "ЛизаАлерт"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("lizaalert.courses.urls")),
+    path("api/v1/", include("lizaalert.quizzes.urls")),
     path("api/v1/", include("lizaalert.users.urls")),
     path("api/v1/", include("lizaalert.authentication.urls")),
     path("api/v1/auth/", include("djoser.urls")),
