@@ -7,7 +7,7 @@ from lizaalert.courses.models import (
     Course,
     CourseStatus,
     Knowledge,
-    Lesson,
+    Lesson
 )
 
 
