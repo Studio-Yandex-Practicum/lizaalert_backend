@@ -6,11 +6,11 @@ from rest_framework.response import Response
 
 from lizaalert.courses.models import Lesson
 from lizaalert.quizzes.models import Question, Quiz, UserAnswer
-from lizaalert.quizzes.serializers import QuizSerializer, UserAnswerSerializer
+from lizaalert.quizzes.serializers import QuizWithQuestionsSerializer, UserAnswerSerializer
 
 
 class QuizDetailView(generics.RetrieveAPIView):
-    serializer_class = QuizSerializer
+    serializer_class = QuizWithQuestionsSerializer
 
     def get_object(self):
         lesson_id = self.kwargs["lesson_id"]
@@ -20,11 +20,6 @@ class QuizDetailView(generics.RetrieveAPIView):
     def get_queryset(self):
         lesson_id = self.kwargs["lesson_id"]
         return Question.objects.filter(quiz__lesson_id=lesson_id)
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["include_questions"] = True
-        return context
 
 
 class RunQuizView(generics.CreateAPIView):

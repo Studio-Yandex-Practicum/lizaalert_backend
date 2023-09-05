@@ -54,11 +54,11 @@ class Question(TimeStampedModel):
 class UserAnswer(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    answers = models.JSONField("Ответы пользователя")
-    result = models.JSONField("Результат проверки ответов")
+    answers = models.JSONField("Ответы пользователя", null=True, blank=True)
+    result = models.JSONField("Результат проверки ответов", null=True, blank=True)
     retry_count = models.PositiveIntegerField("Количество попыток", default=0)
     score = models.PositiveIntegerField("Количество баллов", default=0)
-    final_result = models.CharField("Окончательный результат", max_length=255)
+    final_result = models.CharField("Окончательный результат", max_length=255, null=True, blank=True)
     start_time = models.TimeField("Время начала выполнения", null=True, blank=True)
     date_completed = models.TimeField("Время завершения выполнения", null=True, blank=True)
 

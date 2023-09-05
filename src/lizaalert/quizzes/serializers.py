@@ -15,8 +15,6 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class QuizSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, read_only=True)
-
     class Meta:
         model = Quiz
         fields = (
@@ -28,13 +26,19 @@ class QuizSerializer(serializers.ModelSerializer):
             "retries",
             "in_progress",
             "deadline",
-            "questions",
         )
+
+
+class QuizWithQuestionsSerializer(QuizSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Quiz
+        fields = QuizSerializer.Meta.fields + ("questions",)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        if self.context.get("include_questions"):
-            representation["questions"] = QuestionSerializer(instance.question_set.all(), many=True).data
+        representation["questions"] = QuestionSerializer(instance.question_set.all(), many=True).data
         return representation
 
 

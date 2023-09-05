@@ -18,6 +18,6 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(UserAnswer)
 class UserAnswerAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "quiz", "start_time", "date_completed")
-    list_filter = ("user", "quiz")
+    list_display = ("id", "user", "quiz")
+    readonly_fields = ("user", "quiz")
     search_fields = ("user__username", "quiz__title")
