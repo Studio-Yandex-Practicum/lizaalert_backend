@@ -2,24 +2,10 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from lizaalert.courses.mixins import TimeStampedModel
+from lizaalert.quizzes.models import Quiz
+
 User = get_user_model()
-
-
-class TimeStampedModel(models.Model):
-    """
-    Абстрактная модель времени создания или изменения данных.
-
-    created_at* - дата создания записи об уроке, автоматическое проставление
-    текущего времени
-    updated_at* - дата обновления записи об уроке, автоматическое проставление
-    текущего времени.
-    """
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
 
 
 class FAQ(TimeStampedModel):
@@ -160,6 +146,7 @@ class Lesson(TimeStampedModel):
     lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="квиз")
     user_created = models.ForeignKey(
         User,
         related_name="lesson_creator",
