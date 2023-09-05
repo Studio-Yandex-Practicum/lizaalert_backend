@@ -126,7 +126,7 @@ class CourseStatus(models.Model):
         constraints = [models.UniqueConstraint(fields=["slug"], name="unique_slug_status")]
 
     def __str__(self):
-        return f"{self.slug} {self.type_status}"
+        return f"{self.slug} <{self.type_status}>"
 
 
 class Lesson(TimeStampedModel):
