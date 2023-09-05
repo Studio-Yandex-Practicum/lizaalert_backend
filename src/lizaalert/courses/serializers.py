@@ -51,7 +51,6 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     lesson_status = serializers.ReadOnlyField(source="lesson.lesson_status")
     duration = serializers.ReadOnlyField(source="lesson.duration")
     title = serializers.ReadOnlyField(source="lesson.title")
-    lesson_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = ChapterLesson
@@ -62,22 +61,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
             "lesson_status",
             "duration",
             "title",
-            "lesson_completed",
         )
-
-    def get_lesson_completed(self, obj):
-        """
-        Возвращает статус конкретного урока.
-
-        Здесь не подойдет boolean field, надо переделать в дальнейшей реализации статусов.
-        """
-        user = self.context.get("request").user.id
-        if user:
-            lesson_status = get_object_or_404(LessonProgressStatus, user=user, lesson=obj.lesson)
-            #  проверить данный код, ибо у нас есть 3 статуса, boolean значение тут не пойдет
-            if lesson_status.userlessonprogress == "FINISHED":
-                return True
-        return False
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):

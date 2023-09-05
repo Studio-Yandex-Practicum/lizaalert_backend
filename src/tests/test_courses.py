@@ -87,26 +87,6 @@ class TestCourse:
         assert response.json()["results"][0]["level"] == level
         assert len(courses) != 0
 
-    def test_lesson_completed_field(self, user_client):
-        """
-        Тест, что поле lesson_completed возвращает корректный результат.
-
-        Необходимо доработать данный тест после того как будет решена логика работы
-        lesson_completed_field.
-        """
-        course = CourseFactory()
-        chapter = ChapterFactory(course=course)
-        # если мы закомментируем строчку ниже, то по response1 будет приходить корректный объект, но без
-        # lessons, если мы ее раскомментируем, то будет приходить 404
-        _ = ChapterLessonFactory(chapter=chapter)
-        course_id = course.pk
-        # респонсы и принты ниже показывают нам что мы создали
-        response1 = user_client.get(f"{self.url}{course_id}/")
-        response = user_client.get(self.url)
-        print(response1.json())
-        print(response.json())
-        assert 0 == 1
-
     def test_field_faq_in_course(self, user_client):
         """
         Тест, что объекты FAQ появляются в конкретном курсе.
