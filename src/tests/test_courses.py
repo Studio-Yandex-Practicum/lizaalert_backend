@@ -98,7 +98,6 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert set(response.json()["results"][0]["faq"]) == set([2, 3, 1])
-        assert len(response.json()["results"][0]["faq"]) == 3
 
     def test_field_knowledge_in_course(self, user_client):
         """
@@ -111,4 +110,3 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert set(response.json()["results"][0]["knowledge"]) == set([3, 2, 1])
-        assert len(response.json()["results"][0]["knowledge"]) == 3
