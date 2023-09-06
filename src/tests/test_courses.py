@@ -2,7 +2,14 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from tests.factories.courses import ChapterFactory, ChapterLessonFactory, CourseFactory, CourseStatusFactory
+from tests.factories.courses import (
+    ChapterFactory,
+    ChapterLessonFactory,
+    CourseFactory,
+    CourseStatusFactory,
+    CourseWith3FaqFactory,
+    CourseWith3KnowledgeFactory,
+)
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
 from tests.user_fixtures.level_fixtures import return_levels_data
@@ -61,11 +68,6 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert all(course_status)
 
-    # def test_course_status_user(self, user_client):
-    #     response = user_client.get(self.url)
-    #     assert response.status_code == status.HTTP_200_OK
-    #     assert response.json()["results"][0]["course_status"] == "active"
-
     def test_filter_courses_by_course_format(self, user_client):
         course = CourseFactory()
         course_format = course.course_format
@@ -85,56 +87,26 @@ class TestCourse:
         assert response.json()["results"][0]["level"] == level
         assert len(courses) != 0
 
-    def test_lesson_completed_field(
-        self,
-        user_client,
-    ):
+    def test_field_faq_in_course(self, user_client):
         """
-        Тест, что поле lesson_completed возвращает корректный результат.
+        Тест, что объекты FAQ появляются в конкретном курсе.
 
-        Необходимо доделать тесты/фабрики для связи Chapter и Course
-        Необходимо реализовать данный тест после того как будет решена логика работы
-        lesson_completed_field.
+        При этом FAQ не связанные с данным курсом не отображаются в нем.
         """
-        chapter = ChapterFactory()
-        _ = (
-            ChapterLessonFactory(chapter=chapter, lesson__duration=1),
-            ChapterLessonFactory(chapter=chapter, lesson__duration=2),
-        )
-        course = CourseFactory()
-        course_id = course.pk
-        response = user_client.get(f"{self.url}{course_id}/")
-        print(response.json())
-        assert 0 == 1
-
-    def test_field_faq_in_courses_list(self, user_client, create_faq):
-        """Тест, что объекты FAQ появляются в списке курсов."""
+        _ = CourseWith3FaqFactory()
+        _ = CourseWith3FaqFactory()
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["faq"][0] == 1
-        assert response.json()["results"][0]["faq"][1] == 2
+        assert set(response.json()["results"][0]["faq"]) == set([2, 3, 1])
 
-    def test_field_faq_in_course(self, user_client, create_faq):
-        """Тест, что объекты FAQ появляются в конкретном курсе."""
-        course = CourseFactory()
-        course_id = course.pk
-        response = user_client.get(self.url, {"id": course_id})
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["faq"][0] == 3
-        assert response.json()["results"][0]["faq"][1] == 4
+    def test_field_knowledge_in_course(self, user_client):
+        """
+        Тест, что объекты Knowledge появляются в конкретном курсе.
 
-    def test_field_knowledge_in_courses_list(self, user_client, create_knowledge):
-        """Тест, что объекты Knowledge появляются в списке курсов."""
+        При этом knowledge не связанные с данным курсом не отображаются в нем.
+        """
+        _ = CourseWith3KnowledgeFactory()
+        _ = CourseWith3KnowledgeFactory()
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["knowledge"][0] == 1
-        assert response.json()["results"][0]["knowledge"][1] == 2
-
-    def test_field_knowledge_in_course(self, user_client, create_knowledge):
-        """Тест, что объекты Knowledge появляются в конкретном курсе."""
-        course = CourseFactory()
-        course_id = course.pk
-        response = user_client.get(self.url, {"id": course_id})
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["knowledge"][0] == 3
-        assert response.json()["results"][0]["knowledge"][1] == 4
+        assert set(response.json()["results"][0]["knowledge"]) == set([3, 2, 1])
