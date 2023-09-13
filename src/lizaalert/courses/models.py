@@ -163,7 +163,7 @@ class Lesson(TimeStampedModel):
         max_length=20,
         verbose_name="статус урока",
         choices=LessonStatus.choices,
-        default=LessonStatus.DRAFT,
+        default=LessonStatus.DRAFT
     )
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
@@ -263,9 +263,9 @@ class LessonProgressStatus(TimeStampedModel):
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        NOTSTARTED = 0, "Не начат"
-        INPROGRESS = 1, "Начат"
-        FINISHED = 2, "Пройден"
+        COMING = "Coming", "Не начат"
+        ACTIVE = "Active", "Начат"
+        FINISHED = "Finished", "Пройден"
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
     user = models.ForeignKey(
