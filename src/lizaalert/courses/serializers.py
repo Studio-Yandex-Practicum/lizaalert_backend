@@ -70,7 +70,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
             lesson_progress = get_object_or_404(LessonProgressStatus, lesson=obj.lesson, user_id=user)
             return lesson_progress.userlessonprogress
         except Exception:
-            return "Coming"
+            return 0
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):

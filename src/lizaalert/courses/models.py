@@ -260,9 +260,9 @@ class LessonProgressStatus(TimeStampedModel):
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        COMING = "Coming", "Не начат"
-        ACTIVE = "Active", "Начат"
-        FINISHED = "Finished", "Пройден"
+        COMING = 0, "Не начат"
+        ACTIVE = 1, "Начат"
+        FINISHED = 2, "Пройден"
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
     user = models.ForeignKey(
