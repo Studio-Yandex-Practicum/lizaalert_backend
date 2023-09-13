@@ -160,10 +160,7 @@ class Lesson(TimeStampedModel):
         verbose_name="пользователь, внёсший изменения в урок",
     )
     lesson_status = models.CharField(
-        max_length=20,
-        verbose_name="статус урока",
-        choices=LessonStatus.choices,
-        default=LessonStatus.DRAFT
+        max_length=20, verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT
     )
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
