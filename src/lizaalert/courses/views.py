@@ -1,7 +1,9 @@
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from lizaalert.courses.filters import CourseFilter
@@ -70,6 +72,16 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return CourseDetailSerializer
         return CourseSerializer
+
+    @action(detail=True, methods=("post"), permission_classes=(IsAuthenticated,))
+    def enroll(self, request, **kwargs):
+        user = self.request.user.id
+        course = get_object_or_404(Course, **kwargs)
+        
+
+    @action(detail=True, methods=("post"), permission_classes=(IsAuthenticated,))
+    def unenroll(self, request, **kwargs):
+        pass
 
 
 class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):

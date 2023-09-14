@@ -103,6 +103,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "lessons_count",
             "course_duration",
             "chapters",
+            "course_user_status"
         )
 
 
