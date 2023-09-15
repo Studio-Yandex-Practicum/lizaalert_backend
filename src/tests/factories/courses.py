@@ -115,7 +115,7 @@ class FaqFactory(factory.django.DjangoModelFactory):
 
     question = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
     answer = factory.Faker("sentence", nb_words=15, variable_nb_words=True)
-    user_created = factory.SubFactory(UserFactory)
+    author = factory.SubFactory(UserFactory)
 
 
 class KnowledgeFactory(factory.django.DjangoModelFactory):
@@ -126,7 +126,7 @@ class KnowledgeFactory(factory.django.DjangoModelFactory):
 
     title = factory.Sequence(lambda n: f"Знание {n}")
     description = factory.Faker("sentence", nb_words=15, variable_nb_words=True)
-    user_created = factory.SubFactory(UserFactory)
+    author = factory.SubFactory(UserFactory)
 
 
 class CourseFaqFactory(factory.django.DjangoModelFactory):
@@ -149,15 +149,6 @@ class CourseKnowledgeFactory(factory.django.DjangoModelFactory):
     course = factory.SubFactory(CourseFactory)
 
 
-class CourseWithFaqFactory(CourseFactory):
-    """Test factory for Course with FAQ field."""
-
-    membership1 = factory.RelatedFactory(
-        CourseFaqFactory,
-        factory_related_name="course",
-    )
-
-
 class CourseWith3FaqFactory(CourseFactory):
     """Test factory for Course with 3 FAQ fields."""
 
@@ -171,15 +162,6 @@ class CourseWith3FaqFactory(CourseFactory):
     )
     membership3 = factory.RelatedFactory(
         CourseFaqFactory,
-        factory_related_name="course",
-    )
-
-
-class CourseWithKnowledgeFactory(CourseFactory):
-    """Test factory for Course with Knowledge field."""
-
-    membership1 = factory.RelatedFactory(
-        CourseKnowledgeFactory,
         factory_related_name="course",
     )
 
