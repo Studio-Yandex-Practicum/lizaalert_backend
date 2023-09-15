@@ -24,6 +24,7 @@ drf-nested-routers = "^0.93.4"
 factory-boy = "^3.2.1"
 django-filter = "^22.1"
 djoser = "^2.1.0"
+pydantic = "^23.2.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
