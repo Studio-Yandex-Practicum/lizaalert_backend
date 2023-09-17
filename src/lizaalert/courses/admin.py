@@ -12,7 +12,7 @@ from lizaalert.courses.models import (
     Knowledge,
     Lesson,
     LessonProgressStatus,
-    Subscription,
+    Subscription
 )
 
 

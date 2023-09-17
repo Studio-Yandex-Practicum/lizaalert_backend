@@ -1,11 +1,11 @@
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
-from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import Course, CourseStatus, Lesson, Subscription
@@ -15,7 +15,7 @@ from lizaalert.courses.serializers import (
     CourseLessonListSerializer,
     CourseSerializer,
     CourseStatusSerializer,
-    FilterSerializer,
+    FilterSerializer
 )
 from lizaalert.users.models import Level
 
