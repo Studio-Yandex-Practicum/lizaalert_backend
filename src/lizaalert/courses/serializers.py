@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, ChapterLesson, Course, CourseStatus, Knowledge, Lesson
+from lizaalert.courses.models import FAQ, Chapter, ChapterLesson, Course, CourseStatus, Knowledge, Lesson, Subscription
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
@@ -103,7 +103,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "lessons_count",
             "course_duration",
             "chapters",
-            "course_user_status"
+            "course_user_status",
         )
 
 
@@ -140,3 +140,11 @@ class FilterSerializer(serializers.Serializer):
 
     def get_options(self, model):
         return OptionSerializer(model.objects.all(), many=True).data
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор для записи пользователя на курс."""
+
+    class Meta:
+        model = Subscription
+        fields = ("user", "course")

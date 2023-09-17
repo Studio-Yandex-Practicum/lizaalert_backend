@@ -367,3 +367,40 @@ class CourseKnowledge(models.Model):
 
     class Meta:
         ordering = ("knowledge",)
+
+
+class Subscription(TimeStampedModel):
+    """
+    Модель для записи пользователя на курс.
+
+    user - ForeignKey на модель user
+    course - ForeignKey на модель course.
+    flag - признак активности записи на курс.
+    """
+
+    class Flag(models.TextChoices):
+        ACTIVE = 1, "Запись активна"
+        INACTIVE = 0, "Запись не активна"
+
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
+    flag = models.CharField(
+        max_length=20,
+        choices=Flag.choices,
+        verbose_name="статус записи на курс",
+        default=Flag.ACTIVE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "course"],
+                name="unique_user_course",
+            )
+        ]
+        ordering = ("user",)
+        verbose_name = "Подписка на курс"
+        verbose_name_plural = "Подписки на курс"
+
+    def __str__(self):
+        return f"{self.user} записан на {self.course}"

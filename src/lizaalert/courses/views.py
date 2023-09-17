@@ -2,12 +2,13 @@ from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from lizaalert.courses.filters import CourseFilter
-from lizaalert.courses.models import Course, CourseStatus, Lesson
+from lizaalert.courses.models import Course, CourseStatus, Lesson, Subscription
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.serializers import (
     CourseDetailSerializer,
@@ -53,6 +54,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Value("inactive"),
                     )
                 ),
+                course_user_status=Coalesce(
+                    Subquery(Subscription.objects.filter(user=user, course=self.get_object()).values("flag")),
+                    Value("0")
+                )
             )
             return course
         course = Course.objects.all().annotate(
@@ -73,15 +78,22 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @action(detail=True, methods=("post"), permission_classes=(IsAuthenticated,))
+    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
-        user = self.request.user.id
+        """Subscribe user for given course."""
+        user = self.request.user
         course = get_object_or_404(Course, **kwargs)
-        
+        Subscription.objects.create(user=user, course=course)
+        return Response(status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=("post"), permission_classes=(IsAuthenticated,))
+    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def unenroll(self, request, **kwargs):
-        pass
+        """Unsubscribe user from given course."""
+        user = self.request.user
+        course = get_object_or_404(Course, **kwargs)
+        subscription = get_object_or_404(Subscription, user=user, course=course)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
