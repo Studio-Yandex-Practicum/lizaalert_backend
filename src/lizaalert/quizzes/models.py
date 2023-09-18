@@ -1,13 +1,10 @@
 import json
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db import models
-from pydantic.error_wrappers import ValidationError as PydanticValidationError
 
 from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.quizzes.managers import QuestionManager
-from lizaalert.quizzes.validators import ValidateAnswersModel, ValidateIUserAnswersModel
 
 User = get_user_model()
 
@@ -47,28 +44,13 @@ class Question(TimeStampedModel):
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, verbose_name="Квиз")
     question_type = models.CharField("Тип вопроса", max_length=20, choices=QUESTION_TYPES)
     title = models.CharField("Заголовок", max_length=255)
-    context = models.TextField("Контекст")
+    content = models.JSONField("Варианты ответов", null=True, blank=True, default=list)
     order_number = models.PositiveIntegerField("Порядковый номер")
     objects = QuestionManager()
 
     class Meta:
         verbose_name = "Вопрос"
         verbose_name_plural = "Вопросы"
-
-    def clean(self):
-        try:
-            answers_data = json.loads(self.context)
-        except json.JSONDecodeError:
-            raise ValidationError("Неверный JSON формат в поле 'Ответы'")
-
-        try:
-            context = ValidateAnswersModel(context=answers_data)
-        except PydanticValidationError as e:
-            raise ValidationError(str(e))
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
 
 class UserAnswer(TimeStampedModel):
@@ -85,17 +67,3 @@ class UserAnswer(TimeStampedModel):
     class Meta:
         verbose_name = "Ответ пользователя"
         verbose_name_plural = "Ответы пользователей"
-    
-    def clean(self):
-        try:
-            answers_data = {
-                "answers": self.answers,
-                "result": self.result,
-            }
-            context = ValidateIUserAnswersModel(**answers_data)
-        except PydanticValidationError as e:
-            raise ValidationError(str(e))
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)

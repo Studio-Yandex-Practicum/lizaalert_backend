@@ -1,17 +1,26 @@
+from pydantic import ValidationError as PydanticValidationError
 from rest_framework import serializers
 
 from lizaalert.quizzes.models import Question, Quiz, UserAnswer
+from lizaalert.quizzes.validators import ValidateIUserAnswersModel
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    content = serializers.SerializerMethodField()
+
     class Meta:
         model = Question
         fields = (
             "id",
             "title",
-            "answers",
+            "content",
             "question_type",
         )
+
+    def get_content(self, obj):
+        content = obj.content
+        cleaned_content = [{"id": item["id"], "text": item["text"]} for item in content]
+        return cleaned_content
 
 
 class QuizSerializer(serializers.ModelSerializer):
@@ -46,3 +55,20 @@ class UserAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAnswer
         fields = "__all__"
+
+    def validate(self, data):
+        try:
+            answers_data = {
+                "answers": data.get("answers"),
+                "result": data.get("result"),
+            }
+            context = ValidateIUserAnswersModel(**answers_data)
+        except PydanticValidationError as e:
+            raise serializers.ValidationError(str(e))
+
+        return data
+
+    def create(self, validated_data):
+        user_answer = UserAnswer(**validated_data)
+        user_answer.save()
+        return user_answer

@@ -3,17 +3,17 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class ContextModel(BaseModel):
+class ContentAnswerModel(BaseModel):
     id: int
     text: str
-    isCorrect: bool
+    is_correct: bool
 
 
 class ValidateAnswersModel(BaseModel):
-    context: Optional[List[ContextModel]]
+    content: Optional[List[ContentAnswerModel]]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class AnswerModel(BaseModel):
@@ -32,4 +32,4 @@ class ValidateIUserAnswersModel(BaseModel):
     result: Optional[List[AnswerCheckModel]]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
