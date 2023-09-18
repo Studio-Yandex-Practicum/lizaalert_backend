@@ -48,7 +48,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка уроков курса."""
 
     lesson_type = serializers.ReadOnlyField(source="lesson.lesson_type")
-    lesson_progress = serializers.SerializerMethodField()
+    lesson_progress = serializers.StringRelatedField(source="lesson.lesson_progress")
     duration = serializers.ReadOnlyField(source="lesson.duration")
     title = serializers.ReadOnlyField(source="lesson.title")
 
@@ -62,15 +62,6 @@ class LessonInlineSerializer(serializers.ModelSerializer):
             "duration",
             "title",
         )
-
-    def get_lesson_progress(self, obj):
-        # на данный момент этот код работает только через админку, назначайте статус урока через админк
-        try:
-            user = self.context.get("request").user.id
-            lesson_progress = get_object_or_404(LessonProgressStatus, lesson=obj.lesson, user_id=user)
-            return lesson_progress.userlessonprogress
-        except Exception:
-            return 0
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):

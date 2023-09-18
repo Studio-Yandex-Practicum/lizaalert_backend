@@ -5,7 +5,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from lizaalert.courses.filters import CourseFilter
-from lizaalert.courses.models import Course, CourseStatus, Lesson
+from lizaalert.courses.models import Course, CourseStatus, Lesson, LessonProgressStatus
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.serializers import (
     CourseDetailSerializer,
@@ -49,6 +49,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                             output_field=CharField(),
                         ),
                         Value("inactive"),
+                    )
+                ),
+                lesson_progress=(
+                    Coalesce(
+                        Subquery(
+                            LessonProgressStatus.objects.filter(lesson_id=1, user=user).values("userlessonprogress")
+                        ),
+                        Value("0"),
                     )
                 ),
             )
