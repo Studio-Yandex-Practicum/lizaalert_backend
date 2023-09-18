@@ -57,8 +57,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 ),
                 course_user_status=Coalesce(
                     Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("flag")),
-                    Value("0")
-                )
+                    Value("0"),
+                ),
             )
             return course
         course = Course.objects.all().annotate(
@@ -87,7 +87,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         Subscription.objects.create(user=user, course=course)
         return Response(status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated, IsUserOrReadOnly,))
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=(
+            IsAuthenticated,
+            IsUserOrReadOnly,
+        ),
+    )
     def unroll(self, request, **kwargs):
         """Unsubscribe user from given course."""
         user = self.request.user

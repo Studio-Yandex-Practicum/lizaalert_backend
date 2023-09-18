@@ -385,10 +385,7 @@ class Subscription(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
     flag = models.CharField(
-        max_length=20,
-        choices=Flag.choices,
-        verbose_name="статус записи на курс",
-        default=Flag.ACTIVE
+        max_length=20, choices=Flag.choices, verbose_name="статус записи на курс", default=Flag.ACTIVE
     )
 
     class Meta:
