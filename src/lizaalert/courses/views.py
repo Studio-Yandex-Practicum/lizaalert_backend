@@ -55,8 +55,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Value("inactive"),
                     )
                 ),
-                course_user_status=Coalesce(
-                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("flag")),
+                user_status=Coalesce(
+                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
                     Value("0"),
                 ),
             )

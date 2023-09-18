@@ -9,6 +9,7 @@ from tests.factories.courses import (
     CourseStatusFactory,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
+    SubscriptionFactory,
 )
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
@@ -110,3 +111,40 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert set(response.json()["results"][0]["knowledge"]) == set([3, 2, 1])
+
+    def test_user_subscription_to_course(self, user_client, user, user_2):
+        """Тест, что пользователь может подписаться на курс."""
+        subscription_1 = SubscriptionFactory(user=user)
+        subscription_2 = SubscriptionFactory(user=user_2)
+        course_id_1 = subscription_1.course.id
+        course_id_2 = subscription_2.course.id
+        url_1 = reverse("courses-detail", kwargs={"pk": course_id_1})
+        url_2 = reverse("courses-detail", kwargs={"pk": course_id_2})
+        response_1 = user_client.get(url_1)
+        response_2 = user_client.get(url_2)
+        assert response_1.status_code == status.HTTP_200_OK
+        assert response_1.json()["user_status"] == "1"
+        assert response_2.json()["user_status"] == "0"
+
+    def test_user_unsubscription_from_course(self, user_client, user):
+        """Тест, что пользователь может отписаться от курса."""
+        subscription = SubscriptionFactory(user=user)
+        course_id = subscription.course.id
+        url = reverse("courses-detail", kwargs={"pk": course_id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["user_status"] == "1"
+
+        unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
+        response = user_client.post(unsubscribe_url)
+        response_1 = user_client.get(url)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response_1.json()["user_status"] == "0"
+
+    def test_another_user_unable_to_unsubscribe_from_course(self, user_client, user_2):
+        """Тест, что иной пользователь не может отписаться не от своего курса."""
+        subscription = SubscriptionFactory(user=user_2)
+        course_id = subscription.course.id
+        unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
+        response = user_client.post(unsubscribe_url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND

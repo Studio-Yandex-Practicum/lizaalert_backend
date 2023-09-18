@@ -109,7 +109,6 @@ class CourseStatus(models.Model):
         db_table = "course_status"
         verbose_name = "Статус курса"
         verbose_name_plural = "Статус курсов"
-        constraints = [models.UniqueConstraint(fields=["slug"], name="unique_slug_status")]
 
     def __str__(self):
         return f"{self.slug} <{self.type_status}>"
@@ -375,7 +374,7 @@ class Subscription(TimeStampedModel):
 
     user - ForeignKey на модель user
     course - ForeignKey на модель course.
-    flag - признак активности записи на курс.
+    enabled - признак активности записи на курс.
     """
 
     class Flag(models.TextChoices):
@@ -384,7 +383,7 @@ class Subscription(TimeStampedModel):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
-    flag = models.CharField(
+    enabled = models.CharField(
         max_length=20, choices=Flag.choices, verbose_name="статус записи на курс", default=Flag.ACTIVE
     )
 
@@ -400,4 +399,4 @@ class Subscription(TimeStampedModel):
         verbose_name_plural = "Подписки на курс"
 
     def __str__(self):
-        return f"{self.user} записан на {self.course}"
+        return f"<Subscription: {self.id}, user: {self.user_id}, course: {self.course_id}>"
