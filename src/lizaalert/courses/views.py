@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import Course, CourseStatus, Lesson, Subscription
 from lizaalert.courses.pagination import CourseSetPagination
+from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import (
     CourseDetailSerializer,
     CourseLessonListSerializer,
@@ -55,7 +56,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     )
                 ),
                 course_user_status=Coalesce(
-                    Subquery(Subscription.objects.filter(user=user, course=self.get_object()).values("flag")),
+                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("flag")),
                     Value("0")
                 )
             )
@@ -86,8 +87,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         Subscription.objects.create(user=user, course=course)
         return Response(status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
-    def unenroll(self, request, **kwargs):
+    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated, IsUserOrReadOnly,))
+    def unroll(self, request, **kwargs):
         """Unsubscribe user from given course."""
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)

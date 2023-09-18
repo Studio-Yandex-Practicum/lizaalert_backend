@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, ChapterLesson, Course, CourseStatus, Knowledge, Lesson
+from lizaalert.courses.models import (FAQ, Chapter, ChapterLesson, Course,
+                                      CourseStatus, Knowledge, Lesson)
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
@@ -88,6 +89,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
+    course_user_status = serializers.StringRelatedField()
 
     class Meta:
         model = Course
