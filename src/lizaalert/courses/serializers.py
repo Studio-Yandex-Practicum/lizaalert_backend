@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from lizaalert.courses.models import (FAQ, Chapter, ChapterLesson, Course,
-                                      CourseStatus, Knowledge, Lesson)
+from lizaalert.courses.models import FAQ, Chapter, ChapterLesson, Course, CourseStatus, Knowledge, Lesson
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
