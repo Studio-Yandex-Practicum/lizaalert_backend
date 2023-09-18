@@ -16,7 +16,7 @@ from lizaalert.courses.serializers import (
     CourseLessonListSerializer,
     CourseSerializer,
     CourseStatusSerializer,
-    FilterSerializer
+    FilterSerializer,
 )
 from lizaalert.users.models import Level
 
