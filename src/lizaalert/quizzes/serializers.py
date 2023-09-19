@@ -5,8 +5,13 @@ from lizaalert.quizzes.models import Question, Quiz, UserAnswer
 from lizaalert.quizzes.validators import ValidateIUserAnswersModel
 
 
+class ContentSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    text = serializers.CharField()
+
+
 class QuestionSerializer(serializers.ModelSerializer):
-    content = serializers.SerializerMethodField()
+    content = ContentSerializer(many=True)
 
     class Meta:
         model = Question
@@ -16,11 +21,6 @@ class QuestionSerializer(serializers.ModelSerializer):
             "content",
             "question_type",
         )
-
-    def get_content(self, obj):
-        content = obj.content
-        cleaned_content = [{"id": item["id"], "text": item["text"]} for item in content]
-        return cleaned_content
 
 
 class QuizSerializer(serializers.ModelSerializer):
@@ -62,7 +62,7 @@ class UserAnswerSerializer(serializers.ModelSerializer):
                 "answers": data.get("answers"),
                 "result": data.get("result"),
             }
-            context = ValidateIUserAnswersModel(**answers_data)
+            ValidateIUserAnswersModel(**answers_data)
         except PydanticValidationError as e:
             raise serializers.ValidationError(str(e))
 

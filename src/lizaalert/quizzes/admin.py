@@ -1,5 +1,3 @@
-import json
-
 from django import forms
 from django.contrib import admin
 from pydantic import ValidationError as PydanticValidationError
@@ -17,7 +15,7 @@ class QuestionAdminForm(forms.ModelForm):
         content = self.cleaned_data["content"]
         data = {"content": content}
         try:
-            validate = ValidateAnswersModel(**data)
+            ValidateAnswersModel(**data)
         except PydanticValidationError as e:
             raise forms.ValidationError(str(e))
 
