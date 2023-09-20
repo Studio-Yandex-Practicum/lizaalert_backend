@@ -42,7 +42,7 @@ class Question(TimeStampedModel):
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, verbose_name="Квиз")
     question_type = models.CharField("Тип вопроса", max_length=20, choices=QUESTION_TYPES)
     title = models.CharField("Заголовок", max_length=255)
-    answers = models.TextField("Ответы")
+    content = models.JSONField("Варианты ответов", default=list)
     order_number = models.PositiveIntegerField("Порядковый номер")
     objects = QuestionManager()
 

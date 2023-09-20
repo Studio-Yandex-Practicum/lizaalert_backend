@@ -1,6 +1,25 @@
+from django import forms
 from django.contrib import admin
+from pydantic import ValidationError as PydanticValidationError
 
-from .models import Question, Quiz, UserAnswer
+from lizaalert.quizzes.models import Question, Quiz, UserAnswer
+from lizaalert.quizzes.validators import ValidateAnswersModel
+
+
+class QuestionAdminForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = "__all__"
+
+    def clean_content(self):
+        content = self.cleaned_data["content"]
+        data = {"content": content}
+        try:
+            ValidateAnswersModel(**data)
+        except PydanticValidationError as e:
+            raise forms.ValidationError(str(e))
+
+        return content
 
 
 @admin.register(Quiz)
@@ -11,6 +30,7 @@ class QuizAdmin(admin.ModelAdmin):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
+    form = QuestionAdminForm
     list_display = ("id", "title", "quiz", "question_type", "order_number", "created_at", "deleted_at")
     list_filter = ("quiz",)
     search_fields = ("title",)
