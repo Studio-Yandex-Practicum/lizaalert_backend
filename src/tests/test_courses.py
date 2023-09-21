@@ -123,8 +123,8 @@ class TestCourse:
         response_1 = user_client.get(url_1)
         response_2 = user_client.get(url_2)
         assert response_1.status_code == status.HTTP_200_OK
-        assert response_1.json()["user_status"] == "1"
-        assert response_2.json()["user_status"] == "0"
+        assert response_1.json()["user_status"] == "True"
+        assert response_2.json()["user_status"] == "False"
 
     def test_user_unsubscription_from_course(self, user_client, user):
         """Тест, что пользователь может отписаться от курса."""
@@ -133,13 +133,13 @@ class TestCourse:
         url = reverse("courses-detail", kwargs={"pk": course_id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_status"] == "1"
+        assert response.json()["user_status"] == "True"
 
         unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
         response = user_client.post(unsubscribe_url)
         response_1 = user_client.get(url)
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert response_1.json()["user_status"] == "0"
+        assert response_1.json()["user_status"] == "False"
 
     def test_another_user_unable_to_unsubscribe_from_course(self, user_client, user_2):
         """Тест, что иной пользователь не может отписаться не от своего курса."""

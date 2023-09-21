@@ -1,4 +1,4 @@
-from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum, Value
+from django.db.models import CharField, Count, Exists, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -55,10 +55,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Value("inactive"),
                     )
                 ),
-                user_status=Coalesce(
-                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
-                    Value("0"),
-                ),
+                user_status=Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id")).all()),
             )
             return course
         course = Course.objects.all().annotate(
