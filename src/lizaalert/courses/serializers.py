@@ -88,6 +88,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
+    user_status = serializers.StringRelatedField()
 
     class Meta:
         model = Course
@@ -103,6 +104,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "lessons_count",
             "course_duration",
             "chapters",
+            "user_status",
         )
 
 

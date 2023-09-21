@@ -109,7 +109,6 @@ class CourseStatus(models.Model):
         db_table = "course_status"
         verbose_name = "Статус курса"
         verbose_name_plural = "Статус курсов"
-        constraints = [models.UniqueConstraint(fields=["slug"], name="unique_slug_status")]
 
     def __str__(self):
         return f"{self.slug} <{self.type_status}>"
@@ -367,3 +366,37 @@ class CourseKnowledge(models.Model):
 
     class Meta:
         ordering = ("knowledge",)
+
+
+class Subscription(TimeStampedModel):
+    """
+    Модель для записи пользователя на курс.
+
+    user - ForeignKey на модель user
+    course - ForeignKey на модель course.
+    enabled - признак активности записи на курс.
+    """
+
+    class Flag(models.TextChoices):
+        ACTIVE = 1, "Запись активна"
+        INACTIVE = 0, "Запись не активна"
+
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
+    enabled = models.CharField(
+        max_length=20, choices=Flag.choices, verbose_name="статус записи на курс", default=Flag.ACTIVE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "course"],
+                name="unique_user_course",
+            )
+        ]
+        ordering = ("user",)
+        verbose_name = "Подписка на курс"
+        verbose_name_plural = "Подписки на курс"
+
+    def __str__(self):
+        return f"<Subscription: {self.id}, user: {self.user_id}, course: {self.course_id}>"

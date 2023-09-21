@@ -13,6 +13,7 @@ from lizaalert.courses.models import (
     CourseStatus,
     Knowledge,
     Lesson,
+    Subscription,
 )
 from tests.factories.users import LevelFactory, UserFactory
 
@@ -72,7 +73,7 @@ class CourseStatusFactory(factory.django.DjangoModelFactory):
         model = CourseStatus
 
     name = factory.Sequence(lambda n: "Статус {}".format(n))
-    slug = factory.fuzzy.FuzzyChoice(list(CourseStatus.SlugStatus))
+    slug = factory.fuzzy.FuzzyChoice(list(CourseStatus.CourseStatusChoices))
 
 
 class ChapterLessonFactory(factory.django.DjangoModelFactory):
@@ -181,3 +182,14 @@ class CourseWith3KnowledgeFactory(CourseFactory):
         CourseKnowledgeFactory,
         factory_related_name="course",
     )
+
+
+class SubscriptionFactory(factory.django.DjangoModelFactory):
+    """Test factory for user Subscription on Course."""
+
+    class Meta:
+        model = Subscription
+
+    user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseFactory)
+    enabled = Subscription.Flag.ACTIVE
