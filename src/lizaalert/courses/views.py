@@ -72,7 +72,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         return course
 
     def get_serializer_class(self):
-        if self.action == 'enroll' or self.action == 'unroll':
+        if self.action == "enroll" or self.action == "unroll":
             return None
         if self.action == "retrieve":
             return CourseDetailSerializer
