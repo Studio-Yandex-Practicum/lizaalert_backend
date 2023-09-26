@@ -158,8 +158,7 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
     "SET_PASSWORD_RETYPE": True,
-
-    "ACTIVATION_URL": False
+    "ACTIVATION_URL": False,
 }
 
 # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication
