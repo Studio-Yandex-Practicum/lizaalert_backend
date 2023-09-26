@@ -1,4 +1,5 @@
-"""
+"""Views.
+
 Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
