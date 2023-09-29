@@ -1,15 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from lizaalert.courses.models import (
-    FAQ,
-    Chapter,
-    Course,
-    CourseStatus,
-    Knowledge,
-    Lesson,
-    LessonProgressStatus
-)
+from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowledge, Lesson, LessonProgressStatus
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
