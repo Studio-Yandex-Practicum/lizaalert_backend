@@ -13,9 +13,10 @@ from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .serializers import ResetPasswordSerializer, UserIdSerialiazer, UserSerializer
 from .utils import get_new_password
@@ -80,7 +81,6 @@ class CustomResetUserPassword(APIView):
             except User.DoesNotExist:
                 return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             new_password = get_new_password()
-            print("NEW PS", new_password, email)
             user.set_password(new_password)
             user.save()
             try:
@@ -98,3 +98,16 @@ class CustomResetUserPassword(APIView):
             return Response(status=status.HTTP_200_OK)
 
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HiddenTestAuth(APIView):
+    """Специальный endpoint не отображается в swagger используется для теста настроек системы авторизации."""
+
+    swagger_schema = None
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        if request.user and request.user.username == "test_user":
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_403_FORBIDDEN)
