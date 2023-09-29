@@ -8,7 +8,7 @@ from lizaalert.courses.models import (
     CourseStatus,
     Knowledge,
     Lesson,
-    LessonProgressStatus,
+    LessonProgressStatus
 )
 
 

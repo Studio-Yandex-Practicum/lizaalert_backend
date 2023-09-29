@@ -51,18 +51,6 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    # def test_count_lessons_count_duration(self, user_client):
-    #     chapter = ChapterFactory()
-    #     _ = (
-    #         ChapterLessonFactory(chapter=chapter, lesson__duration=1),
-    #         ChapterLessonFactory(chapter=chapter, lesson__duration=2),
-    #     )
-
-    #     response = user_client.get(self.url)
-    #     assert response.status_code == status.HTTP_200_OK
-    #     assert response.json()["results"][0]["lessons_count"] == 2
-    #     assert response.json()["results"][0]["course_duration"] == 3
-
     def test_lessons_appear_in_chapters(self, user_client):
         """
         Tests Course -> Chapter -> Lesson relation.
