@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_filters",
+    "nested_inline",
     # 3-rd party authentication apps
     "djoser",
     "allauth",

@@ -6,7 +6,6 @@ import factory.fuzzy
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
-    ChapterLesson,
     Course,
     CourseFaq,
     CourseKnowledge,
@@ -44,20 +43,6 @@ class CourseFactory(factory.django.DjangoModelFactory):
     user_created = factory.SubFactory(UserFactory)
 
 
-class LessonFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = Lesson
-
-    title = factory.Sequence(lambda n: "Урок{}".format(n))
-    description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
-    lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
-    lesson_status = Lesson.LessonStatus.READY
-    tags = factory.Faker("words", nb=5)
-    duration = factory.fuzzy.FuzzyInteger(0, 10)
-    user_created = factory.SubFactory(UserFactory)
-    user_modifier = factory.SubFactory(UserFactory)
-
-
 class ChapterFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Chapter
@@ -68,44 +53,28 @@ class ChapterFactory(factory.django.DjangoModelFactory):
     user_modifier = factory.SubFactory(UserFactory)
 
 
+class LessonFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Lesson
+
+    title = factory.Sequence(lambda n: "Урок{}".format(n))
+    chapter_id = factory.SubFactory(ChapterFactory)
+    description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
+    lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
+    lesson_status = Lesson.LessonStatus.READY
+    tags = factory.Faker("words", nb=5)
+    duration = factory.fuzzy.FuzzyInteger(0, 10)
+    user_created = factory.SubFactory(UserFactory)
+    user_modifier = factory.SubFactory(UserFactory)
+    order_number = factory.fuzzy.FuzzyInteger(0, 10)
+
+
 class CourseStatusFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = CourseStatus
 
     name = factory.Sequence(lambda n: "Статус {}".format(n))
     slug = factory.fuzzy.FuzzyChoice(list(CourseStatus.CourseStatusChoices))
-
-
-class ChapterLessonFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = ChapterLesson
-
-    chapter = factory.SubFactory(ChapterFactory)
-    lesson = factory.SubFactory(LessonFactory)
-    order_number = factory.fuzzy.FuzzyInteger(0, 10)
-    created_at = factory.Faker("date_object")
-
-
-class LessonWithChapterFactory(LessonFactory):
-    membership = factory.RelatedFactory(
-        ChapterLessonFactory,
-        factory_related_name="lesson",
-    )
-
-
-class LessonWith3ChapterFactory(ChapterFactory):
-    membership1 = factory.RelatedFactory(
-        ChapterLessonFactory,
-        factory_related_name="chapter",
-    )
-    membership2 = factory.RelatedFactory(
-        ChapterLessonFactory,
-        factory_related_name="chapter",
-    )
-    membership3 = factory.RelatedFactory(
-        ChapterLessonFactory,
-        factory_related_name="chapter",
-    )
 
 
 class FaqFactory(factory.django.DjangoModelFactory):
@@ -193,3 +162,23 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
     enabled = Subscription.Flag.ACTIVE
+
+
+class ChapterWith3Lessons(ChapterFactory):
+    """Test Chapter factory with 3 related lessons."""
+
+    membership1 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter_id",
+        order_number=factory.Iterator([1]),
+    )
+    membership2 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter_id",
+        order_number=factory.Iterator([2]),
+    )
+    membership3 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter_id",
+        order_number=factory.Iterator([3]),
+    )

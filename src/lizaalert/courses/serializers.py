@@ -4,7 +4,6 @@ from rest_framework import serializers
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
-    ChapterLesson,
     Course,
     CourseStatus,
     Knowledge,
@@ -53,7 +52,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     title = serializers.ReadOnlyField(source="lesson.title")
 
     class Meta:
-        model = ChapterLesson
+        model = Lesson
         fields = (
             "id",
             "order_number",
@@ -76,7 +75,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
 class ChapterInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка частей курса."""
 
-    lessons = LessonInlineSerializer(source="chapterlesson_set", read_only=True, many=True)
+    lessons = LessonInlineSerializer(many=True)
 
     class Meta:
         model = Chapter

@@ -3,7 +3,6 @@ from django.contrib import admin
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
-    ChapterLesson,
     ChapterProgressStatus,
     Course,
     CourseFaq,
@@ -14,12 +13,6 @@ from lizaalert.courses.models import (
     LessonProgressStatus,
     Subscription,
 )
-
-
-class ChapterLessonInline(admin.TabularInline):
-    model = ChapterLesson
-    min_num = 1
-    extra = 0
 
 
 class CourseFaqInline(admin.TabularInline):
@@ -38,8 +31,27 @@ class CourseKnowledgeInline(admin.TabularInline):
     extra = 0
 
 
+class LessonInline(admin.StackedInline):
+    """Инлайн урока для отображения в главе."""
+
+    model = Lesson
+    min_num = 1
+    extra = 0
+
+
+class ChapterInline(admin.TabularInline):
+    """Инлайн главы для отображения в курсе."""
+
+    model = Chapter
+    min_num = 1
+    extra = 0
+
+
 class CourseAdmin(admin.ModelAdmin):
-    inlines = (CourseFaqInline, CourseKnowledgeInline)
+    """Админка курса."""
+
+    inlines = (CourseFaqInline, CourseKnowledgeInline, ChapterInline)
+    model = Course
     list_display = (
         "title",
         "course_format",
@@ -54,8 +66,10 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Chapter)
 class ChapterAdmin(admin.ModelAdmin):
-    inlines = (ChapterLessonInline,)
-    ordering = ("-created_at",)
+    """Админка главы."""
+
+    inlines = (LessonInline,)
+    ordering = ("-order_number",)
 
 
 @admin.register(LessonProgressStatus)
