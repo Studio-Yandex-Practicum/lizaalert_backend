@@ -39,7 +39,7 @@ class Question(TimeStampedModel):
         ("text_answer", "Text Answer"),
     ]
 
-    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, verbose_name="Квиз")
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, verbose_name="Квиз", related_name="questions")
     question_type = models.CharField("Тип вопроса", max_length=20, choices=QUESTION_TYPES)
     title = models.CharField("Заголовок", max_length=255)
     content = models.JSONField("Варианты ответов", default=list)
@@ -59,8 +59,8 @@ class UserAnswer(TimeStampedModel):
     retry_count = models.PositiveIntegerField("Количество попыток", default=0)
     score = models.PositiveIntegerField("Количество баллов", default=0)
     final_result = models.CharField("Окончательный результат", max_length=255, null=True, blank=True)
-    start_time = models.TimeField("Время начала выполнения", null=True, blank=True)
-    date_completed = models.TimeField("Время завершения выполнения", null=True, blank=True)
+    start_date = models.DateTimeField("Время начала выполнения", null=True, blank=True)
+    end_date = models.DateTimeField("Время завершения выполнения", null=True, blank=True)
 
     class Meta:
         verbose_name = "Ответ пользователя"

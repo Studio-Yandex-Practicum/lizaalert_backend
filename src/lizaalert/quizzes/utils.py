@@ -1,0 +1,23 @@
+def compare_answers(user_answers, questions):
+    correct_count = 0
+
+    result = []
+
+    for user_answer in user_answers:
+        question_id = user_answer["question_id"]
+        user_answer_ids = user_answer["answer_id"]
+
+        question = next((q for q in questions if q.id == question_id), None)
+
+        if question:
+            correct_answer_ids = [answer["id"] for answer in question.content if answer["is_correct"]]
+            is_correct = sorted(user_answer_ids) == sorted(correct_answer_ids)
+
+            if is_correct:
+                correct_count += 1
+
+            result.append(
+                {"question_id": question_id, "correct_answer_id": correct_answer_ids, "is_correct": is_correct}
+            )
+
+    return result, correct_count
