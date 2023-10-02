@@ -101,7 +101,7 @@ class CourseLessonListViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CourseLessonListSerializer
 
     def get_queryset(self):
-        return Lesson.objects.filter(chapter__course__id=self.kwargs["courses_pk"])
+        return Lesson.objects.filter(chapter__course_id=self.kwargs["courses_pk"])
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):

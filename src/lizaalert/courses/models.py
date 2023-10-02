@@ -77,7 +77,7 @@ class Course(TimeStampedModel):
         verbose_name_plural = "Курсы"
 
     def __str__(self):
-        return self.title
+        return f"Course {self.title}"
 
 
 class CourseStatus(models.Model):
@@ -159,7 +159,7 @@ class Chapter(TimeStampedModel):
         ]
 
     def __str__(self):
-        return self.title
+        return f"Курс {self.course.title}: Глава {self.title}"
 
 
 class Lesson(TimeStampedModel):
@@ -168,7 +168,7 @@ class Lesson(TimeStampedModel):
 
     Поля модели:
     title* - название урока
-    chapter_id - глава, к которой относится курс
+    chapter - глава, к которой относится курс
     description - описание урока
     lesson_type* - тип урока, выбор из перечня Урок, Видеоурок, Вебинар, Тест (Квиз)
     tags - ключевые слова урока
@@ -190,7 +190,7 @@ class Lesson(TimeStampedModel):
         PUBLISHED = "Published", "Опубликован"
 
     title = models.CharField(max_length=120, verbose_name="название урока")
-    chapter_id = models.ForeignKey(
+    chapter = models.ForeignKey(
         Chapter, on_delete=models.PROTECT, related_name="lessons", verbose_name="уроки главы", null=True
     )
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
@@ -225,13 +225,13 @@ class Lesson(TimeStampedModel):
         verbose_name_plural = "Уроки"
         constraints = [
             models.UniqueConstraint(
-                fields=["order_number", "chapter_id"],
+                fields=["order_number", "chapter"],
                 name="unique_lesson_order_number",
             )
         ]
 
     def __str__(self):
-        return self.title
+        return f"Глава {self.chapter.title}: Урок {self.title}"
 
 
 class LessonProgressStatus(TimeStampedModel):
