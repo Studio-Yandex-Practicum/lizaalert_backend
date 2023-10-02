@@ -2,7 +2,15 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from tests.factories.courses import ChapterFactory, ChapterLessonFactory, CourseFactory, CourseStatusFactory
+from tests.factories.courses import (
+    ChapterFactory,
+    ChapterLessonFactory,
+    CourseFactory,
+    CourseStatusFactory,
+    CourseWith3FaqFactory,
+    CourseWith3KnowledgeFactory,
+    SubscriptionFactory,
+)
 from tests.factories.users import LevelFactory
 from tests.user_fixtures.course_fixtures import return_course_data
 from tests.user_fixtures.level_fixtures import return_levels_data
@@ -20,7 +28,7 @@ class TestCourseStatusAndLevel:
         response = user_client.get(url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_anonimous(self, client):
+    def test_anonymous(self, client):
         response = client.get(self.urls[0][0])
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -61,11 +69,6 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert all(course_status)
 
-    # def test_course_status_user(self, user_client):
-    #     response = user_client.get(self.url)
-    #     assert response.status_code == status.HTTP_200_OK
-    #     assert response.json()["results"][0]["course_status"] == "active"
-
     def test_filter_courses_by_course_format(self, user_client):
         course = CourseFactory()
         course_format = course.course_format
@@ -85,17 +88,63 @@ class TestCourse:
         assert response.json()["results"][0]["level"] == level
         assert len(courses) != 0
 
-    def test_field_faq_is_courses_list(self, user_client):
-        course = CourseFactory()
-        course_faq = course.faq
+    def test_field_faq_in_course(self, user_client):
+        """
+        Тест, что объекты FAQ появляются в конкретном курсе.
+
+        При этом FAQ не связанные с данным курсом не отображаются в нем.
+        """
+        _ = CourseWith3FaqFactory()
+        _ = CourseWith3FaqFactory()
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["faq"] == course_faq
+        assert set(response.json()["results"][0]["faq"]) == set([2, 3, 1])
 
-    def test_field_faq_is_course(self, user_client):
-        course = CourseFactory()
-        course_id = course.pk
-        course_faq = course.faq
-        response = user_client.get(self.url, {"id": course_id})
+    def test_field_knowledge_in_course(self, user_client):
+        """
+        Тест, что объекты Knowledge появляются в конкретном курсе.
+
+        При этом knowledge не связанные с данным курсом не отображаются в нем.
+        """
+        _ = CourseWith3KnowledgeFactory()
+        _ = CourseWith3KnowledgeFactory()
+        response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["faq"] == course_faq
+        assert set(response.json()["results"][0]["knowledge"]) == set([3, 2, 1])
+
+    def test_user_subscription_to_course(self, user_client, user, user_2):
+        """Тест, что пользователь может подписаться на курс."""
+        subscription_1 = SubscriptionFactory(user=user)
+        subscription_2 = SubscriptionFactory(user=user_2)
+        course_id_1 = subscription_1.course.id
+        course_id_2 = subscription_2.course.id
+        url_1 = reverse("courses-detail", kwargs={"pk": course_id_1})
+        url_2 = reverse("courses-detail", kwargs={"pk": course_id_2})
+        response_1 = user_client.get(url_1)
+        response_2 = user_client.get(url_2)
+        assert response_1.status_code == status.HTTP_200_OK
+        assert response_1.json()["user_status"] == "True"
+        assert response_2.json()["user_status"] == "False"
+
+    def test_user_unsubscription_from_course(self, user_client, user):
+        """Тест, что пользователь может отписаться от курса."""
+        subscription = SubscriptionFactory(user=user)
+        course_id = subscription.course.id
+        url = reverse("courses-detail", kwargs={"pk": course_id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["user_status"] == "True"
+
+        unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
+        response = user_client.post(unsubscribe_url)
+        response_1 = user_client.get(url)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response_1.json()["user_status"] == "False"
+
+    def test_another_user_unable_to_unsubscribe_from_course(self, user_client, user_2):
+        """Тест, что иной пользователь не может отписаться не от своего курса."""
+        subscription = SubscriptionFactory(user=user_2)
+        course_id = subscription.course.id
+        unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
+        response = user_client.post(unsubscribe_url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
