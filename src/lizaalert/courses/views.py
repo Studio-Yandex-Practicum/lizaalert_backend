@@ -32,7 +32,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        lesson_status = Lesson.LessonStatus.READY
+        lesson_status = Lesson.LessonStatus.PUBLISHED
         if user.is_authenticated:
             course = Course.objects.all().annotate(
                 course_duration=Sum(

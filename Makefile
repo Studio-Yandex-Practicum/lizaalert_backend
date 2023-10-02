@@ -130,7 +130,7 @@ dev-run:
 		-e DB_PASSWORD=$(DEV_DB_PASSWORD) \
 		-e DB_NAME=$(DEV_DB_NAME) \
 		-e DEBUG=true \
-		$(DEV_CONTAINER) python3 manage.py runserver 0.0.0.0:8000 --settings lizaalert.settings.local
+		$(DEV_CONTAINER) python3 manage.py runserver 0.0.0.0:8000 --settings lizaalert.settings.local --verbosity 2
 
 
 	docker stop $(DEV_CONTAINER)

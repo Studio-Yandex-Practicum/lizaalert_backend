@@ -3,6 +3,8 @@ from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializer for create new user backend."""
+
     class Meta:
         model = get_user_model()
         fields = ["username", "email", "password"]
@@ -14,3 +16,13 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+class UserIdSerialiazer(serializers.Serializer):
+    id = serializers.IntegerField()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Serializer for reset user password backend."""
+
+    email = serializers.EmailField()
