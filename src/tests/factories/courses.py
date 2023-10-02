@@ -61,7 +61,7 @@ class LessonFactory(factory.django.DjangoModelFactory):
     chapter_id = factory.SubFactory(ChapterFactory)
     description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
     lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
-    lesson_status = Lesson.LessonStatus.READY
+    lesson_status = Lesson.LessonStatus.PUBLISHED
     tags = factory.Faker("words", nb=5)
     duration = factory.fuzzy.FuzzyInteger(0, 10)
     user_created = factory.SubFactory(UserFactory)
@@ -171,14 +171,17 @@ class ChapterWith3Lessons(ChapterFactory):
         LessonFactory,
         factory_related_name="chapter_id",
         order_number=factory.Iterator([1]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership2 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter_id",
         order_number=factory.Iterator([2]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership3 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter_id",
         order_number=factory.Iterator([3]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
     )

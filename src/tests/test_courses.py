@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from lizaalert.courses.models import Lesson
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -60,16 +61,39 @@ class TestCourse:
         interfere with our Course.
         Asserts created course with correct chapter id,
         number of lessons, correct order nubmer.
+        Asserts "lessons_count" field returns correct value.
+        Asserts "course_duration" field returns correct value.
         """
         chapter = ChapterWith3Lessons()
         _ = LessonFactory()
         course = CourseFactory()
         course.chapters.add(chapter)
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
+        print(response.json())
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["id"] == chapter.id
         assert len(response.json()["chapters"][0]["lessons"]) == 3
         assert response.json()["chapters"][0]["lessons"][2]["order_number"] == 3
+
+    def test_course_annotation(self, user_client):
+        """
+        Tests course annotation functions.
+
+        Creates Course and adds to it Chapter with 3 Lessons
+        Creates additional Lesson instance, to check it doesn't
+        interfere with our Course.
+        Asserts correct lessons_count.
+        Asserts correct total course duration.
+        """
+        chapter = ChapterWith3Lessons()
+        lessons = Lesson.objects.filter(chapter_id=chapter.id)
+        course_duration = sum([lesson.duration for lesson in lessons])
+        _ = LessonFactory()
+        course = CourseFactory()
+        course.chapters.add(chapter)
+        response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
+        assert response.json()["lessons_count"] == 3
+        assert response.json()["course_duration"] == course_duration
 
     def test_course_status_anonymous(self, anonymous_client):
         response = anonymous_client.get(self.url)
