@@ -153,23 +153,30 @@ AUTHENTICATION_CLASSES = [
     "djoser.views.TokenCreateView",
 ]
 
+# https://djoser.readthedocs.io/en/latest/settings.html
 DJOSER = {
     "LOGIN_FIELD": "email",
     "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
     "SET_PASSWORD_RETYPE": True,
+    "ACTIVATION_URL": False,
 }
 
+# https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
 }
 
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
+
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None
