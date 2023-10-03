@@ -231,7 +231,7 @@ class Lesson(TimeStampedModel):
         ]
 
     def __str__(self):
-        return f"Глава {self.chapter.title}: Урок {self.title}"
+        return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
 
 class LessonProgressStatus(TimeStampedModel):
