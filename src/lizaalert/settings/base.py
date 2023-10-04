@@ -16,6 +16,7 @@ DEBUG = env.bool("DEBUG", False)
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     [
+        "la-testing.ru",
         "api.la-testing.ru",
         "admin.la-testing.ru",
         "docs.la-testing.ru",
