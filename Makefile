@@ -145,6 +145,6 @@ dev-test:
 		--name $(DEV_CONTAINER) local/lizaalert_backend_dev
 
 	-docker exec -it \
-		$(DEV_CONTAINER) python3 -m pytest -vvs
+		$(DEV_CONTAINER) python3 -m pytest -s
 
 	docker stop $(DEV_CONTAINER)
