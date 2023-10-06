@@ -9,6 +9,7 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     lessons_count = serializers.IntegerField()
     course_duration = serializers.IntegerField()
     course_status = serializers.StringRelatedField(read_only=True)
+    user_status = serializers.StringRelatedField()
 
 
 class CourseStatusSerializer(serializers.ModelSerializer):
@@ -32,6 +33,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "cover_path",
             "faq",
             "knowledge",
+            "user_status",
         )
 
 
