@@ -16,6 +16,7 @@ DEBUG = env.bool("DEBUG", False)
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     [
+        "la-testing.ru",
         "api.la-testing.ru",
         "admin.la-testing.ru",
         "docs.la-testing.ru",
@@ -173,8 +174,8 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
-    "AUTH_HEADER_TYPES": ("JWT",),
-    "AUTH_HEADER_NAME": "Authorization",
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
 
 SITE_ID = 1
