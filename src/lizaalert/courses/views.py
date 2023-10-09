@@ -97,11 +97,9 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-class CourseLessonListViewSet(viewsets.ReadOnlyModelViewSet):
+class LessonViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CourseLessonListSerializer
-
-    def get_queryset(self):
-        return Lesson.objects.filter(chapter__course_id=self.kwargs["courses_pk"])
+    queryset = Lesson.objects.all()
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):

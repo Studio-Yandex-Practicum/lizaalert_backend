@@ -181,3 +181,12 @@ class TestCourse:
         unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
         response = user_client.post(unsubscribe_url)
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_lessons_appear_on_endpoint(self, user_client):
+        """Тест, что уроки корректно отображаются по эндпоинту."""
+        _ = ChapterWith3Lessons()
+        _ = LessonFactory()
+        url = reverse("lessons-list")
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 4
