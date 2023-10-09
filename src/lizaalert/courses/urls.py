@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
-from lizaalert.courses.views import LessonViewSet, CourseStatusViewSet, CourseViewSet, FilterListViewSet
+from lizaalert.courses.views import CourseStatusViewSet, CourseViewSet, FilterListViewSet, LessonViewSet
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="courses")
