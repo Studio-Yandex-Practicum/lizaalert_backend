@@ -16,6 +16,7 @@ DEBUG = env.bool("DEBUG", False)
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     [
+        "la-testing.ru",
         "api.la-testing.ru",
         "admin.la-testing.ru",
         "docs.la-testing.ru",
@@ -153,23 +154,42 @@ AUTHENTICATION_CLASSES = [
     "djoser.views.TokenCreateView",
 ]
 
+# https://djoser.readthedocs.io/en/latest/settings.html
 DJOSER = {
     "LOGIN_FIELD": "email",
     "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
     "SET_PASSWORD_RETYPE": True,
+    "ACTIVATION_URL": False,
 }
 
+# https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
 }
 
+# https://drf-yasg.readthedocs.io/en/stable/security.html
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Basic": {"type": "basic"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+    },
+    "LOGIN_URL": "/admin/login/",
+    "LOGOUT_URL": "/admin/logout/",
+}
+
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
+
 SITE_ID = 1
 REST_USE_JWT = True
 REST_AUTH_TOKEN_MODEL = None

@@ -77,7 +77,7 @@ class Course(TimeStampedModel):
         verbose_name_plural = "Курсы"
 
     def __str__(self):
-        return self.title
+        return f"Course {self.title}"
 
 
 class CourseStatus(models.Model):
@@ -109,10 +109,57 @@ class CourseStatus(models.Model):
         db_table = "course_status"
         verbose_name = "Статус курса"
         verbose_name_plural = "Статус курсов"
-        constraints = [models.UniqueConstraint(fields=["slug"], name="unique_slug_status")]
 
     def __str__(self):
         return f"{self.slug} <{self.type_status}>"
+
+
+class Chapter(TimeStampedModel):
+    """
+    Модель главы.
+
+    Поля модели:
+    title - название главы
+    course - курс, к которому относится глава
+    user_created* - пользователь создавший главу
+    user_modified* - пользователь последний редактировавший главу
+    created_at* - дата создания записи о главе, автоматическое проставление
+    текущего времени
+    updated_at* - дата обновления записи о главе, автоматическое проставление
+    текущего времени.
+    """
+
+    title = models.CharField(max_length=120, null=True, blank=True, verbose_name="название главы")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name="Курс", related_name="chapters")
+    user_created = models.ForeignKey(
+        User,
+        related_name="chapter_creator",
+        on_delete=models.PROTECT,
+        verbose_name="пользователь, создавший главу",
+    )
+    user_modifier = models.ForeignKey(
+        User,
+        related_name="chapter_editor",
+        on_delete=models.PROTECT,
+        verbose_name="пользователь, внёсший изменения в главу",
+    )
+    order_number = models.PositiveSmallIntegerField(
+        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], default=1
+    )
+
+    class Meta:
+        ordering = ("order_number",)
+        verbose_name = "глава"
+        verbose_name_plural = "глава"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["order_number", "course"],
+                name="unique_order_number",
+            )
+        ]
+
+    def __str__(self):
+        return f"Курс {self.course.title}: Глава {self.title}"
 
 
 class Lesson(TimeStampedModel):
@@ -121,6 +168,7 @@ class Lesson(TimeStampedModel):
 
     Поля модели:
     title* - название урока
+    chapter - глава, к которой относится курс
     description - описание урока
     lesson_type* - тип урока, выбор из перечня Урок, Видеоурок, Вебинар, Тест (Квиз)
     tags - ключевые слова урока
@@ -142,6 +190,9 @@ class Lesson(TimeStampedModel):
         PUBLISHED = "Published", "Опубликован"
 
     title = models.CharField(max_length=120, verbose_name="название урока")
+    chapter = models.ForeignKey(
+        Chapter, on_delete=models.PROTECT, related_name="lessons", verbose_name="уроки главы", null=True
+    )
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
     lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
@@ -160,92 +211,27 @@ class Lesson(TimeStampedModel):
         verbose_name="пользователь, внёсший изменения в урок",
     )
     lesson_status = models.CharField(
-        max_length=20,
-        verbose_name="статус урока",
-        choices=LessonStatus.choices,
-        default=LessonStatus.DRAFT,
+        max_length=20, verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT
     )
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
+    order_number = models.PositiveSmallIntegerField(
+        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], default=1
+    )
 
     class Meta:
-        ordering = ("title",)
+        ordering = ("order_number",)
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
-
-    def __str__(self):
-        return self.title
-
-
-class Chapter(TimeStampedModel):
-    """
-    Модель главы.
-
-    Поля модели:
-    title - название главы
-    lessons - уроки, входящие в главу
-    user_created* - пользователь создавший главу
-    user_modified* - пользователь последний редактировавший главу
-    created_at* - дата создания записи о главе, автоматическое проставление
-    текущего времени
-    updated_at* - дата обновления записи о главе, автоматическое проставление
-    текущего времени.
-    """
-
-    title = models.CharField(max_length=120, null=True, blank=True, verbose_name="название главы")
-    lessons = models.ManyToManyField(Lesson, through="ChapterLesson", verbose_name="уроки главы")
-    course = models.ForeignKey(Course, on_delete=models.PROTECT, verbose_name="Части", related_name="chapters")
-    user_created = models.ForeignKey(
-        User,
-        related_name="chapter_creator",
-        on_delete=models.PROTECT,
-        verbose_name="пользователь, создавший главу",
-    )
-    user_modifier = models.ForeignKey(
-        User,
-        related_name="chapter_editor",
-        on_delete=models.PROTECT,
-        verbose_name="пользователь, внёсший изменения в главу",
-    )
-
-    class Meta:
-        ordering = ("title",)
-        verbose_name = "глава"
-        verbose_name_plural = "глава"
-
-    def __str__(self):
-        return self.title
-
-
-class ChapterLesson(models.Model):
-    """
-    Модель связи глава-урок.
-
-    Поля модели:
-    chapter* - тип ForeignKey к модели главы урока Chapter
-    lesson* - тип ForeignKey к модели курса Lesson
-    order_number* - порядковый номер урока в главе >= 1
-    created_at* - дата создания записи о связи глава-урок.
-    """
-
-    chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT)
-    lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT)
-    order_number = models.PositiveSmallIntegerField("порядковый номер урока в главе", validators=[MinValueValidator(1)])
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="дата добавления урока в главу")
-
-    class Meta:
-        ordering = ("chapter", "order_number")
         constraints = [
             models.UniqueConstraint(
-                fields=["chapter", "lesson", "order_number"],
-                name="unique_chapter_lesson",
+                fields=["order_number", "chapter"],
+                name="unique_lesson_order_number",
             )
         ]
-        verbose_name = "Урок"
-        verbose_name_plural = "Урок"
 
     def __str__(self):
-        return f"Chapter {self.id}: {self.lesson.title}"
+        return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
 
 class LessonProgressStatus(TimeStampedModel):
@@ -263,8 +249,8 @@ class LessonProgressStatus(TimeStampedModel):
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        NOTSTARTED = 0, "Не начат"
-        INPROGRESS = 1, "Начат"
+        COMING = 0, "Не начат"
+        ACTIVE = 1, "Начат"
         FINISHED = 2, "Пройден"
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
@@ -352,8 +338,8 @@ class CourseProgressStatus(TimeStampedModel):
 class CourseFaq(models.Model):
     """Модель связи вопрос-курс."""
 
-    faq = models.ForeignKey(FAQ, on_delete=models.PROTECT)
-    course = models.ForeignKey(Course, on_delete=models.PROTECT)
+    faq = models.ForeignKey(FAQ, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ("faq",)
@@ -362,8 +348,42 @@ class CourseFaq(models.Model):
 class CourseKnowledge(models.Model):
     """Модель связи умение-курс."""
 
-    knowledge = models.ForeignKey(Knowledge, on_delete=models.PROTECT)
-    course = models.ForeignKey(Course, on_delete=models.PROTECT)
+    knowledge = models.ForeignKey(Knowledge, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ("knowledge",)
+
+
+class Subscription(TimeStampedModel):
+    """
+    Модель для записи пользователя на курс.
+
+    user - ForeignKey на модель user
+    course - ForeignKey на модель course.
+    enabled - признак активности записи на курс.
+    """
+
+    class Flag(models.TextChoices):
+        ACTIVE = 1, "Запись активна"
+        INACTIVE = 0, "Запись не активна"
+
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
+    enabled = models.CharField(
+        max_length=20, choices=Flag.choices, verbose_name="статус записи на курс", default=Flag.ACTIVE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "course"],
+                name="unique_user_course",
+            )
+        ]
+        ordering = ("user",)
+        verbose_name = "Подписка на курс"
+        verbose_name_plural = "Подписки на курс"
+
+    def __str__(self):
+        return f"<Subscription: {self.id}, user: {self.user_id}, course: {self.course_id}>"

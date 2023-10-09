@@ -42,5 +42,4 @@ jobs:
           script: |
             sudo docker pull cr.yandex/crpabbati0r6r7i5ee8c/lizaalert_backend:latest
             sudo bash -c "docker-compose -f /root/liza_backend/docker-compose.yml up -d"
-            sudo bash -c "docker-compose -f /root/liza_backend/docker-compose.yml exec -T backend bash -c 'python manage.py migrate'"
-
+            sudo bash -c "docker-compose -f /root/liza_backend/docker-compose.yml exec -T backend python manage.py migrate"
