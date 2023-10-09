@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0001_initial'),
+        ('users', '0002_auto_20230811_1615'),
         ('courses', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('quizzes', '0002_auto_20230919_1110'),
