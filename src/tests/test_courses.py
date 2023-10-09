@@ -7,6 +7,8 @@ from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
     CourseFactory,
+    CourseFaqFactory,
+    CourseKnowledgeFactory,
     CourseStatusFactory,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
@@ -127,11 +129,14 @@ class TestCourse:
 
         При этом FAQ не связанные с данным курсом не отображаются в нем.
         """
+        course = CourseFaqFactory()
         _ = CourseWith3FaqFactory()
-        _ = CourseWith3FaqFactory()
+        faq = course.faq
         response = user_client.get(self.url)
+        results = response.json()["results"][0]
         assert response.status_code == status.HTTP_200_OK
-        assert set(response.json()["results"][0]["faq"]) == set([2, 3, 1])
+        assert results["faq"][0]["question"] == faq.question
+        assert results["faq"][0]["answer"] == faq.answer
 
     def test_field_knowledge_in_course(self, user_client):
         """
@@ -139,11 +144,14 @@ class TestCourse:
 
         При этом knowledge не связанные с данным курсом не отображаются в нем.
         """
+        course = CourseKnowledgeFactory()
         _ = CourseWith3KnowledgeFactory()
-        _ = CourseWith3KnowledgeFactory()
+        knowledge = course.knowledge
         response = user_client.get(self.url)
+        results = response.json()["results"][0]
         assert response.status_code == status.HTTP_200_OK
-        assert set(response.json()["results"][0]["knowledge"]) == set([3, 2, 1])
+        assert results["knowledge"][0]["title"] == knowledge.title
+        assert results["knowledge"][0]["description"] == knowledge.description
 
     def test_user_subscription_to_course(self, user_client, user, user_2):
         """Тест, что пользователь может подписаться на курс."""

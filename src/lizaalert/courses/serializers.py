@@ -4,12 +4,30 @@ from rest_framework import serializers
 from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowledge, Lesson, LessonProgressStatus
 
 
+class FaqInlineSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для вложенных FAQ."""
+
+    class Meta:
+        model = FAQ
+        fields = "__all__"
+
+
+class KnowledgeInlineSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для вложенных умений."""
+
+    class Meta:
+        model = Knowledge
+        fields = "__all__"
+
+
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
     level = serializers.StringRelatedField(read_only=True)
     lessons_count = serializers.IntegerField()
     course_duration = serializers.IntegerField()
     course_status = serializers.StringRelatedField(read_only=True)
     user_status = serializers.StringRelatedField()
+    faq = FaqInlineSerializer(many=True)
+    knowledge = KnowledgeInlineSerializer(many=True)
 
 
 class CourseStatusSerializer(serializers.ModelSerializer):
@@ -80,26 +98,8 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
         )
 
 
-class FaqInlineSerializer(serializers.ModelSerializer):
-    """Сериалайзер класс для вложенных FAQ."""
-
-    class Meta:
-        model = FAQ
-        fields = "__all__"
-
-
-class KnowledgeInlineSerializer(serializers.ModelSerializer):
-    """Сериалайзер класс для вложенных умений."""
-
-    class Meta:
-        model = Knowledge
-        fields = "__all__"
-
-
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    faq = FaqInlineSerializer(many=True)
-    knowledge = KnowledgeInlineSerializer(many=True)
     user_status = serializers.StringRelatedField()
 
     class Meta:
