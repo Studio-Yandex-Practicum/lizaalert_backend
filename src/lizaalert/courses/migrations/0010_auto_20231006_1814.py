@@ -7,7 +7,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    initial = True
+    initial = False
 
     dependencies = [
         ('users', '0001_initial'),
