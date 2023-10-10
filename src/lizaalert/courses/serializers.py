@@ -133,8 +133,12 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 
 
 class LessonSerializer(serializers.ModelSerializer):
-    # next = serializers.HyperlinkedRelatedField(view_name="lessons-detail", read_only=True, lookup_field="next", lookup_url_kwarg='pk',)
-    # prev = serializers.HyperlinkedRelatedField(view_name="lessons-detail", read_only=True, lookup_field="prev", lookup_url_kwarg='id',)
+    # next = serializers.HyperlinkedRelatedField(
+    #     view_name="lessons-detail", read_only=True, lookup_field="next", lookup_url_kwarg='pk',
+    # )
+    # prev = serializers.HyperlinkedRelatedField(
+    #     view_name="lessons-detail", read_only=True, lookup_field="prev", lookup_url_kwarg='id',
+    # )
     next = serializers.IntegerField(read_only=True)
     prev = serializers.IntegerField()
 
