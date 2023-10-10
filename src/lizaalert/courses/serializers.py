@@ -132,7 +132,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
         )
 
 
-class CourseLessonListSerializer(serializers.ModelSerializer):
+class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = (
