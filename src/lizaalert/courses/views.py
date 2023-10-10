@@ -1,7 +1,7 @@
 from django.db.models import Count, Exists, OuterRef, Q, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -12,10 +12,10 @@ from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import (
     CourseDetailSerializer,
-    CourseLessonListSerializer,
     CourseSerializer,
     CourseStatusSerializer,
     FilterSerializer,
+    LessonSerializer,
 )
 from lizaalert.users.models import Level
 
@@ -97,8 +97,8 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-class LessonViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CourseLessonListSerializer
+class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
 
 

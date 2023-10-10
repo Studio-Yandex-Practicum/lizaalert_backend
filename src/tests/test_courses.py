@@ -185,8 +185,8 @@ class TestCourse:
     def test_lessons_appear_on_endpoint(self, user_client):
         """Тест, что уроки корректно отображаются по эндпоинту."""
         _ = ChapterWith3Lessons()
-        _ = LessonFactory()
-        url = reverse("lessons-list")
+        lesson = LessonFactory()
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()) == 4
+        assert response.json()["id"] == lesson.id
