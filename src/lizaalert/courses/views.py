@@ -1,4 +1,5 @@
-from django.db.models import Count, Exists, OuterRef, Q, Sum
+from django.db.models import Count, Exists, OuterRef, Q, Sum, Window, F
+from django.db.models.functions import Lead, Lag
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -99,7 +100,10 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = LessonSerializer
-    queryset = Lesson.objects.annotate()
+    queryset = Lesson.objects.annotate(
+        next=Window(expression=Lead('id'), order_by=[F('order_number')]),
+        prev=Window(expression=Lag('id'), order_by=[F('order_number')]),
+    )
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):

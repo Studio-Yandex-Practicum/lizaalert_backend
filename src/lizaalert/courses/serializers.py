@@ -133,8 +133,8 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 
 
 class LessonSerializer(serializers.ModelSerializer):
-    next = serializers.HyperlinkedRelatedField(read_only=True, lookup_field="next_id")
-    prev = serializers.HyperlinkedRelatedField(read_only=True, lookup_field="prev_id")
+    next = serializers.HyperlinkedRelatedField(view_name="lessons-detail", read_only=True, lookup_field="next", lookup_url_kwarg='pk')
+    prev = serializers.HyperlinkedRelatedField(view_name="lessons-detail", read_only=True, lookup_field="prev")
 
     class Meta:
         model = Lesson
