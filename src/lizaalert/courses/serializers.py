@@ -23,7 +23,7 @@ class FaqInlineSerializer(serializers.ModelSerializer):
 
 class KnowledgeInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенных умений."""
-    
+
     id = serializers.IntegerField()
 
     class Meta:
