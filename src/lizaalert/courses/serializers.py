@@ -10,6 +10,7 @@ class FaqInlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQ
         fields = (
+            "id",
             "question",
             "answer",
             "author",
@@ -24,6 +25,7 @@ class KnowledgeInlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Knowledge
         fields = (
+            "id",
             "title",
             "description",
             "author",
