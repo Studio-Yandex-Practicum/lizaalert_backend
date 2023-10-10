@@ -15,7 +15,6 @@ class FaqInlineSerializer(serializers.ModelSerializer):
             "author",
             "created_at",
             "updated_at",
-
         )
 
 
@@ -30,7 +29,6 @@ class KnowledgeInlineSerializer(serializers.ModelSerializer):
             "author",
             "created_at",
             "updated_at",
-
         )
 
 
