@@ -7,6 +7,8 @@ from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowled
 class FaqInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенных FAQ."""
 
+    id = serializers.IntegerField()
+
     class Meta:
         model = FAQ
         fields = (
@@ -21,6 +23,8 @@ class FaqInlineSerializer(serializers.ModelSerializer):
 
 class KnowledgeInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенных умений."""
+
+    id = serializers.IntegerField()
 
     class Meta:
         model = Knowledge
