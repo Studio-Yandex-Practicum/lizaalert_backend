@@ -9,7 +9,14 @@ class FaqInlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FAQ
-        fields = "__all__"
+        fields = (
+            "question",
+            "answer",
+            "author",
+            "created_at",
+            "updated_at",
+
+        )
 
 
 class KnowledgeInlineSerializer(serializers.ModelSerializer):
@@ -17,7 +24,14 @@ class KnowledgeInlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Knowledge
-        fields = "__all__"
+        fields = (
+            "title",
+            "description",
+            "author",
+            "created_at",
+            "updated_at",
+
+        )
 
 
 class CourseCommonFieldsMixin(serializers.ModelSerializer):
