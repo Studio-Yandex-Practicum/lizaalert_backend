@@ -9,7 +9,7 @@ class CourseFilter(filters.FilterSet):
 
     course_format = django_filters.CharFilter(field_name="course_format", lookup_expr="icontains")
 
-    level = django_filters.CharFilter(field_name="level__name", lookup_expr="icontains")
+    level = django_filters.CharFilter(field_name="level__id", lookup_expr="icontains")
 
     class Meta:
         model = Course
