@@ -198,3 +198,20 @@ class TestCourse:
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["id"] == lesson.id
+
+    def test_lessons_pagination_works(self, user_client):
+        """Тест, что работает переключение между уроками."""
+        chapter = ChapterFactory()
+        lesson_1 = LessonFactory(chapter=chapter, order_number=1)
+        lesson_2 = LessonFactory(chapter=chapter, order_number=2)
+        lesson_3 = LessonFactory(chapter=chapter, order_number=3)
+        url_1 = reverse("lessons-detail", kwargs={"pk": lesson_2.id})
+        url_2 = reverse("lessons-detail", kwargs={"pk": lesson_3.id})
+        response_1 = user_client.get(url_1)
+        response_2 = user_client.get(url_2)
+        assert response_1.status_code == status.HTTP_200_OK
+        assert response_2.status_code == status.HTTP_200_OK
+        assert response_1.json()["next_lesson"] == lesson_3.id
+        assert response_1.json()["prev_lesson"] == lesson_1.id
+        assert response_2.json()["next_lesson"] is None
+        assert response_2.json()["prev_lesson"] == lesson_2.id

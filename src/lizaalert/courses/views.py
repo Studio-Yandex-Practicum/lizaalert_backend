@@ -1,5 +1,4 @@
-from django.db.models import Count, Exists, F, OuterRef, Q, RowRange, Sum, Window
-from django.db.models.functions import Lag, Lead
+from django.db.models import Count, Exists, OuterRef, Q, Subquery, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -102,19 +101,20 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = LessonSerializer
 
     def get_queryset(self):
-        window = {
-            "partition_by": [F("chapter")],
-            "frame": RowRange(start=None, end=0),
-            "order_by": F("order_number").asc(),
-        }
         base_annotations = {
-            "next": Window(expression=Lead("id", 1), **window),
-            "prev": Window(expression=Lag("id", 1), **window),
+            "next_lesson": Subquery(
+                Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__gt=OuterRef("order_number"))
+                .order_by("order_number")
+                .values("id")[:1]
+            ),
+            "prev_lesson": Subquery(
+                Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__lt=OuterRef("order_number"))
+                .order_by("-order_number")
+                .values("id")[:1]
+            ),
         }
-        queryset = Lesson.objects.annotate(**base_annotations)
-        print(queryset.last().__dict__)
 
-        return queryset
+        return Lesson.objects.annotate(**base_annotations)
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
