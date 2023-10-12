@@ -107,10 +107,11 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             "frame": RowRange(start=None, end=0),
             "order_by": F("order_number").asc(),
         }
-        queryset = Lesson.objects.annotate(
-            next=Window(expression=Lead("id", 1), **window),
-            prev=Window(expression=Lag("id", 1), **window),
-        )
+        base_annotations = {
+            "next": Window(expression=Lead("id", 1), **window),
+            "prev": Window(expression=Lag("id", 1), **window),
+        }
+        queryset = Lesson.objects.annotate(**base_annotations)
         print(queryset.last().__dict__)
 
         return queryset
