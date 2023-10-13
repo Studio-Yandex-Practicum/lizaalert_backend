@@ -72,10 +72,10 @@ class CourseSerializer(CourseCommonFieldsMixin):
 class LessonInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка уроков курса."""
 
-    lesson_type = serializers.ReadOnlyField(source="lesson.lesson_type")
+    lesson_type = serializers.ReadOnlyField()
     lesson_progress = serializers.SerializerMethodField()
-    duration = serializers.ReadOnlyField(source="lesson.duration")
-    title = serializers.ReadOnlyField(source="lesson.title")
+    duration = serializers.ReadOnlyField()
+    title = serializers.ReadOnlyField()
 
     class Meta:
         model = Lesson
