@@ -114,14 +114,32 @@ class TestCourse:
         assert len(courses) != 0
 
     def test_test_filter_courses_by_level(self, user_client):
-        course = CourseFactory()
-        level = course.level.name
-        params = {"level": level}
+        """
+        Тест на работу фильтров.
+
+        Проверка фильтрации по level id.
+        Создается 2 курса с разными уровнями.
+        1) проверяем что при фильтрации по id уровня novice остается один курс
+        2) проверяем что при фильтрации по id уровня proffesional остается один курс
+        2) проверяем что без фильтрации показывается 2 курса.
+        """
+        novice = LevelFactory(name="novice")
+        prof = LevelFactory(name="professional")
+        course_1 = CourseFactory(level=novice)
+        course_2 = CourseFactory(level=prof)
+        level_1 = course_1.level
+        level_2 = course_2.level
+        params = {"level": level_1.id}
+        params_2 = {"level": level_2.id}
         response = user_client.get(self.url, params)
-        courses = response.json()["results"]
+        response_2 = user_client.get(self.url, params_2)
+        response_full = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["results"][0]["level"] == level
-        assert len(courses) != 0
+        assert response.json()["results"][0]["level"] == level_1.name
+        assert response_2.json()["results"][0]["level"] == level_2.name
+        assert len(response.json()["results"]) == 1
+        assert len(response_2.json()["results"]) == 1
+        assert len(response_full.json()["results"]) == 2
 
     def test_field_faq_in_course(self, user_client):
         """
