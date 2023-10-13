@@ -116,7 +116,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Lesson.objects.select_related("chapter").annotate(**base_annotations)
 
 
-
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = [Level, CourseStatus]
     serializer_class = FilterSerializer
