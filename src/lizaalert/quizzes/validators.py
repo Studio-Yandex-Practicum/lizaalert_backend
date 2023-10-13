@@ -23,7 +23,7 @@ class AnswerModel(BaseModel):
 
 class AnswerCheckModel(BaseModel):
     question_id: int
-    answer_id: List[int]
+    correct_answer_id: List[int]
     is_correct: bool
 
 

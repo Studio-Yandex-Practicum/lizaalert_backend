@@ -11,6 +11,12 @@ from lizaalert.quizzes.serializers import QuizWithQuestionsSerializer, UserAnswe
 from lizaalert.quizzes.utils import compare_answers
 
 
+class ErrorMessages:
+    TEST_NOT_STARTED = "Тест еще не начат."
+    TIME_EXPIRED = "Время вышло. Вы не успели."
+    COUNT_EXPIRED = "Закончилось количество попыток."
+
+
 class QuizDetailView(generics.RetrieveAPIView):
     serializer_class = QuizWithQuestionsSerializer
 
@@ -44,7 +50,7 @@ class RunQuizView(generics.CreateAPIView):
         if user_answer:
             print(user_answer)
             if quiz.retries != 0 and user_answer.retry_count >= quiz.retries:
-                return Response({"message": "Закончилось количество попыток."}, status=status.HTTP_200_OK)
+                return Response({"message": ErrorMessages.COUNT_EXPIRED}, status=status.HTTP_400_BAD_REQUEST)
             retry_count = user_answer.retry_count = user_answer.retry_count + 1
         else:
             if quiz.retries != 0:
@@ -78,8 +84,7 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         lesson_id = self.kwargs["lesson_id"]
-        quiz = Quiz.objects.get(lesson__id=lesson_id)
-        user_answer = UserAnswer.objects.filter(user=user, quiz=quiz).order_by("-id").first()
+        user_answer = UserAnswer.objects.filter(user=user, quiz__lesson__id=lesson_id).order_by("-id").first()
         return user_answer
 
     def post(self, request, *args, **kwargs):
@@ -95,18 +100,19 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
             user_answer.end_date = timezone.now()
             solution_time = user_answer.end_date - user_answer.start_date
             solution_time_minutes = solution_time.total_seconds() / 60
-            if solution_time_minutes > quiz.duration_minutes:
-                return Response({"message": "Время вышло. Вы не успели"}, status=status.HTTP_200_OK)
 
-            if user_answer:
-                questions = Question.objects.filter(quiz=quiz)
-            user_answer.result, user_answer.score = compare_answers(data, questions)
+            if solution_time_minutes > quiz.duration_minutes:
+                return Response({"message": ErrorMessages.TIME_EXPIRED}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = UserAnswerSerializer(user_answer, data={"answers": data}, partial=True)
+            if serializer.is_valid():
+                user_answer.result, user_answer.score = compare_answers(data, quiz)
             if quiz.passing_score > user_answer.score:
                 user_answer.final_result = False
             else:
                 user_answer.final_result = True
         except UserAnswer.DoesNotExist:
-            return Response({"message": "Тест еще не начат."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": ErrorMessages.TEST_NOT_STARTED}, status=status.HTTP_400_BAD_REQUEST)
         serializer = UserAnswerSerializer(user_answer, data={"answers": data}, partial=True)
 
         if serializer.is_valid():

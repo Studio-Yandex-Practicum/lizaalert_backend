@@ -1,3 +1,5 @@
+import json
+
 from pydantic import ValidationError as PydanticValidationError
 from rest_framework import serializers
 
@@ -47,7 +49,7 @@ class QuizWithQuestionsSerializer(QuizSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["questions"] = QuestionSerializer(instance.question_set.all(), many=True).data
+        representation["questions"] = QuestionSerializer(instance.questions.all(), many=True).data
         return representation
 
 
@@ -62,11 +64,11 @@ class UserAnswerSerializer(serializers.ModelSerializer):
                 "answers": data.get("answers"),
                 "result": data.get("result"),
             }
-            ValidateIUserAnswersModel(**answers_data)
+            validated_data = ValidateIUserAnswersModel(**answers_data)
+            data["answers"] = json.loads(validated_data.json())["answers"]
+            return data
         except PydanticValidationError as e:
-            raise serializers.ValidationError(str(e))
-
-        return data
+            raise serializers.ValidationError(e.errors())
 
     def create(self, validated_data):
         user_answer = UserAnswer(**validated_data)
