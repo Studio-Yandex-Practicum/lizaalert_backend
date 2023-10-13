@@ -99,7 +99,9 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = LessonSerializer
-    queryset = Lesson.objects.all()
+
+    def get_queryset(self):
+        return Lesson.objects.select_related("chapter")
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
