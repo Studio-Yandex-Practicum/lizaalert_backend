@@ -211,7 +211,7 @@ class TestCourse:
         response_2 = user_client.get(url_2)
         assert response_1.status_code == status.HTTP_200_OK
         assert response_2.status_code == status.HTTP_200_OK
-        assert response_1.json()["next_lesson"] == lesson_3.id
-        assert response_1.json()["prev_lesson"] == lesson_1.id
-        assert response_2.json()["next_lesson"] is None
-        assert response_2.json()["prev_lesson"] == lesson_2.id
+        assert response_1.json()["next_lesson_id"] == lesson_3.id
+        assert response_1.json()["prev_lesson_id"] == lesson_1.id
+        assert response_2.json()["next_lesson_id"] is None
+        assert response_2.json()["prev_lesson_id"] == lesson_2.id

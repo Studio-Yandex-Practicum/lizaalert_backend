@@ -133,8 +133,8 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 
 
 class LessonSerializer(serializers.ModelSerializer):
-    next_lesson = serializers.IntegerField()
-    prev_lesson = serializers.IntegerField()
+    next_lesson_id = serializers.IntegerField()
+    prev_lesson_id = serializers.IntegerField()
 
     class Meta:
         model = Lesson
@@ -147,8 +147,8 @@ class LessonSerializer(serializers.ModelSerializer):
             "duration",
             "additional",
             "diploma",
-            "next_lesson",
-            "prev_lesson",
+            "next_lesson_id",
+            "prev_lesson_id",
         )
 
 
