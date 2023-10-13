@@ -10,6 +10,7 @@ class FaqInlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQ
         fields = (
+            "id",
             "question",
             "answer",
             "author",
@@ -24,6 +25,7 @@ class KnowledgeInlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Knowledge
         fields = (
+            "id",
             "title",
             "description",
             "author",
@@ -135,11 +137,14 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 class LessonSerializer(serializers.ModelSerializer):
     next_lesson_id = serializers.IntegerField()
     prev_lesson_id = serializers.IntegerField()
+    course_id = serializers.IntegerField(source="chapter.course_id")
 
     class Meta:
         model = Lesson
         fields = (
             "id",
+            "course_id",
+            "chapter_id",
             "title",
             "description",
             "lesson_type",

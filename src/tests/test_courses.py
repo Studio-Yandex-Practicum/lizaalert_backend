@@ -191,13 +191,14 @@ class TestCourse:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_lessons_appear_on_endpoint(self, user_client):
-        """Тест, что уроки корректно отображаются по эндпоинту."""
+        """Тест, что уроки и аннотация курса корректно отображаются по эндпоинту."""
         _ = ChapterWith3Lessons()
         lesson = LessonFactory()
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["id"] == lesson.id
+        assert response.json()["course_id"] == lesson.chapter.course_id
 
     def test_lessons_pagination_works(self, user_client):
         """Тест, что работает переключение между уроками."""
