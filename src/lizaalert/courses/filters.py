@@ -5,7 +5,11 @@ from .models import Course
 
 
 class CourseFilter(filters.FilterSet):
-    """Кастомный фильтр для модели Course."""
+    """
+    Кастомный фильтр для модели Course.
+
+    Фильтрация по формату курса и ID уровня.
+    """
 
     course_format = django_filters.CharFilter(field_name="course_format", lookup_expr="icontains")
 
