@@ -1,4 +1,4 @@
-from django.db.models import Count, Exists, F, OuterRef, Q, Sum
+from django.db.models import Count, Exists, OuterRef, Q, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -101,10 +101,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = LessonSerializer
 
     def get_queryset(self):
-        base_annotations = {
-            "course": F("chapter__course__id"),
-        }
-        return Lesson.objects.annotate(**base_annotations)
+        return Lesson.objects.select_related("chapter")
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):

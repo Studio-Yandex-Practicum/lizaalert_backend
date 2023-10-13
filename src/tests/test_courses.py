@@ -198,4 +198,4 @@ class TestCourse:
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["id"] == lesson.id
-        assert response.json()["course"] == lesson.chapter.course.id
+        assert response.json()["course_id"] == lesson.chapter.course_id

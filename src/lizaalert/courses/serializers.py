@@ -139,14 +139,14 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 
 
 class LessonSerializer(serializers.ModelSerializer):
-    course = serializers.IntegerField()
+    course_id = serializers.IntegerField(source="chapter.course_id")
 
     class Meta:
         model = Lesson
         fields = (
             "id",
-            "course",
-            "chapter",
+            "course_id",
+            "chapter_id",
             "title",
             "description",
             "lesson_type",
