@@ -127,19 +127,23 @@ class TestCourse:
         prof = LevelFactory(name="professional")
         course_1 = CourseFactory(level=novice)
         course_2 = CourseFactory(level=prof)
+        _ = CourseFactory()
         level_1 = course_1.level
         level_2 = course_2.level
         params = {"level": level_1.id}
         params_2 = {"level": level_2.id}
+        params_3 = {"level": f"{level_1.id},{level_2.id}"}
         response = user_client.get(self.url, params)
         response_2 = user_client.get(self.url, params_2)
+        response_3 = user_client.get(self.url, params_3)
         response_full = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"][0]["level"] == level_1.name
         assert response_2.json()["results"][0]["level"] == level_2.name
         assert len(response.json()["results"]) == 1
         assert len(response_2.json()["results"]) == 1
-        assert len(response_full.json()["results"]) == 2
+        assert len(response_3.json()["results"]) == 2
+        assert len(response_full.json()["results"]) == 3
 
     def test_field_faq_in_course(self, user_client):
         """
