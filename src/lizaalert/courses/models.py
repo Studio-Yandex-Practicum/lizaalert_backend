@@ -261,11 +261,11 @@ class LessonProgressStatus(TimeStampedModel):
         verbose_name="user_lesson_status",
     )
     userlessonprogress = models.CharField(
-        max_length=20,
-        verbose_name="прогресс урока",
-        choices=ProgressStatus.choices,
+        max_length=20, verbose_name="прогресс урока", choices=ProgressStatus.choices, default=0
     )
-    version_number = models.PositiveSmallIntegerField("Номер версии урока", validators=[MinValueValidator(1)])
+    version_number = models.PositiveSmallIntegerField(
+        "Номер версии урока", validators=[MinValueValidator(1)], default=1
+    )
 
     def __str__(self):
         return f"Lesson {self.lesson.title}: {self.user.username}"
