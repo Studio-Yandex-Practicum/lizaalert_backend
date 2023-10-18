@@ -139,7 +139,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     def complete(self, request, **kwargs):
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
-        lesson.finish(user)
+        lesson.finished = user
         return Response(status=status.HTTP_200_OK)
 
 
