@@ -111,7 +111,9 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         user = self.request.user
         base_annotations = {
             "user_lesson_progress": Subquery(
-                LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user).values("userlessonprogress")[:1]
+                LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                .order_by("-updated_at")
+                .values("userlessonprogress")[:1]
             ),
             "next_lesson_id": Subquery(
                 Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__gt=OuterRef("order_number"))
@@ -137,7 +139,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     def complete(self, request, **kwargs):
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
-        LessonProgressStatus.objects.get_or_create(user=user, lesson=lesson, userlessonprogress=2)
+        lesson.finish(user)
         return Response(status=status.HTTP_200_OK)
 
 
