@@ -233,15 +233,11 @@ class Lesson(TimeStampedModel):
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
-    @property
-    def finished(self):
-        pass
-
-    @finished.setter
-    def finished(self, user):
+    def finish(self, user):
         """Complete current lesson."""
-        finished = 2
-        LessonProgressStatus.objects.get_or_create(user=user, lesson=self, userlessonprogress=finished)
+        LessonProgressStatus.objects.get_or_create(
+            user=user, lesson=self, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
+        )
 
 
 class LessonProgressStatus(TimeStampedModel):
