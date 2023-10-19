@@ -160,14 +160,8 @@ class LessonSerializer(serializers.ModelSerializer):
 
     def get_breadcrumbs(self, obj):
         return {
-            "course": {
-                "id": obj.chapter.course.id,
-                "title": obj.chapter.course.title
-            },
-            "chapter": {
-                "id": obj.chapter.id,
-                "title": obj.chapter.title
-            }
+            "course": {"id": obj.chapter.course.id, "title": obj.chapter.course.title},
+            "chapter": {"id": obj.chapter.id, "title": obj.chapter.title},
         }
 
 
