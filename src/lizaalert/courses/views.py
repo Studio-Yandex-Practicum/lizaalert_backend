@@ -1,4 +1,4 @@
-from django.db.models import Count, Exists, F, OuterRef, Q, Subquery, Sum
+from django.db.models import Count, Exists, OuterRef, Q, Subquery, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -114,21 +114,8 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 .order_by("-order_number")
                 .values("id")[:1]
             ),
-            "course_id": F("chapter__course__id"),
-            "course_title": F("chapter__course__title"),
-            "chapter_title": F("chapter__title"),
         }
         return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
-
-    def retrieve(self, request, *args, **kwargs):
-        """Передает breadcrumbs в сериализатор."""
-        instance = self.get_object()
-        instance.breadcrumbs = {
-            "course": {"id": instance.course_id, "title": instance.course_title},
-            "chapter": {"id": instance.chapter_id, "title": instance.chapter_title},
-        }
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):

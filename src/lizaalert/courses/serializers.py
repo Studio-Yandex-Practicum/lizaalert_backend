@@ -138,7 +138,7 @@ class LessonSerializer(serializers.ModelSerializer):
     next_lesson_id = serializers.IntegerField()
     prev_lesson_id = serializers.IntegerField()
     course_id = serializers.IntegerField(source="chapter.course_id")
-    breadcrumbs = serializers.JSONField()
+    breadcrumbs = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -157,6 +157,18 @@ class LessonSerializer(serializers.ModelSerializer):
             "next_lesson_id",
             "prev_lesson_id",
         )
+
+    def get_breadcrumbs(self, obj):
+        return {
+            "course": {
+                "id": obj.chapter.course.id,
+                "title": obj.chapter.course.title
+            },
+            "chapter": {
+                "id": obj.chapter.id,
+                "title": obj.chapter.title
+            }
+        }
 
 
 class OptionSerializer(serializers.Serializer):

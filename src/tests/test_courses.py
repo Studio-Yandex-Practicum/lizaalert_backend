@@ -242,17 +242,11 @@ class TestCourse:
 
     def test_breadcrumbs(self, user_client):
         """Тест, что breadcrumbs отображаются корректно."""
-        chapter = ChapterWith3Lessons()
-        _ = LessonFactory()
-        _ = CourseFactory()
-        _ = ChapterFactory()
-        course = CourseFactory()
-        course.chapters.add(chapter)
-        first_lesson = chapter.lessons.first()
-        url = reverse("lessons-detail", kwargs={"pk": first_lesson.id})
+        lesson = LessonFactory()
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["breadcrumbs"]["course"]["id"] == course.id
-        assert response.json()["breadcrumbs"]["course"]["title"] == course.title
-        assert response.json()["breadcrumbs"]["chapter"]["id"] == chapter.id
-        assert response.json()["breadcrumbs"]["chapter"]["title"] == chapter.title
+        assert response.json()["breadcrumbs"]["course"]["id"] == lesson.chapter.course.id
+        assert response.json()["breadcrumbs"]["course"]["title"] == lesson.chapter.course.title
+        assert response.json()["breadcrumbs"]["chapter"]["id"] == lesson.chapter.id
+        assert response.json()["breadcrumbs"]["chapter"]["title"] == lesson.chapter.title
