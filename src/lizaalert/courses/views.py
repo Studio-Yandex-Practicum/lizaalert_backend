@@ -1,4 +1,4 @@
-from django.db.models import Count, Exists, OuterRef, Q, Subquery, Sum
+from django.db.models import Count, Exists, F, OuterRef, Q, Subquery, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -98,6 +98,8 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """Viewset для Уроков."""
+
     serializer_class = LessonSerializer
 
     def get_queryset(self):
@@ -112,8 +114,21 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 .order_by("-order_number")
                 .values("id")[:1]
             ),
+            "course_id": F("chapter__course__id"),
+            "course_title": F("chapter__course__title"),
+            "chapter_title": F("chapter__title"),
         }
-        return Lesson.objects.select_related("chapter").annotate(**base_annotations)
+        return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Передает breadcrumbs в сериализатор."""
+        instance = self.get_object()
+        instance.breadcrumbs = {
+            "course": {"id": instance.chapter.course_id, "title": instance.chapter.course.title},
+            "chapter": {"id": instance.chapter_id, "title": instance.chapter.title},
+        }
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):

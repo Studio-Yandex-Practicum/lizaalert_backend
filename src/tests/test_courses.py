@@ -239,3 +239,20 @@ class TestCourse:
         assert response_1.json()["prev_lesson_id"] == lesson_1.id
         assert response_2.json()["next_lesson_id"] is None
         assert response_2.json()["prev_lesson_id"] == lesson_2.id
+
+    def test_breadcrumbs(self, user_client):
+        """Тест, что breadcrumbs отображаются корректно."""
+        chapter = ChapterWith3Lessons()
+        _ = LessonFactory()
+        _ = CourseFactory()
+        _ = ChapterFactory()
+        course = CourseFactory()
+        course.chapters.add(chapter)
+        first_lesson = chapter.lessons.first()
+        url = reverse("lessons-detail", kwargs={"pk": first_lesson.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["breadcrumbs"]["course"]["id"] == course.id
+        assert response.json()["breadcrumbs"]["course"]["title"] == course.title
+        assert response.json()["breadcrumbs"]["chapter"]["id"] == chapter.id
+        assert response.json()["breadcrumbs"]["chapter"]["title"] == chapter.title
