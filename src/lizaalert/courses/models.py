@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Count, Max
 
 from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.quizzes.models import Quiz
@@ -79,10 +80,16 @@ class Course(TimeStampedModel):
     def __str__(self):
         return f"Course {self.title}"
 
+    def finish(self, user):
+        """Закончить весь курс."""
+        CourseProgressStatus.objects.get_or_create(
+            user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
+        )
+
 
 class CourseStatus(models.Model):
     """
-    Класс для хранения статуса курсов.
+    Класс для хранения статуса отображения курса.
 
     Draft - курс находится в разработке, не готов к публикации.
     Published - курс готов, опубликован, пользователь может записаться на курс.
@@ -161,6 +168,27 @@ class Chapter(TimeStampedModel):
     def __str__(self):
         return f"Курс {self.course.title}: Глава {self.title}"
 
+    def finish(self, user):
+        """
+        Закончить главу.
+
+        В случае если, текущая глава является последним и остальные главы в курсе пройдены
+        активируется метод finish() отмечающий прохождение курса этогй главы.
+        """
+        ChapterProgressStatus.objects.get_or_create(
+            user=user, chapter=self, userchapterprogress=CourseProgressStatus.ProgressStatus.FINISHED
+        )
+        chapter_qs = Chapter.objects.filter(course=self.course).aggregate(
+            Max("order_number"), total_chapters=Count("id")
+        )
+        progress_qs = ChapterProgressStatus.objects.filter(
+            chapter__course=self.course, user=user, userchapterprogress=ChapterProgressStatus.ProgressStatus.FINISHED
+        ).aggregate(finished_chapters=Count("id"))
+        if (chapter_qs["order_number__max"] == self.order_number) and (
+            chapter_qs["total_chapters"] == progress_qs["finished_chapters"]
+        ):
+            self.course.finish(user)
+
 
 class Lesson(TimeStampedModel):
     """
@@ -234,10 +262,25 @@ class Lesson(TimeStampedModel):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
     def finish(self, user):
-        """Complete current lesson."""
+        """
+        Закончить текущий урок.
+
+        В случае если, текущий урок является последним и остальные уроки в главе пройдены
+        активируется метод finish() отмечающий прохождение главы этого урока.
+        """
         LessonProgressStatus.objects.get_or_create(
             user=user, lesson=self, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
         )
+        lesson_qs = Lesson.objects.filter(chapter=self.chapter).aggregate(
+            Max("order_number"), total_lessons=Count("id")
+        )
+        progress_qs = LessonProgressStatus.objects.filter(
+            lesson__chapter=self.chapter, user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
+        ).aggregate(finished_lessons=Count("id"))
+        if (lesson_qs["order_number__max"] == self.order_number) and (
+            lesson_qs["total_lessons"] == progress_qs["finished_lessons"]
+        ):
+            self.chapter.finish(user)
 
 
 class LessonProgressStatus(TimeStampedModel):
@@ -248,7 +291,7 @@ class LessonProgressStatus(TimeStampedModel):
 
     lesson - тип ForeignKey к модели  Lesson
     user - тип ForeignKey к модели User
-    lessonstatus - cтатус прохождения урока (в настоящий момент только finished)
+    usercourseprogress - статус прохождения урока
     version_number - номер версии урока(предусматриваем для будующего использования, значение по умолчанию 1)
     """
 
@@ -279,24 +322,29 @@ class LessonProgressStatus(TimeStampedModel):
     def __str__(self):
         return f"Lesson {self.lesson.title}: {self.user.username}"
 
+    class Meta:
+        verbose_name = "Прогресс по уроку"
+        verbose_name_plural = "Прогресс по урокам"
+        ordering = ("user",)
+
 
 class ChapterProgressStatus(TimeStampedModel):
     """
-    Класс для хранения прогресса студента при прохождении глав в курсе. Наследуется от TimeStampedModel.
+    Класс для хранения прогресса студента при прохождении главы. Наследуется от TimeStampedModel.
 
     Поля модели:
 
-    chapter - тип ForeignKey к модели  Chapter
+    глава - тип ForeignKey к модели Chapter
     user - тип ForeignKey к модели User
-    userchapterprogress - cтатус прохождения главы (в настоящий момент только finished).
+    userchapterprogress - статус прохождения главы
     """
 
     class ProgressStatus(models.TextChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        NOTSTARTED = 0, "Не начат"
-        INPROGRESS = 1, "Начат"
-        FINISHED = 2, "Пройден"
+        NOTSTARTED = 0, "Не начата"
+        INPROGRESS = 1, "Начата"
+        FINISHED = 2, "Пройдена"
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT, related_name="chapter_progress")
     user = models.ForeignKey(
@@ -311,16 +359,24 @@ class ChapterProgressStatus(TimeStampedModel):
         choices=ProgressStatus.choices,
     )
 
+    def __str__(self):
+        return f"Chapter {self.chapter.title}: {self.user.username}"
+
+    class Meta:
+        verbose_name = "Прогресс по главе"
+        verbose_name_plural = "Прогресс по главам"
+        ordering = ("user",)
+
 
 class CourseProgressStatus(TimeStampedModel):
     """
-    Класс для хранения прогресса студента при прохождении глав в курсе. Наследуется от TimeStampedModel.
+    Класс для хранения прогресса студента при прохождении курса. Наследуется от TimeStampedModel.
 
     Поля модели:
 
-    chapter - тип ForeignKey к модели  Chapter
+    курс - тип ForeignKey к модели Course
     user - тип ForeignKey к модели User
-    usercourseprogress - cтатус прохождения курса (в настоящий момент только finished).
+    usercourseprogress - статус прохождения курса
     """
 
     class ProgressStatus(models.TextChoices):
@@ -342,6 +398,14 @@ class CourseProgressStatus(TimeStampedModel):
         verbose_name="прогресс курса",
         choices=ProgressStatus.choices,
     )
+
+    def __str__(self):
+        return f"Course {self.course.title}: {self.user.username}"
+
+    class Meta:
+        verbose_name = "Прогресс по курсу"
+        verbose_name_plural = "Прогресс по курсам"
+        ordering = ("user",)
 
 
 class CourseFaq(models.Model):

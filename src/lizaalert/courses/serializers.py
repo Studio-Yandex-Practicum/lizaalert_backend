@@ -1,7 +1,6 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowledge, Lesson, LessonProgressStatus
+from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowledge, Lesson
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -51,6 +50,10 @@ class CourseStatusSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(CourseCommonFieldsMixin):
+    """Course serializer."""
+
+    user_course_progress = serializers.IntegerField()
+
     class Meta:
         model = Course
         fields = (
@@ -66,6 +69,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "faq",
             "knowledge",
             "user_status",
+            "user_course_progress",
         )
 
 
@@ -73,7 +77,6 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка уроков курса."""
 
     lesson_type = serializers.ReadOnlyField()
-    lesson_progress = serializers.SerializerMethodField()
     duration = serializers.ReadOnlyField()
     title = serializers.ReadOnlyField()
 
@@ -83,31 +86,23 @@ class LessonInlineSerializer(serializers.ModelSerializer):
             "id",
             "order_number",
             "lesson_type",
-            "lesson_progress",
             "duration",
             "title",
         )
-
-    def get_lesson_progress(self, obj):
-        try:
-            user = self.context.get("request").user
-            lesson = obj.lesson
-            progress = get_object_or_404(LessonProgressStatus, user=user, lesson=lesson)
-            return progress.userlessonprogress
-        except Exception:
-            return "0"
 
 
 class ChapterInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка частей курса."""
 
     lessons = LessonInlineSerializer(many=True)
+    user_chapter_progress = serializers.IntegerField()
 
     class Meta:
         model = Chapter
         fields = (
             "id",
             "title",
+            "user_chapter_progress",
             "lessons",
         )
 
@@ -115,6 +110,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
     user_status = serializers.StringRelatedField()
+    user_course_progress = serializers.IntegerField()
 
     class Meta:
         model = Course
@@ -131,6 +127,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "course_duration",
             "chapters",
             "user_status",
+            "user_course_progress",
         )
 
 

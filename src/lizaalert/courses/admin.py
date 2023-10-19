@@ -7,6 +7,7 @@ from lizaalert.courses.models import (
     Course,
     CourseFaq,
     CourseKnowledge,
+    CourseProgressStatus,
     CourseStatus,
     Knowledge,
     Lesson,
@@ -79,6 +80,11 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(CourseProgressStatus)
+class CourseProgressStatusAdmin(admin.ModelAdmin):
     pass
 
 
