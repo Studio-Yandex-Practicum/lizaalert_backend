@@ -239,3 +239,21 @@ class TestCourse:
         assert response_1.json()["prev_lesson_id"] == lesson_1.id
         assert response_2.json()["next_lesson_id"] is None
         assert response_2.json()["prev_lesson_id"] == lesson_2.id
+
+    def test_lesson_completion(self, user_client):
+        """
+        Тест, что работает завершение урока.
+
+        Проверяется статус прохождения урока, убеждаемся, что урок не пройден.
+        После запроса POST на /complete/ проверяем статус пройденности урока.
+        """
+        lesson = LessonFactory()
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["user_lesson_progress"] != 2
+        complete_url = reverse("lessons-complete", kwargs={"pk": lesson.id})
+        user_client.post(complete_url)
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["user_lesson_progress"] == 2

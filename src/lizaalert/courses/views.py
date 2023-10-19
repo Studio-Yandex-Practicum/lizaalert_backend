@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from lizaalert.courses.filters import CourseFilter
-from lizaalert.courses.models import Course, CourseStatus, Lesson, Subscription
+from lizaalert.courses.models import Course, CourseStatus, Lesson, LessonProgressStatus, Subscription
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import (
@@ -101,7 +101,20 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = LessonSerializer
 
     def get_queryset(self):
+        """
+        Create custom queryset for lessons.
+
+        user_lesson_progress - returns the progress (int: id) of current user with the current lesson
+        next_lesson_id - returns the int id of the next lesson in current chapter
+        prev_lesson_id - returns the int id of the previous lesson in current chapter.
+        """
+        user = self.request.user
         base_annotations = {
+            "user_lesson_progress": Subquery(
+                LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                .order_by("-updated_at")
+                .values("userlessonprogress")[:1]
+            ),
             "next_lesson_id": Subquery(
                 Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__gt=OuterRef("order_number"))
                 .order_by("order_number")
@@ -114,6 +127,20 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             ),
         }
         return Lesson.objects.select_related("chapter").annotate(**base_annotations)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=(
+            IsAuthenticated,
+            IsUserOrReadOnly,
+        ),
+    )
+    def complete(self, request, **kwargs):
+        user = self.request.user
+        lesson = get_object_or_404(Lesson, **kwargs)
+        lesson.finish(user)
+        return Response(status=status.HTTP_200_OK)
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
