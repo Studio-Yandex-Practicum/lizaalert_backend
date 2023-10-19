@@ -137,6 +137,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 class LessonSerializer(serializers.ModelSerializer):
     next_lesson_id = serializers.IntegerField()
     prev_lesson_id = serializers.IntegerField()
+    user_lesson_progress = serializers.IntegerField()
     course_id = serializers.IntegerField(source="chapter.course_id")
     breadcrumbs = serializers.JSONField()
 
@@ -154,6 +155,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "additional",
             "diploma",
             "breadcrumbs",
+            "user_lesson_progress",
             "next_lesson_id",
             "prev_lesson_id",
         )

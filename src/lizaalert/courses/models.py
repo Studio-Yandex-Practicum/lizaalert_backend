@@ -233,6 +233,12 @@ class Lesson(TimeStampedModel):
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
+    def finish(self, user):
+        """Complete current lesson."""
+        LessonProgressStatus.objects.get_or_create(
+            user=user, lesson=self, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
+        )
+
 
 class LessonProgressStatus(TimeStampedModel):
     """
@@ -264,8 +270,11 @@ class LessonProgressStatus(TimeStampedModel):
         max_length=20,
         verbose_name="прогресс урока",
         choices=ProgressStatus.choices,
+        default=0,
     )
-    version_number = models.PositiveSmallIntegerField("Номер версии урока", validators=[MinValueValidator(1)])
+    version_number = models.PositiveSmallIntegerField(
+        "Номер версии урока", validators=[MinValueValidator(1)], default=1
+    )
 
     def __str__(self):
         return f"Lesson {self.lesson.title}: {self.user.username}"
