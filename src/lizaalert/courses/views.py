@@ -114,9 +114,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 .order_by("-order_number")
                 .values("id")[:1]
             ),
-            "course_id": F("chapter__course__id"),
-            "course_title": F("chapter__course__title"),
-            "chapter_title": F("chapter__title"),
         }
         return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
 
