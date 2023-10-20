@@ -79,6 +79,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     lesson_type = serializers.ReadOnlyField()
     duration = serializers.ReadOnlyField()
     title = serializers.ReadOnlyField()
+    user_lesson_progress = serializers.IntegerField()
 
     class Meta:
         model = Lesson
@@ -88,6 +89,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
             "lesson_type",
             "duration",
             "title",
+            "user_lesson_progress",
         )
 
 

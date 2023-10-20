@@ -77,6 +77,20 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
+            # Аннотируем прогресс пользователя по уроку
+            lessons_with_progress = Lesson.objects.annotate(
+                user_lesson_progress=Coalesce(
+                    Cast(
+                        Subquery(
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                            .order_by("-updated_at")
+                            .values("userlessonprogress")[:1]
+                        ),
+                        IntegerField(),
+                    ),
+                    Value(0),
+                )
+            )
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
                 "user_course_progress": Coalesce(
@@ -92,7 +106,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 ),
             }
             return Course.objects.annotate(**base_annotations, **users_annotations).prefetch_related(
-                Prefetch("chapters", queryset=chapters_with_progress)
+                Prefetch("chapters", queryset=chapters_with_progress),
+                Prefetch("chapters__lessons", queryset=lessons_with_progress),
             )
         return Course.objects.annotate(**base_annotations)
 
