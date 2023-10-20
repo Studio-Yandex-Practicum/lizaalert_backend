@@ -98,6 +98,11 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+    permission_classes = [
+        AllowAny,
+    ]
+
     def get_queryset(self):
         """
         Create custom queryset for lessons.
@@ -108,11 +113,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         user = self.request.user
         base_annotations = {
-            "user_lesson_progress": Subquery(
-                LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
-                .order_by("-updated_at")
-                .values("userlessonprogress")[:1]
-            ),
             "next_lesson_id": Subquery(
                 Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__gt=OuterRef("order_number"))
                 .order_by("order_number")
@@ -124,6 +124,15 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 .values("id")[:1]
             ),
         }
+        if user.is_authenticated:
+            user_annotations = {
+                "user_lesson_progress": Subquery(
+                    LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                    .order_by("-updated_at")
+                    .values("userlessonprogress")[:1]
+                ),
+            }
+            return Lesson.objects.select_related("chapter").annotate(**base_annotations, **user_annotations)
         return Lesson.objects.select_related("chapter").annotate(**base_annotations)
 
     def get_serializer_class(self):
