@@ -98,8 +98,6 @@ class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    serializer_class = LessonSerializer
-
     def get_queryset(self):
         """
         Create custom queryset for lessons.
@@ -128,6 +126,11 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         }
         return Lesson.objects.select_related("chapter").annotate(**base_annotations)
 
+    def get_serializer_class(self):
+        if self.action == "complete":
+            return None
+        return LessonSerializer
+
     @action(
         detail=True,
         methods=["post"],
@@ -140,7 +143,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
         lesson.finish(user)
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
