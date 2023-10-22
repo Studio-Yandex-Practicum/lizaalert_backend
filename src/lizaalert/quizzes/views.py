@@ -48,7 +48,6 @@ class RunQuizView(generics.CreateAPIView):
         quiz = Quiz.objects.get(lesson__id=lesson_id)
         user_answer = UserAnswer.objects.filter(user=user, quiz=quiz).order_by("-id").first()
         if user_answer:
-            print(user_answer)
             if quiz.retries != 0 and user_answer.retry_count >= quiz.retries:
                 return Response({"message": ErrorMessages.COUNT_EXPIRED}, status=status.HTTP_400_BAD_REQUEST)
             retry_count = user_answer.retry_count = user_answer.retry_count + 1
@@ -84,7 +83,7 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         lesson_id = self.kwargs["lesson_id"]
-        user_answer = UserAnswer.objects.filter(user=user, quiz__lesson__id=lesson_id).order_by("-id").first()
+        user_answer = UserAnswer.objects.filter(user=user, quiz__lesson=lesson_id).order_by("-id").first()
         return user_answer
 
     def post(self, request, *args, **kwargs):
@@ -93,7 +92,7 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
         user = self.request.user
 
         lesson_id = self.kwargs["lesson_id"]
-        quiz = Quiz.objects.get(lesson__id=lesson_id)
+        quiz = Quiz.objects.get(lesson=lesson_id)
 
         try:
             user_answer = UserAnswer.objects.filter(user=user, quiz=quiz).order_by("-id").first()

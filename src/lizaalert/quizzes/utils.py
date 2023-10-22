@@ -5,14 +5,14 @@ from lizaalert.quizzes.models import Question
 
 def compare_answers(user_answers, quiz):
     correct_count = 0
-    all_questions = get_list_or_404(Question, quiz=quiz)
+    all_questions = {q.id: q for q in get_list_or_404(Question, quiz=quiz)}
     result = []
 
     for user_answer in user_answers:
         question_id = user_answer["question_id"]
         user_answer_ids = user_answer["answer_id"]
 
-        question = next((q for q in all_questions if q.id == question_id), None)
+        question = all_questions.get(question_id)
 
         if question:
             correct_answer_ids = [answer["id"] for answer in question.content if answer["is_correct"]]
