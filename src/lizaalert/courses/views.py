@@ -133,8 +133,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 ),
             }
             return Lesson.objects.select_related("chapter", "chapter__course").annotate(
-                **base_annotations,
-                **user_annotations
+                **base_annotations, **user_annotations
             )
         return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
 
