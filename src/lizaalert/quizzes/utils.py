@@ -14,7 +14,7 @@ def compare_answers(user_answers, quiz):
 
         question = all_questions.get(question_id)
 
-        if question:
+        if question.question_type in ["checkbox", "radio"]:
             correct_answer_ids = [answer["id"] for answer in question.content if answer["is_correct"]]
             is_correct = sorted(user_answer_ids) == sorted(correct_answer_ids)
 
