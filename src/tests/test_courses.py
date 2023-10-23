@@ -257,3 +257,17 @@ class TestCourse:
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == 2
+
+    def test_lesson_course_endpoints_for_unauth_users(self, anonymous_client):
+        """Тест, что эндпоинты урока и курсов доступны для незарегистрированных пользователей."""
+        lesson = LessonFactory()
+        course = CourseFactory()
+        url_lesson = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        url_course_detail = reverse("courses-detail", kwargs={"pk": course.id})
+        url_course_list = reverse("courses-list")
+        response_lesson = anonymous_client.get(url_lesson)
+        response_course_detail = anonymous_client.get(url_course_detail)
+        response_course_list = anonymous_client.get(url_course_list)
+        assert response_lesson.status_code == status.HTTP_200_OK
+        assert response_course_detail.status_code == status.HTTP_200_OK
+        assert response_course_list.status_code == status.HTTP_200_OK
