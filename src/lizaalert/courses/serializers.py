@@ -52,7 +52,7 @@ class CourseStatusSerializer(serializers.ModelSerializer):
 class CourseSerializer(CourseCommonFieldsMixin):
     """Course serializer."""
 
-    user_course_progress = serializers.IntegerField()
+    user_course_progress = serializers.IntegerField(default=0)
 
     class Meta:
         model = Course
@@ -79,7 +79,7 @@ class LessonInlineSerializer(serializers.ModelSerializer):
     lesson_type = serializers.ReadOnlyField()
     duration = serializers.ReadOnlyField()
     title = serializers.ReadOnlyField()
-    user_lesson_progress = serializers.IntegerField()
+    user_lesson_progress = serializers.IntegerField(default=0)
 
     class Meta:
         model = Lesson
@@ -97,7 +97,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для вложенного списка частей курса."""
 
     lessons = LessonInlineSerializer(many=True)
-    user_chapter_progress = serializers.IntegerField()
+    user_chapter_progress = serializers.IntegerField(default=0)
 
     class Meta:
         model = Chapter
@@ -111,8 +111,8 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    user_status = serializers.StringRelatedField()
-    user_course_progress = serializers.IntegerField()
+    user_status = serializers.StringRelatedField(default=False)
+    user_course_progress = serializers.IntegerField(default=0)
 
     class Meta:
         model = Course

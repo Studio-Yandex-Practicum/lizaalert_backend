@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, Max
+from django.db.models import Count
 
 from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.quizzes.models import Quiz
@@ -178,15 +178,11 @@ class Chapter(TimeStampedModel):
         ChapterProgressStatus.objects.get_or_create(
             user=user, chapter=self, userchapterprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
-        chapter_qs = Chapter.objects.filter(course=self.course).aggregate(
-            Max("order_number"), total_chapters=Count("id")
-        )
+        chapter_qs = Chapter.objects.filter(course=self.course).aggregate(total_chapters=Count("id"))
         progress_qs = ChapterProgressStatus.objects.filter(
             chapter__course=self.course, user=user, userchapterprogress=ChapterProgressStatus.ProgressStatus.FINISHED
         ).aggregate(finished_chapters=Count("id"))
-        if (chapter_qs["order_number__max"] == self.order_number) and (
-            chapter_qs["total_chapters"] == progress_qs["finished_chapters"]
-        ):
+        if chapter_qs["total_chapters"] == progress_qs["finished_chapters"]:
             self.course.finish(user)
 
 
@@ -271,15 +267,13 @@ class Lesson(TimeStampedModel):
         LessonProgressStatus.objects.get_or_create(
             user=user, lesson=self, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
         )
-        lesson_qs = Lesson.objects.filter(chapter=self.chapter).aggregate(
-            Max("order_number"), total_lessons=Count("id")
+        lesson_qs = Lesson.objects.filter(chapter=self.chapter, lesson_status=self.LessonStatus.PUBLISHED).aggregate(
+            total_lessons=Count("id")
         )
         progress_qs = LessonProgressStatus.objects.filter(
             lesson__chapter=self.chapter, user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
         ).aggregate(finished_lessons=Count("id"))
-        if (lesson_qs["order_number__max"] == self.order_number) and (
-            lesson_qs["total_lessons"] == progress_qs["finished_lessons"]
-        ):
+        if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
             self.chapter.finish(user)
 
 
