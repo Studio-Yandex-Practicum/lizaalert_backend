@@ -152,7 +152,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 class LessonSerializer(serializers.ModelSerializer):
     next_lesson_id = serializers.IntegerField()
     prev_lesson_id = serializers.IntegerField()
-    user_lesson_progress = serializers.IntegerField()
+    user_lesson_progress = serializers.IntegerField(default=0)
     course_id = serializers.IntegerField(source="chapter.course_id")
     breadcrumbs = BreadcrumbsLessonSerializer()
 
