@@ -110,7 +110,7 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
             if quiz.passing_score > user_answer.score:
                 user_answer.final_result = False
             else:
-                    user_answer.final_result = True
+                user_answer.final_result = True
         except UserAnswer.DoesNotExist:
             return Response({"message": ErrorMessages.TEST_NOT_STARTED}, status=status.HTTP_400_BAD_REQUEST)
         serializer = UserAnswerSerializer(user_answer, data={"answers": data}, partial=True)
