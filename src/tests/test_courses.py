@@ -240,6 +240,17 @@ class TestCourse:
         assert response_2.json()["next_lesson_id"] is None
         assert response_2.json()["prev_lesson_id"] == lesson_2.id
 
+    def test_breadcrumbs(self, user_client):
+        """Тест, что breadcrumbs отображаются корректно."""
+        lesson = LessonFactory()
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["breadcrumbs"]["course"]["id"] == lesson.chapter.course.id
+        assert response.json()["breadcrumbs"]["course"]["title"] == lesson.chapter.course.title
+        assert response.json()["breadcrumbs"]["chapter"]["id"] == lesson.chapter.id
+        assert response.json()["breadcrumbs"]["chapter"]["title"] == lesson.chapter.title
+
     def test_lesson_completion(self, user_client):
         """
         Тест, что работает завершение урока.

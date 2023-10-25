@@ -132,8 +132,10 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                     .values("userlessonprogress")[:1]
                 ),
             }
-            return Lesson.objects.select_related("chapter").annotate(**base_annotations, **user_annotations)
-        return Lesson.objects.select_related("chapter").annotate(**base_annotations)
+            return Lesson.objects.select_related("chapter", "chapter__course").annotate(
+                **base_annotations, **user_annotations
+            )
+        return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
 
     def get_serializer_class(self):
         if self.action == "complete":

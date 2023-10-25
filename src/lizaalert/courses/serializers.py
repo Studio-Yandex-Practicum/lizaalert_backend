@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowledge, Lesson, LessonProgressStatus
+from lizaalert.courses.utils import BreadcrumbSchema
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -139,6 +141,7 @@ class LessonSerializer(serializers.ModelSerializer):
     prev_lesson_id = serializers.IntegerField()
     user_lesson_progress = serializers.IntegerField(default=0)
     course_id = serializers.IntegerField(source="chapter.course_id")
+    breadcrumbs = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -153,10 +156,16 @@ class LessonSerializer(serializers.ModelSerializer):
             "duration",
             "additional",
             "diploma",
+            "breadcrumbs",
             "user_lesson_progress",
             "next_lesson_id",
             "prev_lesson_id",
         )
+
+    @swagger_serializer_method(serializer_or_field=BreadcrumbSchema)
+    def get_breadcrumbs(self, obj):
+        breadcrumb_serializer = BreadcrumbSchema({"course": obj.chapter.course, "chapter": obj.chapter})
+        return breadcrumb_serializer.data
 
 
 class OptionSerializer(serializers.Serializer):
