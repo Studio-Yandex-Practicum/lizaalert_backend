@@ -164,10 +164,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
     @swagger_serializer_method(serializer_or_field=BreadcrumbSchema)
     def get_breadcrumbs(self, obj):
-        breadcrumb_serializer = BreadcrumbSchema({
-            'course': obj.chapter.course,
-            'chapter': obj.chapter
-        })
+        breadcrumb_serializer = BreadcrumbSchema({"course": obj.chapter.course, "chapter": obj.chapter})
         return breadcrumb_serializer.data
 
 
