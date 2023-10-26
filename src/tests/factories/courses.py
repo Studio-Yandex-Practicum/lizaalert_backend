@@ -3,17 +3,7 @@ import json
 
 import factory.fuzzy
 
-from lizaalert.courses.models import (
-    FAQ,
-    Chapter,
-    Course,
-    CourseFaq,
-    CourseKnowledge,
-    CourseStatus,
-    Knowledge,
-    Lesson,
-    Subscription,
-)
+from lizaalert.courses.models import FAQ, Chapter, Course, CourseFaq, CourseKnowledge, Knowledge, Lesson, Subscription
 from tests.factories.users import LevelFactory, UserFactory
 
 
@@ -41,6 +31,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
     user_created = factory.SubFactory(UserFactory)
+    course_status = Course.CourseStatus.PUBLISHED
 
 
 class ChapterFactory(factory.django.DjangoModelFactory):
@@ -67,14 +58,6 @@ class LessonFactory(factory.django.DjangoModelFactory):
     user_created = factory.SubFactory(UserFactory)
     user_modifier = factory.SubFactory(UserFactory)
     order_number = factory.fuzzy.FuzzyInteger(0, 10)
-
-
-class CourseStatusFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = CourseStatus
-
-    name = factory.Sequence(lambda n: "Статус {}".format(n))
-    slug = factory.fuzzy.FuzzyChoice(list(CourseStatus.CourseStatusChoices))
 
 
 class FaqFactory(factory.django.DjangoModelFactory):

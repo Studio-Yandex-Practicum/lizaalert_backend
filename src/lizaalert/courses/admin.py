@@ -8,7 +8,6 @@ from lizaalert.courses.models import (
     CourseFaq,
     CourseKnowledge,
     CourseProgressStatus,
-    CourseStatus,
     Knowledge,
     Lesson,
     LessonProgressStatus,
@@ -104,5 +103,4 @@ class KnowledgeAdmin(admin.ModelAdmin):
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson)
-admin.site.register(CourseStatus)
 admin.site.register(Subscription)

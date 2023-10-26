@@ -11,21 +11,6 @@ statuses = [
 
 
 @pytest.fixture()
-def create_statuses(token):
-    from lizaalert.courses.models import CourseStatus
-
-    course_statuses = [CourseStatus.objects.create(**status) for status in statuses]
-    return course_statuses
-
-
-def return_course_data():
-    from lizaalert.courses.models import CourseStatus
-
-    out = list(CourseStatus.objects.all().values())
-    return out
-
-
-@pytest.fixture()
 def create_lesson(user):
     from lizaalert.courses.models import Lesson
 

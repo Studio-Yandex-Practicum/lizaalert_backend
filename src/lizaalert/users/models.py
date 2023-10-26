@@ -177,12 +177,6 @@ class VolunteerCourse(models.Model):
         related_name="course_volunteers",
         verbose_name="Курс",
     )
-    status = models.ForeignKey(
-        "courses.CourseStatus",
-        on_delete=models.PROTECT,
-        related_name="volunteer_courses",
-        verbose_name="Статус",
-    )
     assessment = models.FloatField(
         "Оценка за курс",
         default=0.0,
@@ -195,7 +189,13 @@ class VolunteerCourse(models.Model):
         verbose_name = "Курс волонтера"
         verbose_name_plural = "Курсы волонтеров"
         constraints = (
-            models.UniqueConstraint(fields=("volunteer", "course", "status"), name="unique_volunteer_course"),
+            models.UniqueConstraint(
+                fields=(
+                    "volunteer",
+                    "course",
+                ),
+                name="unique_volunteer_course",
+            ),
         )
 
     def __str__(self):

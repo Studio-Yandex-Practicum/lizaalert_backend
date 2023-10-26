@@ -2,47 +2,19 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Lesson
+from lizaalert.courses.models import Course, Lesson
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
     CourseFactory,
     CourseFaqFactory,
     CourseKnowledgeFactory,
-    CourseStatusFactory,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     LessonFactory,
     SubscriptionFactory,
 )
 from tests.factories.users import LevelFactory
-from tests.user_fixtures.course_fixtures import return_course_data
-from tests.user_fixtures.level_fixtures import return_levels_data
-
-
-@pytest.mark.django_db(transaction=True)
-class TestCourseStatusAndLevel:
-    urls = [
-        (reverse("courses_statuses-list"), return_course_data),
-        (reverse("level-list"), return_levels_data),
-    ]
-
-    @pytest.mark.parametrize("url, test_data", urls)
-    def test_not_found(self, user_client, url, test_data):
-        response = user_client.get(url)
-        assert response.status_code != status.HTTP_404_NOT_FOUND
-
-    def test_anonymous(self, client):
-        response = client.get(self.urls[0][0])
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.parametrize("url, test_data", urls)
-    def test_coursestatus_list(self, user_client, url, test_data):
-        _ = [LevelFactory() for _ in range(3)]
-        _ = [CourseStatusFactory() for _ in range(3)]
-        response = user_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() == test_data()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -319,3 +291,12 @@ class TestCourse:
         assert response_course.json()["user_course_progress"] == 2
         assert response_course.json()["chapters"][0]["user_chapter_progress"] == 2
         assert response_course.json()["chapters"][1]["user_chapter_progress"] == 2
+
+    def test_unpublished_courses_dont_appear_on_endopoint(self, user_client):
+        """Тест, что Курс со статусом DRAFT/ARCHIVED не появляется в выдаче."""
+        _ = CourseFactory()
+        _ = CourseFactory(course_status=Course.CourseStatus.DRAFT)
+        _ = CourseFactory(course_status=Course.CourseStatus.ARCHIVE)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+        assert len(response.json()["results"]) == 1

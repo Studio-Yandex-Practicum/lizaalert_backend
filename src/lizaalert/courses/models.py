@@ -57,6 +57,13 @@ class Knowledge(TimeStampedModel):
 
 
 class Course(TimeStampedModel):
+    class CourseStatus(models.TextChoices):
+        """Класс для выбора статуса курса."""
+
+        DRAFT = "Draft", "в разработке"
+        PUBLISHED = "Published", "опубликован"
+        ARCHIVE = "Archive", "в архиве"
+
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
     start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
@@ -72,6 +79,9 @@ class Course(TimeStampedModel):
     knowledge = models.ManyToManyField(Knowledge, through="CourseKnowledge", verbose_name="Умения", null=True)
     faq = models.ManyToManyField(FAQ, through="CourseFaq", verbose_name="Часто задаваемые вопросы", null=True)
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
+    course_status = models.CharField(
+        max_length=20, verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT
+    )
 
     class Meta:
         verbose_name = "Курс"
@@ -85,40 +95,6 @@ class Course(TimeStampedModel):
         CourseProgressStatus.objects.get_or_create(
             user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
-
-
-class CourseStatus(models.Model):
-    """
-    Класс для хранения статуса отображения курса.
-
-    Draft - курс находится в разработке, не готов к публикации.
-    Published - курс готов, опубликован, пользователь может записаться на курс.
-    Archive - курс готов, но снят с публикации, не виден пользователю.
-    """
-
-    class CourseStatusChoices(models.TextChoices):
-        """Класс для выбора статуса курса."""
-
-        DRAFT = "draft", "в разработке"
-        PUBLISHED = "published", "опубликован"
-        ARCHIVE = "archive", "в архиве"
-
-    name = models.CharField("Статус курса", max_length=50, editable=False)
-    slug = models.CharField("Слаг курса", max_length=50, editable=False)
-    type_status = models.CharField(
-        max_length=20,
-        choices=CourseStatusChoices.choices,
-        default=CourseStatusChoices.DRAFT,
-        editable=False,
-    )
-
-    class Meta:
-        db_table = "course_status"
-        verbose_name = "Статус курса"
-        verbose_name_plural = "Статус курсов"
-
-    def __str__(self):
-        return f"{self.slug} <{self.type_status}>"
 
 
 class Chapter(TimeStampedModel):

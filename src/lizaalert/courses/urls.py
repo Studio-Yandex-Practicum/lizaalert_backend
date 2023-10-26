@@ -2,11 +2,10 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
-from lizaalert.courses.views import CourseStatusViewSet, CourseViewSet, FilterListViewSet, LessonViewSet
+from lizaalert.courses.views import CourseViewSet, FilterListViewSet, LessonViewSet
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="courses")
-router.register(r"courses_statuses", CourseStatusViewSet, basename="courses_statuses"),
 router.register("filters", FilterListViewSet, basename="filters-list")
 router.register("lessons", LessonViewSet, basename="lessons")
 

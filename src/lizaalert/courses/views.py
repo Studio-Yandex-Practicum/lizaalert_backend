@@ -13,20 +13,13 @@ from lizaalert.courses.models import (
     ChapterProgressStatus,
     Course,
     CourseProgressStatus,
-    CourseStatus,
     Lesson,
     LessonProgressStatus,
     Subscription,
 )
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
-from lizaalert.courses.serializers import (
-    CourseDetailSerializer,
-    CourseSerializer,
-    CourseStatusSerializer,
-    FilterSerializer,
-    LessonSerializer,
-)
+from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
 from lizaalert.users.models import Level
 
 
@@ -105,11 +98,15 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 ),
             }
-            return Course.objects.annotate(**base_annotations, **users_annotations).prefetch_related(
-                Prefetch("chapters", queryset=chapters_with_progress),
-                Prefetch("chapters__lessons", queryset=lessons_with_progress),
+            return (
+                Course.objects.filter(course_status=Course.CourseStatus.PUBLISHED)
+                .annotate(**base_annotations, **users_annotations)
+                .prefetch_related(
+                    Prefetch("chapters", queryset=chapters_with_progress),
+                    Prefetch("chapters__lessons", queryset=lessons_with_progress),
+                )
             )
-        return Course.objects.annotate(**base_annotations)
+        return Course.objects.filter(course_status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 
     def get_serializer_class(self):
         if self.action == "enroll" or self.action == "unroll":
@@ -141,12 +138,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = CourseStatus.objects.all()
-    serializer_class = CourseStatusSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -202,5 +193,5 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = [Level, CourseStatus]
+    queryset = [Level]
     serializer_class = FilterSerializer
