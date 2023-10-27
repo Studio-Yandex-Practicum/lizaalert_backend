@@ -1,4 +1,5 @@
-from django.db.models import Count, Exists, OuterRef, Q, Subquery, Sum
+from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -7,16 +8,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from lizaalert.courses.filters import CourseFilter
-from lizaalert.courses.models import Course, CourseStatus, Lesson, LessonProgressStatus, Subscription
+from lizaalert.courses.models import (
+    Chapter,
+    ChapterProgressStatus,
+    Course,
+    CourseProgressStatus,
+    Lesson,
+    LessonProgressStatus,
+    Subscription,
+)
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
-from lizaalert.courses.serializers import (
-    CourseDetailSerializer,
-    CourseSerializer,
-    CourseStatusSerializer,
-    FilterSerializer,
-    LessonSerializer,
-)
+from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
 from lizaalert.users.models import Level
 
 
@@ -44,20 +47,66 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         base_annotations = {
             "course_duration": Sum(
                 "chapters__lessons__duration",
-                filter=Q(chapters__lessons__lesson_status=lesson_status),
+                filter=Q(chapters__lessons__status=lesson_status),
             ),
             "lessons_count": Count(
                 "chapters__lessons",
-                filter=Q(chapters__lessons__lesson_status=lesson_status),
+                filter=Q(chapters__lessons__status=lesson_status),
             ),
         }
 
         if user.is_authenticated:
+            # Аннотируем прогресс пользователя по главе
+            chapters_with_progress = Chapter.objects.annotate(
+                user_chapter_progress=Coalesce(
+                    Cast(
+                        Subquery(
+                            ChapterProgressStatus.objects.filter(chapter=OuterRef("id"), user=user)
+                            .order_by("-updated_at")
+                            .values("userchapterprogress")[:1]
+                        ),
+                        IntegerField(),
+                    ),
+                    Value(0),
+                )
+            )
+            # Аннотируем прогресс пользователя по уроку
+            lessons_with_progress = Lesson.objects.annotate(
+                user_lesson_progress=Coalesce(
+                    Cast(
+                        Subquery(
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                            .order_by("-updated_at")
+                            .values("userlessonprogress")[:1]
+                        ),
+                        IntegerField(),
+                    ),
+                    Value(0),
+                )
+            )
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
+                "user_course_progress": Coalesce(
+                    Cast(
+                        Subquery(
+                            CourseProgressStatus.objects.filter(course=OuterRef("id"), user=user)
+                            .order_by("-updated_at")
+                            .values("usercourseprogress")[:1]
+                        ),
+                        IntegerField(),
+                    ),
+                    Value(0),
+                ),
             }
-            return Course.objects.annotate(**base_annotations, **users_annotations)
-        return Course.objects.annotate(**base_annotations)
+            return (
+                Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
+                .annotate(**base_annotations, **users_annotations)
+                .prefetch_related(
+                    Prefetch("chapters", queryset=chapters_with_progress),
+                    Prefetch("chapters__lessons", queryset=lessons_with_progress),
+                )
+            )
+        return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 
     def get_serializer_class(self):
         if self.action == "enroll" or self.action == "unroll":
@@ -89,12 +138,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class CourseStatusViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = CourseStatus.objects.all()
-    serializer_class = CourseStatusSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -158,5 +201,5 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 
 class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = [Level, CourseStatus]
+    queryset = [Level]
     serializer_class = FilterSerializer

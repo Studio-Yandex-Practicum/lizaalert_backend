@@ -2,47 +2,19 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Lesson
+from lizaalert.courses.models import Course, Lesson
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
     CourseFactory,
     CourseFaqFactory,
     CourseKnowledgeFactory,
-    CourseStatusFactory,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     LessonFactory,
     SubscriptionFactory,
 )
 from tests.factories.users import LevelFactory
-from tests.user_fixtures.course_fixtures import return_course_data
-from tests.user_fixtures.level_fixtures import return_levels_data
-
-
-@pytest.mark.django_db(transaction=True)
-class TestCourseStatusAndLevel:
-    urls = [
-        (reverse("courses_statuses-list"), return_course_data),
-        (reverse("level-list"), return_levels_data),
-    ]
-
-    @pytest.mark.parametrize("url, test_data", urls)
-    def test_not_found(self, user_client, url, test_data):
-        response = user_client.get(url)
-        assert response.status_code != status.HTTP_404_NOT_FOUND
-
-    def test_anonymous(self, client):
-        response = client.get(self.urls[0][0])
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    @pytest.mark.parametrize("url, test_data", urls)
-    def test_coursestatus_list(self, user_client, url, test_data):
-        _ = [LevelFactory() for _ in range(3)]
-        _ = [CourseStatusFactory() for _ in range(3)]
-        response = user_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() == test_data()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -268,6 +240,77 @@ class TestCourse:
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == 2
+
+    def test_final_lesson_completion_triggers_chapter_and_course_completion(self, user_client):
+        """
+        Тест, что завершение последнего урока в главе завершает главу.
+
+        Если это последняя глава в курсе, то также завершается курс.
+        1) Проверяем, что курс и главы не пройдены
+        2) Проверяем, что после прохождения одного урока, первая глава не пройдена
+        3) Проверяем, что после прохождения всех уроков, первая глава пройдена. а курс не пройден
+        4) Проверяем, что после прохождения первого и последнего урока второй главы (минуя второй урок)
+         вторая глава будет не пройдена
+        5) Проверяем, что после прохождения всех уроков второй главы, вторая глава и курс пройдены.
+        """
+        chapter_1 = ChapterFactory(order_number=1)
+        c1_lesson_1 = LessonFactory(chapter=chapter_1, order_number=1)
+        c1_lesson_2 = LessonFactory(chapter=chapter_1, order_number=2)
+        c1_lesson_3 = LessonFactory(chapter=chapter_1, order_number=3)
+        lesson_bulk_1 = [c1_lesson_1, c1_lesson_2, c1_lesson_3]
+        chapter_2 = ChapterFactory(order_number=2)
+        c2_lesson_1 = LessonFactory(chapter=chapter_2, order_number=1)
+        c2_lesson_2 = LessonFactory(chapter=chapter_2, order_number=2)
+        c2_lesson_3 = LessonFactory(chapter=chapter_2, order_number=3)
+        lesson_bulk_2 = [c2_lesson_1, c2_lesson_2, c2_lesson_3]
+        course = CourseFactory()
+        course.chapters.add(chapter_1)
+        course.chapters.add(chapter_2)
+
+        # Проверяем, что курс и главы не пройдены
+        url_course = reverse("courses-detail", kwargs={"pk": course.id})
+        response_course = user_client.get(url_course)
+        assert response_course.status_code == status.HTTP_200_OK
+        assert response_course.json()["user_course_progress"] != 2
+        assert response_course.json()["chapters"][0]["user_chapter_progress"] != 2
+
+        # Проверяем, что после прохождения одного урока, первая глава не пройдена
+        user_client.post(reverse("lessons-complete", kwargs={"pk": c1_lesson_1.id}))
+        response_course = user_client.get(url_course)
+        assert response_course.json()["chapters"][0]["user_chapter_progress"] != 2
+
+        # Проверяем, что после прохождения всех уроков, первая глава пройдена. а курс не пройден
+        for lesson in lesson_bulk_1:
+            user_client.post(reverse("lessons-complete", kwargs={"pk": lesson.id}))
+        response_course = user_client.get(url_course)
+        assert response_course.json()["user_course_progress"] != 2
+        assert response_course.json()["chapters"][0]["user_chapter_progress"] == 2
+
+        # Проверяем, что после прохождения первого и последнего урока второй главы (минуя второй урок)
+        # вторая глава будет не пройдена
+        user_client.post(reverse("lessons-complete", kwargs={"pk": c2_lesson_1.id}))
+        user_client.post(reverse("lessons-complete", kwargs={"pk": c2_lesson_3.id}))
+        response_course = user_client.get(url_course)
+        assert response_course.json()["user_course_progress"] != 2
+        assert response_course.json()["chapters"][1]["user_chapter_progress"] != 2
+
+        # Проверяем, что после прохождения всех уроков второй главы, вторая глава и курс пройдены
+        for lesson in lesson_bulk_2:
+            user_client.post(reverse("lessons-complete", kwargs={"pk": lesson.id}))
+        response_course = user_client.get(url_course)
+        assert response_course.status_code == status.HTTP_200_OK
+        assert response_course.json()["user_course_progress"] == 2
+        assert response_course.json()["chapters"][0]["user_chapter_progress"] == 2
+        assert response_course.json()["chapters"][1]["user_chapter_progress"] == 2
+
+    def test_unpublished_courses_dont_appear_on_endopoint(self, user_client):
+        """Тест, что Курс со статусом DRAFT/ARCHIVED не появляется в выдаче."""
+        _ = CourseFactory()
+        _ = CourseFactory(status=Course.CourseStatus.DRAFT)
+        _ = CourseFactory(status=Course.CourseStatus.ARCHIVE)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+        assert len(response.json()["results"]) == 1
 
     def test_lesson_course_endpoints_for_unauth_users(self, anonymous_client):
         """Тест, что эндпоинты урока и курсов доступны для незарегистрированных пользователей."""
