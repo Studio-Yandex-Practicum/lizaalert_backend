@@ -212,6 +212,17 @@ class TestCourse:
         assert response_2.json()["next_lesson_id"] is None
         assert response_2.json()["prev_lesson_id"] == lesson_2.id
 
+    def test_breadcrumbs(self, user_client):
+        """Тест, что breadcrumbs отображаются корректно."""
+        lesson = LessonFactory()
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["breadcrumbs"]["course"]["id"] == lesson.chapter.course.id
+        assert response.json()["breadcrumbs"]["course"]["title"] == lesson.chapter.course.title
+        assert response.json()["breadcrumbs"]["chapter"]["id"] == lesson.chapter.id
+        assert response.json()["breadcrumbs"]["chapter"]["title"] == lesson.chapter.title
+
     def test_lesson_completion(self, user_client):
         """
         Тест, что работает завершение урока.
@@ -300,3 +311,17 @@ class TestCourse:
         url = reverse("courses-list")
         response = user_client.get(url)
         assert len(response.json()["results"]) == 1
+
+    def test_lesson_course_endpoints_for_unauth_users(self, anonymous_client):
+        """Тест, что эндпоинты урока и курсов доступны для незарегистрированных пользователей."""
+        lesson = LessonFactory()
+        course = CourseFactory()
+        url_lesson = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        url_course_detail = reverse("courses-detail", kwargs={"pk": course.id})
+        url_course_list = reverse("courses-list")
+        response_lesson = anonymous_client.get(url_lesson)
+        response_course_detail = anonymous_client.get(url_course_detail)
+        response_course_list = anonymous_client.get(url_course_list)
+        assert response_lesson.status_code == status.HTTP_200_OK
+        assert response_course_detail.status_code == status.HTTP_200_OK
+        assert response_course_list.status_code == status.HTTP_200_OK
