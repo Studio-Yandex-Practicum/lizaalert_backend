@@ -295,8 +295,8 @@ class TestCourse:
     def test_unpublished_courses_dont_appear_on_endopoint(self, user_client):
         """Тест, что Курс со статусом DRAFT/ARCHIVED не появляется в выдаче."""
         _ = CourseFactory()
-        _ = CourseFactory(course_status=Course.CourseStatus.DRAFT)
-        _ = CourseFactory(course_status=Course.CourseStatus.ARCHIVE)
+        _ = CourseFactory(status=Course.CourseStatus.DRAFT)
+        _ = CourseFactory(status=Course.CourseStatus.ARCHIVE)
         url = reverse("courses-list")
         response = user_client.get(url)
         assert len(response.json()["results"]) == 1

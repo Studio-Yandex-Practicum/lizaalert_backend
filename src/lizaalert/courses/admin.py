@@ -79,12 +79,14 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
-    pass
+
+    raw_id_fields = ("user",)
 
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
-    pass
+
+    raw_id_fields = ("user",)
 
 
 @admin.register(FAQ)

@@ -31,7 +31,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
     user_created = factory.SubFactory(UserFactory)
-    course_status = Course.CourseStatus.PUBLISHED
+    status = Course.CourseStatus.PUBLISHED
 
 
 class ChapterFactory(factory.django.DjangoModelFactory):
@@ -52,7 +52,7 @@ class LessonFactory(factory.django.DjangoModelFactory):
     chapter = factory.SubFactory(ChapterFactory)
     description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
     lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
-    lesson_status = Lesson.LessonStatus.PUBLISHED
+    status = Lesson.LessonStatus.PUBLISHED
     tags = factory.Faker("words", nb=5)
     duration = factory.fuzzy.FuzzyInteger(0, 10)
     user_created = factory.SubFactory(UserFactory)

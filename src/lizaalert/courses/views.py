@@ -47,11 +47,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         base_annotations = {
             "course_duration": Sum(
                 "chapters__lessons__duration",
-                filter=Q(chapters__lessons__lesson_status=lesson_status),
+                filter=Q(chapters__lessons__status=lesson_status),
             ),
             "lessons_count": Count(
                 "chapters__lessons",
-                filter=Q(chapters__lessons__lesson_status=lesson_status),
+                filter=Q(chapters__lessons__status=lesson_status),
             ),
         }
 
@@ -99,14 +99,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 ),
             }
             return (
-                Course.objects.filter(course_status=Course.CourseStatus.PUBLISHED)
+                Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
                 .annotate(**base_annotations, **users_annotations)
                 .prefetch_related(
                     Prefetch("chapters", queryset=chapters_with_progress),
                     Prefetch("chapters__lessons", queryset=lessons_with_progress),
                 )
             )
-        return Course.objects.filter(course_status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
+        return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 
     def get_serializer_class(self):
         if self.action == "enroll" or self.action == "unroll":

@@ -57,12 +57,12 @@ class Knowledge(TimeStampedModel):
 
 
 class Course(TimeStampedModel):
-    class CourseStatus(models.TextChoices):
+    class CourseStatus(models.IntegerChoices):
         """Класс для выбора статуса курса."""
 
-        DRAFT = "Draft", "в разработке"
-        PUBLISHED = "Published", "опубликован"
-        ARCHIVE = "Archive", "в архиве"
+        DRAFT = 0, "в разработке"
+        PUBLISHED = 1, "опубликован"
+        ARCHIVE = 2, "в архиве"
 
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
@@ -76,12 +76,18 @@ class Course(TimeStampedModel):
         related_name="course",
     )
     full_description = models.TextField(verbose_name="Полное описание курса")
-    knowledge = models.ManyToManyField(Knowledge, through="CourseKnowledge", verbose_name="Умения", null=True)
-    faq = models.ManyToManyField(FAQ, through="CourseFaq", verbose_name="Часто задаваемые вопросы", null=True)
-    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
-    course_status = models.CharField(
-        max_length=20, verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT
+    knowledge = models.ManyToManyField(
+        Knowledge,
+        through="CourseKnowledge",
+        verbose_name="Умения",
     )
+    faq = models.ManyToManyField(
+        FAQ,
+        through="CourseFaq",
+        verbose_name="Часто задаваемые вопросы",
+    )
+    user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
+    status = models.IntegerField(verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT)
 
     class Meta:
         verbose_name = "Курс"
@@ -184,10 +190,10 @@ class Lesson(TimeStampedModel):
         WEBINAR = "Webinar", "Вебинар"
         QUIZ = "Quiz", "Тест"
 
-    class LessonStatus(models.TextChoices):
-        DRAFT = "Draft", "В разработке"
-        READY = "Ready", "Готов"
-        PUBLISHED = "Published", "Опубликован"
+    class LessonStatus(models.IntegerChoices):
+        DRAFT = 0, "В разработке"
+        READY = 1, "Готов"
+        PUBLISHED = 2, "Опубликован"
 
     title = models.CharField(max_length=120, verbose_name="название урока")
     chapter = models.ForeignKey(
@@ -210,9 +216,7 @@ class Lesson(TimeStampedModel):
         on_delete=models.PROTECT,
         verbose_name="пользователь, внёсший изменения в урок",
     )
-    lesson_status = models.CharField(
-        max_length=20, verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT
-    )
+    status = models.IntegerField(verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT)
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
     order_number = models.PositiveSmallIntegerField(
@@ -243,7 +247,7 @@ class Lesson(TimeStampedModel):
         LessonProgressStatus.objects.get_or_create(
             user=user, lesson=self, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
         )
-        lesson_qs = Lesson.objects.filter(chapter=self.chapter, lesson_status=self.LessonStatus.PUBLISHED).aggregate(
+        lesson_qs = Lesson.objects.filter(chapter=self.chapter, status=self.LessonStatus.PUBLISHED).aggregate(
             total_lessons=Count("id")
         )
         progress_qs = LessonProgressStatus.objects.filter(

@@ -21,7 +21,7 @@ def create_lesson(user):
             duration=i,
             user_created=user,
             user_modifier=user,
-            lesson_status=Lesson.LessonStatus.choices[1][0],
+            status=Lesson.LessonStatus.choices[1][0],
         )
         for i in range(1, 3)
     ]
