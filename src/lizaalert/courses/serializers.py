@@ -1,11 +1,9 @@
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson
-from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, Course, CourseStatus, Knowledge, Lesson, LessonProgressStatus
+from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson
 from lizaalert.courses.utils import BreadcrumbSchema
 
 
