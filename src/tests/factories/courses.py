@@ -51,6 +51,7 @@ class LessonFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: "Урок{}".format(n))
     chapter = factory.SubFactory(ChapterFactory)
     description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
+    video_link = factory.Faker("url")
     lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
     status = Lesson.LessonStatus.PUBLISHED
     tags = factory.Faker("words", nb=5)
