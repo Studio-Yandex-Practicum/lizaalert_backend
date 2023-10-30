@@ -7,13 +7,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('users', '0003_auto_20231027_1728'),
-        ('courses', '0011_auto_20231016_1943'),
+        ('courses', '0012_delete_coursestatus'),
     ]
 
     operations = [
-        migrations.DeleteModel(
-            name='CourseStatus',
-        ),
         migrations.AlterModelOptions(
             name='chapterprogressstatus',
             options={'ordering': ('user',), 'verbose_name': 'Прогресс по главе', 'verbose_name_plural': 'Прогресс по главам'},
