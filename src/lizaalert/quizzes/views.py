@@ -10,11 +10,6 @@ from lizaalert.quizzes.models import Question, Quiz, UserAnswer
 from lizaalert.quizzes.serializers import QuizWithQuestionsSerializer, UserAnswerSerializer
 from lizaalert.quizzes.utils import compare_answers
 
-# class ErrorMessages:
-#     TEST_NOT_STARTED = "Тест еще не начат."
-#     TIME_EXPIRED = "Время вышло. Вы не успели."
-#     COUNT_EXPIRED = "Закончилось количество попыток."
-
 
 class QuizException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
@@ -102,7 +97,8 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         lesson_id = self.kwargs["lesson_id"]
-        user_answer = UserAnswer.objects.filter(user=user, quiz__lesson=lesson_id).order_by("-id").first()
+        lesson = Lesson.objects.get(id=lesson_id)
+        user_answer = UserAnswer.objects.filter(user=user, quiz__lesson=lesson).order_by("-id").first()
         return user_answer
 
     def post(self, request, *args, **kwargs):
@@ -114,6 +110,8 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
         quiz = Quiz.objects.get(lesson=lesson_id)
 
         try:
+            lesson = Lesson.objects.get(id=lesson_id)
+            quiz = lesson.quiz
             user_answer = UserAnswer.objects.filter(user=user, quiz=quiz).order_by("-id").first()
             user_answer.end_date = timezone.now()
             solution_time = user_answer.end_date - user_answer.start_date
