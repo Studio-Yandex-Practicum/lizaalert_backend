@@ -97,8 +97,11 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         lesson_id = self.kwargs["lesson_id"]
-        lesson = Lesson.objects.get(id=lesson_id)
-        user_answer = UserAnswer.objects.filter(user=user, quiz__lesson=lesson).order_by("-id").first()
+        user_answer = (
+            UserAnswer.objects.filter(user=user, quiz_id__in=Lesson.objects.filter(id=lesson_id).values("quiz_id"))
+            .order_by("-id")
+            .first()
+        )
         return user_answer
 
     def post(self, request, *args, **kwargs):
@@ -110,9 +113,11 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
         quiz = Quiz.objects.get(lesson=lesson_id)
 
         try:
-            lesson = Lesson.objects.get(id=lesson_id)
-            quiz = lesson.quiz
-            user_answer = UserAnswer.objects.filter(user=user, quiz=quiz).order_by("-id").first()
+            user_answer = (
+                UserAnswer.objects.filter(user=user, quiz_id__in=Lesson.objects.filter(id=lesson_id).values("quiz_id"))
+                .order_by("-id")
+                .first()
+            )
             user_answer.end_date = timezone.now()
             solution_time = user_answer.end_date - user_answer.start_date
             solution_time_minutes = solution_time.total_seconds() / 60
