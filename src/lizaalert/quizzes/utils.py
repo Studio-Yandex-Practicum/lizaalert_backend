@@ -25,8 +25,6 @@ def compare_answers(user_answers, quiz):
                     {"question_id": question_id, "correct_answer_id": correct_answer_ids, "is_correct": is_correct}
                 )
         else:
-            result.append(
-                {"question_id": question_id, "correct_answer_id": [], "is_correct": False}
-            )
+            result.append({"question_id": question_id, "correct_answer_id": [], "is_correct": False})
 
     return result, correct_count
