@@ -169,11 +169,17 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         }
         if user.is_authenticated:
             user_annotations = {
-                "user_lesson_progress": Subquery(
-                    LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
-                    .order_by("-updated_at")
-                    .values("userlessonprogress")[:1]
-                ),
+                "user_lesson_progress": Coalesce(
+                    Cast(
+                        Subquery(
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                            .order_by("-updated_at")
+                            .values("userlessonprogress")[:1]
+                        ),
+                        IntegerField(),
+                    ),
+                    Value(0),
+                )
             }
             return Lesson.objects.select_related("chapter", "chapter__course").annotate(
                 **base_annotations, **user_annotations
