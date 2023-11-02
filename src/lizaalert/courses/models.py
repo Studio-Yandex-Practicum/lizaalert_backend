@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Max
 
 from lizaalert.courses.mixins import TimeStampedModel
+from lizaalert.courses.utils import set_ordering
 from lizaalert.quizzes.models import Quiz
 
 User = get_user_model()
@@ -133,19 +134,13 @@ class Chapter(TimeStampedModel):
         verbose_name="пользователь, внёсший изменения в главу",
     )
     order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], default=1
+        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], null=True, blank=True
     )
 
     class Meta:
         ordering = ("order_number",)
         verbose_name = "глава"
         verbose_name_plural = "глава"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["order_number", "course"],
-                name="unique_order_number",
-            )
-        ]
 
     def __str__(self):
         return f"Курс {self.course.title}: Глава {self.title}"
@@ -166,6 +161,22 @@ class Chapter(TimeStampedModel):
         ).aggregate(finished_chapters=Count("id"))
         if chapter_qs["total_chapters"] == progress_qs["finished_chapters"]:
             self.course.finish(user)
+
+    def save(self, *args, **kwargs):
+        """Изменяем функцию присвоения порядкового номера."""
+        if not self.id:
+            max_order_number = self.course.chapters.aggregate(Max("order_number")).get("order_number__max")
+            self.order_number = (max_order_number or 0) + 1000
+        super().save(*args, **kwargs)
+
+        if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
+            chapters = Chapter.objects.filter(
+                course=self.course,
+            ).order_by("order_number")
+
+            for position, chapter in enumerate(chapters):
+                chapter.order_number = (position + 1) * 1000
+            Chapter.objects.bulk_update(chapters, ["order_number"])
 
 
 class Lesson(TimeStampedModel):
@@ -220,19 +231,13 @@ class Lesson(TimeStampedModel):
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
     order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], default=1
+        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], null=True, blank=True
     )
 
     class Meta:
         ordering = ("order_number",)
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["order_number", "chapter"],
-                name="unique_lesson_order_number",
-            )
-        ]
 
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
@@ -255,6 +260,11 @@ class Lesson(TimeStampedModel):
         ).aggregate(finished_lessons=Count("id"))
         if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
             self.chapter.finish(user)
+
+    def save(self, *args, **kwargs):
+        """Изменяем функцию присвоения порядкового номера."""
+        set_ordering(self, self.chapter.lessons, 10, self.chapter.order_number)
+        super().save(*args, **kwargs)
 
 
 class LessonProgressStatus(TimeStampedModel):

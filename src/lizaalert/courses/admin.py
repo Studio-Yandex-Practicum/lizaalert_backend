@@ -13,6 +13,7 @@ from lizaalert.courses.models import (
     LessonProgressStatus,
     Subscription,
 )
+from lizaalert.courses.utils import HideOrderNumberMixin
 
 
 class CourseFaqInline(admin.TabularInline):
@@ -31,20 +32,34 @@ class CourseKnowledgeInline(admin.TabularInline):
     extra = 0
 
 
-class LessonInline(admin.StackedInline):
+class LessonInline(HideOrderNumberMixin, admin.StackedInline):
     """Инлайн урока для отображения в главе."""
 
     model = Lesson
     min_num = 1
     extra = 0
 
+    def get_fields(self, request, obj=None):
+        """Убираем поле order_number при создании Главы с уроками, оставляем при редактировании."""
+        fields = super().get_fields(request, obj)
+        if obj:
+            return fields
+        return [field for field in fields if field != "order_number"]
 
-class ChapterInline(admin.TabularInline):
+
+class ChapterInline(HideOrderNumberMixin, admin.TabularInline):
     """Инлайн главы для отображения в курсе."""
 
     model = Chapter
     min_num = 1
     extra = 0
+
+    def get_fields(self, request, obj=None):
+        """Убираем поле order_number при создании Курса с главами, оставляем при редактировании."""
+        fields = super().get_fields(request, obj)
+        if obj:
+            return fields
+        return [field for field in fields if field != "order_number"]
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -65,7 +80,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 @admin.register(Chapter)
-class ChapterAdmin(admin.ModelAdmin):
+class ChapterAdmin(HideOrderNumberMixin, admin.ModelAdmin):
     """Админка главы."""
 
     inlines = (LessonInline,)
@@ -103,6 +118,12 @@ class KnowledgeAdmin(admin.ModelAdmin):
     inlines = (CourseKnowledgeInline,)
 
 
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin, HideOrderNumberMixin):
+    """Админка для урока."""
+
+    pass
+
+
 admin.site.register(Course, CourseAdmin)
-admin.site.register(Lesson)
 admin.site.register(Subscription)
