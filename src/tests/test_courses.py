@@ -1,19 +1,21 @@
+from pprint import pprint
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Course, Lesson, Chapter
+from lizaalert.courses.models import Chapter, Course, Lesson
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
     CourseFactory,
     CourseFaqFactory,
     CourseKnowledgeFactory,
+    CourseWith2Chapters,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     LessonFactory,
     SubscriptionFactory,
-    CourseWith2Chapters,
 )
 from tests.factories.users import LevelFactory
 
@@ -346,7 +348,7 @@ class TestCourse:
                 assert lesson["order_number"] == i * 1000 + n * 10
 
         # Проверям корректность порядка, после переноса урока на другую позицию
-        chapter = Chapter.objects.filter(course=course).order_by('order_number').first()
+        chapter = Chapter.objects.filter(course=course).order_by("order_number").first()
         lesson = Lesson.objects.filter(chapter=chapter, title="4").first()
 
         # Проверяем порядок уроков
@@ -370,7 +372,7 @@ class TestCourse:
         assert response_new_order.status_code == status.HTTP_200_OK
         chapters = response_new_chapter_order.json()["chapters"]
         new_order = ("2", "1")
-        print(chapters)
+        pprint(chapters)
         for i in range(1):
             chapter = chapters[i]
             assert chapter["order_number"] == 1000 * (i + 1)
