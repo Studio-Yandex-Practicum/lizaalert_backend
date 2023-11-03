@@ -262,7 +262,11 @@ class Volunteer(models.Model):
 
     @property
     def count_pass_course(self):
-        return len(self.volunter_courses.filter(status="complete"))
+        from lizaalert.courses.models import CourseProgressStatus
+
+        return CourseProgressStatus.objects.filter(
+            user=self.user, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
+        ).count()
 
     @property
     def level_confirmed(self):
