@@ -168,3 +168,56 @@ class ChapterWith3Lessons(ChapterFactory):
         order_number=factory.Iterator([3]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
+
+
+class ChapterWith4Lessons(ChapterFactory):
+    """Test Chapter factory with 4 related lessons."""
+
+    membership1 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([1]),
+        title=factory.Iterator([1]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+    membership2 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([2]),
+        title=factory.Iterator([2]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+    membership3 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([3]),
+        title=factory.Iterator([3]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+    membership4 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([4]),
+        title=factory.Iterator([4]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+
+
+class CourseWith2Chapters(CourseFactory):
+    """
+    Создает курс, 2 главы с 4 уроками в каждой.
+
+    В заголовках прописана изначальная нумерация для проверки
+     корректности работы ordering.
+    """
+
+    membership1 = factory.RelatedFactory(
+        ChapterWith4Lessons,
+        factory_related_name="course",
+        title=factory.Iterator([1]),
+    )
+    membership2 = factory.RelatedFactory(
+        ChapterWith4Lessons,
+        factory_related_name="course",
+        title=factory.Iterator([2]),
+    )

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, Max
+from django.db.models import Count
 
 from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.courses.utils import set_ordering
@@ -164,19 +164,12 @@ class Chapter(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         """Изменяем функцию присвоения порядкового номера."""
-        if not self.id:
-            max_order_number = self.course.chapters.aggregate(Max("order_number")).get("order_number__max")
-            self.order_number = (max_order_number or 0) + 1000
-        super().save(*args, **kwargs)
-
-        if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
-            chapters = Chapter.objects.filter(
-                course=self.course,
-            ).order_by("order_number")
-
-            for position, chapter in enumerate(chapters):
-                chapter.order_number = (position + 1) * 1000
-            Chapter.objects.bulk_update(chapters, ["order_number"])
+        if self.id:  # В зависимости от создания или изменения super() надо вызывать в разное время
+            super().save(*args, **kwargs)
+            set_ordering(self, self.course.chapters, 1000)
+        else:
+            set_ordering(self, self.course.chapters, 1000)
+            super().save(*args, **kwargs)
 
 
 class Lesson(TimeStampedModel):
@@ -263,8 +256,12 @@ class Lesson(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         """Изменяем функцию присвоения порядкового номера."""
-        set_ordering(self, self.chapter.lessons, 10, self.chapter.order_number)
-        super().save(*args, **kwargs)
+        if self.id:  # В зависимости от создания или изменения super() надо вызывать в разное время
+            super().save(*args, **kwargs)
+            set_ordering(self, self.chapter.lessons, 10, self.chapter.order_number)
+        else:
+            set_ordering(self, self.chapter.lessons, 10, self.chapter.order_number)
+            super().save(*args, **kwargs)
 
 
 class LessonProgressStatus(TimeStampedModel):

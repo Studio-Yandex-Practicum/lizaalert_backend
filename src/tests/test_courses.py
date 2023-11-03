@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Course, Lesson
+from lizaalert.courses.models import Course, Lesson, Chapter
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -13,6 +13,7 @@ from tests.factories.courses import (
     CourseWith3KnowledgeFactory,
     LessonFactory,
     SubscriptionFactory,
+    CourseWith2Chapters,
 )
 from tests.factories.users import LevelFactory
 
@@ -47,7 +48,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["id"] == chapter.id
         assert len(response.json()["chapters"][0]["lessons"]) == 3
-        assert response.json()["chapters"][0]["lessons"][2]["order_number"] == 3
+        assert response.json()["chapters"][0]["lessons"][2]["order_number"] == 1030
 
     def test_course_annotation(self, user_client):
         """
@@ -325,3 +326,53 @@ class TestCourse:
         assert response_lesson.status_code == status.HTTP_200_OK
         assert response_course_detail.status_code == status.HTTP_200_OK
         assert response_course_list.status_code == status.HTTP_200_OK
+
+    def test_ordering_working_properly(self, user_client):
+        """Тест, что автоматическое назначение очередности работает корректно."""
+        course = CourseWith2Chapters()
+        url = reverse("courses-detail", kwargs={"pk": course.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+        # Проверяем корректность изначального порядка в главах и уроках
+        for i in range(1, 3):
+            chapter = response.json()["chapters"][i - 1]
+            assert chapter["title"] == str(i)
+            assert chapter["order_number"] == 1000 * i
+
+            for n in range(1, 5):
+                lesson = chapter["lessons"][n - 1]
+                assert lesson["title"] == str(n)
+                assert lesson["order_number"] == i * 1000 + n * 10
+
+        # Проверям корректность порядка, после переноса урока на другую позицию
+        chapter = Chapter.objects.filter(course=course).order_by('order_number').first()
+        lesson = Lesson.objects.filter(chapter=chapter, title="4").first()
+
+        # Проверяем порядок уроков
+        lesson.order_number = 1013
+        lesson.save()
+
+        response_new_order = user_client.get(url)
+        assert response_new_order.status_code == status.HTTP_200_OK
+        lessons = response_new_order.json()["chapters"][0]["lessons"]
+        new_order = ("1", "4", "2", "3")  # новый порядок уроков
+        for n in range(4):
+            lesson = lessons[n]
+            assert lesson["order_number"] == 1000 + (n + 1) * 10
+            assert lesson["title"] == new_order[n]
+
+        # Проверяем порядок глав
+        chapter.order_number = 3947
+        chapter.save()
+
+        response_new_chapter_order = user_client.get(url)
+        assert response_new_order.status_code == status.HTTP_200_OK
+        chapters = response_new_chapter_order.json()["chapters"]
+        new_order = ("2", "1")
+        print(chapters)
+        for i in range(1):
+            chapter = chapters[i]
+            assert chapter["order_number"] == 1000 * (i + 1)
+            assert chapter["title"] == new_order[i]
+            assert 1 == 0

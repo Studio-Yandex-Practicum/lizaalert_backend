@@ -6,4 +6,4 @@ class CoursesConfig(AppConfig):
     name = "lizaalert.courses"
 
     def ready(self) -> None:
-        import lizaalert.courses.signals
+        import lizaalert.courses.signals  # noqa
