@@ -261,14 +261,6 @@ class Volunteer(models.Model):
         verbose_name_plural = "Волонтеры"
 
     @property
-    def count_pass_course(self):
-        from lizaalert.courses.models import CourseProgressStatus
-
-        return CourseProgressStatus.objects.filter(
-            user=self.user, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
-        ).count()
-
-    @property
     def level_confirmed(self):
         return self.volunteer_levels.filter(confirmed=True).order_by("-updated_at").first()
 

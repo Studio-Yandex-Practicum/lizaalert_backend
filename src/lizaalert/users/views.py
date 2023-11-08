@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -13,8 +14,9 @@ class VolunteerAPIview(APIView):
 
     def get(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
-        serializer = VolunteerSerializer(volunteer, context={"request": request})
-        return Response(serializer.data)
+        queryset = Volunteer.objects.annotate(count_pass_course=Count("volunter_courses")).filter(pk=volunteer.pk)
+        serializer = VolunteerSerializer(queryset, context={"request": request}, many=True)
+        return Response(serializer.data[0])
 
     def patch(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
