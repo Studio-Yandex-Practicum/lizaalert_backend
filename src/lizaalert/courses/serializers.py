@@ -144,6 +144,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "chapter_id",
             "title",
             "description",
+            "video_link",
             "lesson_type",
             "tags",
             "duration",

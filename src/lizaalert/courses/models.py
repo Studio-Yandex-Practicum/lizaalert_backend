@@ -200,6 +200,7 @@ class Lesson(TimeStampedModel):
         Chapter, on_delete=models.PROTECT, related_name="lessons", verbose_name="уроки главы", null=True
     )
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
+    video_link = models.URLField(blank=True, null=True, verbose_name="Ссылка на видеоурок")
     lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")

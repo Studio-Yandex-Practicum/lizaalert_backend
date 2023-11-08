@@ -59,6 +59,12 @@ class LessonFactory(factory.django.DjangoModelFactory):
     user_modifier = factory.SubFactory(UserFactory)
     order_number = factory.fuzzy.FuzzyInteger(0, 10)
 
+    @factory.lazy_attribute
+    def video_link(self):
+        if self.lesson_type == Lesson.LessonType.VIDEOLESSON:
+            return factory.Faker("url")
+        return ""
+
 
 class FaqFactory(factory.django.DjangoModelFactory):
     """Test factory for FAQ model."""
