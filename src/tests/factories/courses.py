@@ -51,7 +51,6 @@ class LessonFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: "Урок{}".format(n))
     chapter = factory.SubFactory(ChapterFactory)
     description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
-    video_link = factory.Faker("url")
     lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
     status = Lesson.LessonStatus.PUBLISHED
     tags = factory.Faker("words", nb=5)
@@ -59,6 +58,12 @@ class LessonFactory(factory.django.DjangoModelFactory):
     user_created = factory.SubFactory(UserFactory)
     user_modifier = factory.SubFactory(UserFactory)
     order_number = factory.fuzzy.FuzzyInteger(0, 10)
+
+    @factory.lazy_attribute
+    def video_link(self):
+        if self.lesson_type == Lesson.LessonType.VIDEOLESSON:
+            return factory.Faker("url")
+        return ""
 
 
 class FaqFactory(factory.django.DjangoModelFactory):
