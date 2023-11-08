@@ -377,4 +377,7 @@ class TestCourse:
             chapter = chapters[i]
             assert chapter["order_number"] == 1000 * (i + 1)
             assert chapter["title"] == new_order[i]
-            assert 1 == 0
+            # Проверяем, что после изменения порядка глав, номера уроков такжже поменялись
+            for n in range(4):
+                lesson = chapter["lessons"][n]
+                assert lesson["order_number"] == 1000 + (n + 1) * 10
