@@ -21,25 +21,6 @@ class BreadcrumbSchema(serializers.Serializer):
     chapter = ChapterBreadcrumbSerializer()
 
 
-class HideOrderNumberMixin:
-    """
-    Убирает поле order_number при создании, оставляет при редактировании.
-
-    Логика создания нумерации поля order_number не очевидна, поэтому при
-    создании порядка данный механизм скрыт от администратора. При редактировании
-    объекта администратору показаывается нумерация и появляется возможность поменять
-    порядок.
-    """
-
-    field = "order_number"
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        if not obj and self.field:
-            return list(filter(lambda f: f != self.field, fields))
-        return fields
-
-
 def set_ordering(self, queryset, order_factor, chapter_order=None):
     """
     Устанавливает очередность глав и уроков.
