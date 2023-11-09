@@ -1,6 +1,8 @@
 from django.db.models import Max
 from rest_framework import serializers
 
+LESSON_STEP = 10
+
 
 class CourseBreadcrumbSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -52,24 +54,44 @@ def set_ordering(self, queryset, order_factor, chapter_order=None):
         max_order_number = queryset.aggregate(Max("order_number")).get("order_number__max")
         current_order = chapter_order if chapter_order else 0
         self.order_number = (max_order_number or current_order) + order_factor
+
+
+def reset_ordering(self, queryset, order_factor, chapter_order=None):
+    """
+    Переустанавливает очередность глав и уроков.
+
+    self - глава/урок
+    queryset - вызываем объект более высокого уровня
+    order_factor - номер порядка, 1000 или 10
+    chapter_order - default None, порядковый номер главы, вызывается только если функция
+    применяется для Урока.
+    """
+    if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
+        objects = queryset.order_by("order_number")
+        current_order = chapter_order if chapter_order else 0
+        for position, object in enumerate(objects):
+            object.order_number = (position + 1) * order_factor + current_order
+        queryset.model.objects.bulk_update(objects, ["order_number"])
+
+        # При изменении порядка в глав в курсе, триггерим изменение одного урока в каждой главе,
+        # чтобы произошел пересчет порядковых номеров.
+        if not chapter_order:
+            from lizaalert.courses.models import Chapter, Lesson
+
+            chapters = Chapter.objects.filter(course=self.course)
+            for chapter in chapters:
+                try:
+                    first_lesson = Lesson.objects.filter(chapter=chapter).order_by("order_number").first()
+                    first_lesson.order_number = self.order_number + LESSON_STEP
+                    first_lesson.save()
+                except AttributeError:
+                    pass
+
+
+def old_order_number_getter(instance):
+    """Получить старый порядковый номер."""
+    if instance.id:
+        old_instance = type(instance).objects.get(id=instance.id)
+        instance._old_order_number = old_instance.order_number
     else:
-        if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
-            objects = queryset.order_by("order_number")
-            current_order = chapter_order if chapter_order else 0
-            for position, object in enumerate(objects):
-                object.order_number = (position + 1) * order_factor + current_order
-            queryset.model.objects.bulk_update(objects, ["order_number"])
-
-            # При изменении порядка в глав в курсе, триггерим изменение одного урока в каждой главе,
-            # чтобы произошел пересчет порядковых номеров.
-            if not chapter_order:
-                from lizaalert.courses.models import Chapter, Lesson
-
-                chapters = Chapter.objects.filter(course=self.course)
-                for chapter in chapters:
-                    try:
-                        first_lesson = Lesson.objects.filter(chapter=chapter).order_by("order_number").first()
-                        first_lesson.order_number = self.order_number + 10
-                        first_lesson.save()
-                    except AttributeError:
-                        pass
+        instance._old_order_number = None

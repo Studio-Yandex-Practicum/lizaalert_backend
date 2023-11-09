@@ -1,10 +1,9 @@
-from pprint import pprint
-
 import pytest
 from django.urls import reverse
 from rest_framework import status
 
 from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.courses.utils import set_ordering
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -372,7 +371,6 @@ class TestCourse:
         assert response_new_order.status_code == status.HTTP_200_OK
         chapters = response_new_chapter_order.json()["chapters"]
         new_order = ("2", "1")
-        pprint(chapters)
         for i in range(1):
             chapter = chapters[i]
             assert chapter["order_number"] == 1000 * (i + 1)
@@ -381,3 +379,21 @@ class TestCourse:
             for n in range(4):
                 lesson = chapter["lessons"][n]
                 assert lesson["order_number"] == 1000 + (n + 1) * 10
+
+    def test_set_ordering_chapter(self):
+        """Тест функции распределения порядковых номеров главы."""
+        CourseWith2Chapters()
+        new_chapter = ChapterFactory.build()
+        queryset = Chapter.objects.all()
+        order_factor = 1000
+        set_ordering(new_chapter, queryset, order_factor)
+        assert new_chapter.order_number == 3000
+
+    def test_set_ordering_lesson(self):
+        """Тест функции распределения порядковых номеров урока."""
+        chapter = ChapterWith3Lessons()
+        new_lesson = LessonFactory.build()
+        queryset = Lesson.objects.all()
+        order_factor = 10
+        set_ordering(new_lesson, queryset, order_factor, chapter.order_number)
+        assert new_lesson.order_number == 1040

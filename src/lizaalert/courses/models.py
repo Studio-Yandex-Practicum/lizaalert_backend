@@ -4,10 +4,12 @@ from django.db import models
 from django.db.models import Count
 
 from lizaalert.courses.mixins import TimeStampedModel
-from lizaalert.courses.utils import set_ordering
+from lizaalert.courses.utils import reset_ordering, set_ordering
 from lizaalert.quizzes.models import Quiz
 
 User = get_user_model()
+CHAPTER_STEP = 1000
+LESSON_STEP = 10
 
 
 class FAQ(TimeStampedModel):
@@ -134,7 +136,7 @@ class Chapter(TimeStampedModel):
         verbose_name="пользователь, внёсший изменения в главу",
     )
     order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], null=True, blank=True
+        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], blank=True
     )
 
     class Meta:
@@ -164,11 +166,11 @@ class Chapter(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         """Изменяем функцию присвоения порядкового номера."""
-        if self.id:  # В зависимости от создания или изменения super() надо вызывать в разное время
+        if self.id:
             super().save(*args, **kwargs)
-            set_ordering(self, self.course.chapters, 1000)
+            reset_ordering(self, self.course.chapters, CHAPTER_STEP)
         else:
-            set_ordering(self, self.course.chapters, 1000)
+            set_ordering(self, self.course.chapters, CHAPTER_STEP)
             super().save(*args, **kwargs)
 
 
@@ -224,7 +226,7 @@ class Lesson(TimeStampedModel):
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
     order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], null=True, blank=True
+        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], blank=True
     )
 
     class Meta:
@@ -256,11 +258,11 @@ class Lesson(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         """Изменяем функцию присвоения порядкового номера."""
-        if self.id:  # В зависимости от создания или изменения super() надо вызывать в разное время
+        if self.id:
             super().save(*args, **kwargs)
-            set_ordering(self, self.chapter.lessons, 10, self.chapter.order_number)
+            reset_ordering(self, self.chapter.lessons, LESSON_STEP, self.chapter.order_number)
         else:
-            set_ordering(self, self.chapter.lessons, 10, self.chapter.order_number)
+            set_ordering(self, self.chapter.lessons, LESSON_STEP, self.chapter.order_number)
             super().save(*args, **kwargs)
 
 
