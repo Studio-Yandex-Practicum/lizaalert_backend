@@ -39,13 +39,6 @@ class LessonInline(HideOrderNumberMixin, admin.StackedInline):
     min_num = 1
     extra = 0
 
-    def get_fields(self, request, obj=None):
-        """Убираем поле order_number при создании Главы с уроками, оставляем при редактировании."""
-        fields = super().get_fields(request, obj)
-        if obj:
-            return fields
-        return [field for field in fields if field != "order_number"]
-
 
 class ChapterInline(HideOrderNumberMixin, admin.TabularInline):
     """Инлайн главы для отображения в курсе."""
@@ -53,13 +46,6 @@ class ChapterInline(HideOrderNumberMixin, admin.TabularInline):
     model = Chapter
     min_num = 1
     extra = 0
-
-    def get_fields(self, request, obj=None):
-        """Убираем поле order_number при создании Курса с главами, оставляем при редактировании."""
-        fields = super().get_fields(request, obj)
-        if obj:
-            return fields
-        return [field for field in fields if field != "order_number"]
 
 
 class CourseAdmin(admin.ModelAdmin):

@@ -36,7 +36,7 @@ class HideOrderNumberMixin:
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if not obj and self.field:
-            return [field for field in fields if field != self.field]
+            return list(filter(lambda f: f != self.field, fields))
         return fields
 
 
