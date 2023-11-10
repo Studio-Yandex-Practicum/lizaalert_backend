@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Course, Lesson
+from lizaalert.courses.models import Course, Lesson, LessonProgressStatus
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -325,3 +325,28 @@ class TestCourse:
         assert response_lesson.status_code == status.HTTP_200_OK
         assert response_course_detail.status_code == status.HTTP_200_OK
         assert response_course_list.status_code == status.HTTP_200_OK
+
+    def test_activate_lesson_mixin(self, user, user_client):
+        """
+        Тест миксина активирующего урок.
+
+        1. Проверка активации урока
+        2. Проверка ошибки активации урока при наличии более 1 активного урока.
+        """
+        # Проверка активации урока
+        lesson = LessonFactory()
+        lesson.activate(user)
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["user_lesson_progress"] == int(LessonProgressStatus.ProgressStatus.ACTIVE.value)
+
+        # Проверка ошибки активации
+        _ = ChapterWith3Lessons()
+        queryset = Lesson.objects.all()
+        for number, lesson in enumerate(queryset):
+            if number > 0:
+                with pytest.raises(ValueError, match="You can't have more than one active lesson."):
+                    lesson.activate(user)
+            else:
+                lesson.activate(user)

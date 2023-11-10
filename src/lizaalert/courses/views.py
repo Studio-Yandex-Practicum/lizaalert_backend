@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
@@ -115,12 +116,15 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
+    @transaction.atomic
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """Subscribe user for given course."""
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
         Subscription.objects.create(user=user, course=course)
+        first_lesson = Lesson.objects.filter(chapter__course=course).order_by("order_number").first()
+        first_lesson.activate(user)
         return Response(status=status.HTTP_201_CREATED)
 
     @action(
@@ -151,8 +155,8 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         Create custom queryset for lessons.
 
         user_lesson_progress - returns the progress (int: id) of current user with the current lesson
-        next_lesson_id - returns the int id of the next lesson in current chapter
-        prev_lesson_id - returns the int id of the previous lesson in current chapter.
+        next_lesson_id - returns the int id of the next lesson in current course
+        prev_lesson_id - returns the int id of the previous lesson in current course.
         """
         user = self.request.user
         base_annotations = {
