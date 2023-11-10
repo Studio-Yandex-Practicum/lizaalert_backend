@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Count
 
-from lizaalert.courses.mixins import TimeStampedModel
+from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
 from lizaalert.courses.utils import reset_ordering, set_ordering
 from lizaalert.quizzes.models import Quiz
 
@@ -106,7 +106,7 @@ class Course(TimeStampedModel):
         )
 
 
-class Chapter(TimeStampedModel):
+class Chapter(TimeStampedModel, order_number_mixin(name_of_instance="главы")):
     """
     Модель главы.
 
@@ -134,9 +134,6 @@ class Chapter(TimeStampedModel):
         related_name="chapter_editor",
         on_delete=models.PROTECT,
         verbose_name="пользователь, внёсший изменения в главу",
-    )
-    order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], blank=True
     )
 
     class Meta:
@@ -174,7 +171,7 @@ class Chapter(TimeStampedModel):
             super().save(*args, **kwargs)
 
 
-class Lesson(TimeStampedModel):
+class Lesson(TimeStampedModel, order_number_mixin(name_of_instance="урока")):
     """
     Модель урока.
 
@@ -226,9 +223,6 @@ class Lesson(TimeStampedModel):
     status = models.IntegerField(verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT)
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
-    order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], blank=True
-    )
 
     class Meta:
         ordering = ("order_number",)

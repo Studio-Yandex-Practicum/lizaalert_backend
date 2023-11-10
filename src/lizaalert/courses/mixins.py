@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -36,3 +37,19 @@ class HideOrderNumberMixin:
         if not obj and self.field:
             return list(filter(lambda f: f != self.field, fields))
         return fields
+
+
+def order_number_mixin(name_of_instance):
+    """Order number mixin setter."""
+
+    class OrderNumberMixin(models.Model):
+        """Order number mixin."""
+
+        class Meta:
+            abstract = True
+
+        order_number = models.PositiveSmallIntegerField(
+            verbose_name=f"порядковый номер {name_of_instance}", validators=[MinValueValidator(1)], blank=True
+        )
+
+    return OrderNumberMixin

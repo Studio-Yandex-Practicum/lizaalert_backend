@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from lizaalert.courses.mixins import HideOrderNumberMixin
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
@@ -13,7 +14,6 @@ from lizaalert.courses.models import (
     LessonProgressStatus,
     Subscription,
 )
-from lizaalert.courses.utils import HideOrderNumberMixin
 
 
 class CourseFaqInline(admin.TabularInline):
