@@ -85,6 +85,18 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
+
+            # active lesson - урок, который проходит пользователь
+            active_lesson = Lesson.objects.filter(
+                chapter__course=self.kwargs.get("pk"),
+                lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.ACTIVE,
+                lesson_progress__user=user,
+            )
+            # initial lesson - первый урок курса
+            initial_lesson = Lesson.objects.filter(
+                chapter__course=OuterRef("id"), status=Lesson.LessonStatus.PUBLISHED
+            ).order_by("order_number")
+
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
                 "user_course_progress": Coalesce(
@@ -97,6 +109,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         IntegerField(),
                     ),
                     Value(0),
+                ),
+                "current_lesson": Coalesce(
+                    active_lesson.values("id"),
+                    initial_lesson.values("id")[:1],
+                ),
+                "current_chapter": Coalesce(
+                    active_lesson.values("chapter_id"),
+                    initial_lesson.values("chapter_id")[:1],
                 ),
             }
             return (
@@ -116,15 +136,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @transaction.atomic
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """Subscribe user for given course."""
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
         Subscription.objects.create(user=user, course=course)
-        first_lesson = Lesson.objects.filter(chapter__course=course).order_by("order_number").first()
-        first_lesson.activate(user)
         return Response(status=status.HTTP_201_CREATED)
 
     @action(
@@ -195,6 +212,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             return None
         return LessonSerializer
 
+    @transaction.atomic
     @action(
         detail=True,
         methods=["post"],
@@ -207,6 +225,13 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
         lesson.finish(user)
+        next_lesson = (
+            Lesson.objects.filter(chapter__course=lesson.chapter.course, order_number__gt=lesson.order_number)
+            .order_by("order_number")
+            .first()
+        )
+        if next_lesson:
+            next_lesson.activate(user)
         return Response(status=status.HTTP_201_CREATED)
 
 

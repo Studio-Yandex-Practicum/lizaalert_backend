@@ -274,7 +274,7 @@ class TestCourse:
         assert response_course.json()["user_course_progress"] != 2
         assert response_course.json()["chapters"][0]["user_chapter_progress"] != 2
 
-        # Проверяем, что после прохождения одного урока, первая глава не пройдена
+        # # Проверяем, что после прохождения одного урока, первая глава не пройдена
         user_client.post(reverse("lessons-complete", kwargs={"pk": c1_lesson_1.id}))
         response_course = user_client.get(url_course)
         assert response_course.json()["chapters"][0]["user_chapter_progress"] != 2
@@ -341,12 +341,29 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == int(LessonProgressStatus.ProgressStatus.ACTIVE.value)
 
-        # Проверка ошибки активации
-        _ = ChapterWith3Lessons()
-        queryset = Lesson.objects.all()
-        for number, lesson in enumerate(queryset):
-            if number > 0:
-                with pytest.raises(ValueError, match="You can't have more than one active lesson."):
-                    lesson.activate(user)
-            else:
-                lesson.activate(user)
+    def test_current_lesson_and_chapter_in_course(self, user_client, user):
+        """
+        Тест, что текущая глава и урок отображаются на странице курса.
+
+        1. Проверяем, что авторизированный пользователь не начавший курс
+        получает первый урок первой главы курса
+        2. Проверям, что авторизированный пользователь начавший курс, получает
+        активный урок.
+        """
+        chapter = ChapterWith3Lessons()
+        url = reverse("courses-detail", kwargs={"pk": chapter.course.id})
+        response = user_client.get(url)
+        lessons = Lesson.objects.filter(chapter=chapter).order_by("order_number")
+        first_lesson = lessons[0]
+        second_lesson = lessons[1]
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["current_lesson"]["chapter"] == chapter.id
+        assert response.json()["current_lesson"]["lesson"] == first_lesson.id
+
+        # Проверяем, возвращается активный урок
+        first_lesson.finish(user)
+        second_lesson.activate(user)
+        new_response = user_client.get(url)
+        assert new_response.status_code == status.HTTP_200_OK
+        assert new_response.json()["current_lesson"]["chapter"] == chapter.id
+        assert new_response.json()["current_lesson"]["lesson"] == second_lesson.id

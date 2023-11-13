@@ -16,3 +16,10 @@ class BreadcrumbSchema(serializers.Serializer):
 
     course = CourseBreadcrumbSerializer()
     chapter = ChapterBreadcrumbSerializer()
+
+
+class CurrentLessonSerializer(serializers.Serializer):
+    """Schema serializer for OpenAPI/Swagger."""
+
+    chapter = serializers.IntegerField()
+    lesson = serializers.IntegerField()
