@@ -21,25 +21,6 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
-class HideOrderNumberMixin:
-    """
-    Убирает поле order_number при создании, оставляет при редактировании.
-
-    Логика создания нумерации поля order_number не очевидна, поэтому при
-    создании порядка данный механизм скрыт от администратора. При редактировании
-    объекта администратору показаывается нумерация и появляется возможность поменять
-    порядок.
-    """
-
-    field = "order_number"
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        if not obj and self.field:
-            return list(filter(lambda f: f != self.field, fields))
-        return fields
-
-
 def order_number_mixin(step, parent_field):
     """Order number mixin setter."""
 

@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-from lizaalert.courses.mixins import HideOrderNumberMixin
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
@@ -32,7 +31,7 @@ class CourseKnowledgeInline(admin.TabularInline):
     extra = 0
 
 
-class LessonInline(HideOrderNumberMixin, admin.StackedInline):
+class LessonInline(admin.StackedInline):
     """Инлайн урока для отображения в главе."""
 
     model = Lesson
@@ -40,7 +39,7 @@ class LessonInline(HideOrderNumberMixin, admin.StackedInline):
     extra = 0
 
 
-class ChapterInline(HideOrderNumberMixin, admin.TabularInline):
+class ChapterInline(admin.TabularInline):
     """Инлайн главы для отображения в курсе."""
 
     model = Chapter
@@ -66,7 +65,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 @admin.register(Chapter)
-class ChapterAdmin(HideOrderNumberMixin, admin.ModelAdmin):
+class ChapterAdmin(admin.ModelAdmin):
     """Админка главы."""
 
     inlines = (LessonInline,)
@@ -105,7 +104,7 @@ class KnowledgeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Lesson)
-class LessonAdmin(admin.ModelAdmin, HideOrderNumberMixin):
+class LessonAdmin(admin.ModelAdmin):
     """Админка для урока."""
 
     pass
