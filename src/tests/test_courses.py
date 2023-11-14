@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from lizaalert.courses.models import Chapter, Course, Lesson
-from lizaalert.courses.utils import set_ordering
+from lizaalert.courses.mixins import order_number_mixin
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -393,7 +393,8 @@ class TestCourse:
         new_chapter = ChapterFactory.build()
         queryset = Chapter.objects.all()
         order_factor = 1000
-        set_ordering(new_chapter, queryset, order_factor)
+        mixin = order_number_mixin(order_factor, "course")
+        mixin.set_ordering(new_chapter, queryset, order_factor)
         assert new_chapter.order_number == 3000
 
     def test_set_ordering_lesson(self):
@@ -402,5 +403,6 @@ class TestCourse:
         new_lesson = LessonFactory.build()
         queryset = Lesson.objects.all()
         order_factor = 10
-        set_ordering(new_lesson, queryset, order_factor, chapter.order_number)
+        mixin = order_number_mixin(order_factor, "chapter")
+        mixin.set_ordering(new_lesson, queryset, order_factor, chapter.order_number)
         assert new_lesson.order_number == 1040

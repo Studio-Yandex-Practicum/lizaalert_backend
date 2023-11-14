@@ -1,7 +1,6 @@
+from django.db.models import Max
 from django.core.validators import MinValueValidator
 from django.db import models
-
-from lizaalert.courses.utils import reset_ordering, set_ordering
 
 
 class TimeStampedModel(models.Model):
@@ -41,7 +40,7 @@ class HideOrderNumberMixin:
         return fields
 
 
-def order_number_mixin(step, parent_field, name_of_instance):
+def order_number_mixin(step, parent_field):
     """Order number mixin setter."""
 
     class SaveOrderingMixin(models.Model):
@@ -51,7 +50,7 @@ def order_number_mixin(step, parent_field, name_of_instance):
             abstract = True
 
         order_number = models.PositiveSmallIntegerField(
-            verbose_name=f"порядковый номер {name_of_instance}", validators=[MinValueValidator(1)], blank=True
+            verbose_name="порядковый номер", validators=[MinValueValidator(1)], blank=True
         )
 
         @property
@@ -70,6 +69,52 @@ def order_number_mixin(step, parent_field, name_of_instance):
             except AttributeError:
                 return None
 
+        def set_ordering(self, queryset, order_factor, chapter_order=None):
+            """
+            Устанавливает очередность глав и уроков.
+
+            self - глава/урок
+            queryset - вызываем объект более высокого уровня
+            order_factor - номер порядка, 1000 или 10
+            chapter_order - default None, порядковый номер главы, вызывается только если функция
+            применяется для Урока.
+            """
+            if not self.id:
+                max_order_number = queryset.aggregate(Max("order_number")).get("order_number__max")
+                current_order = chapter_order if chapter_order else 0
+                self.order_number = (max_order_number or current_order) + order_factor
+
+        def reset_ordering(self, queryset, order_factor, chapter_order=None):
+            """
+            Переустанавливает очередность глав и уроков.
+
+            self - глава/урок
+            queryset - вызываем объект более высокого уровня
+            order_factor - номер порядка, 1000 или 10
+            chapter_order - default None, порядковый номер главы, вызывается только если функция
+            применяется для Урока.
+            """
+            if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
+                objects = queryset.order_by("order_number")
+                current_order = chapter_order if chapter_order else 0
+                for position, object in enumerate(objects):
+                    object.order_number = (position + 1) * order_factor + current_order
+                queryset.model.objects.bulk_update(objects, ["order_number"])
+
+                # При изменении порядка в глав в курсе, триггерим изменение одного урока в каждой главе,
+                # чтобы произошел пересчет порядковых номеров.
+                if not chapter_order:
+                    from lizaalert.courses.models import Chapter, Lesson
+
+                    chapters = Chapter.objects.filter(course=self.course)
+                    for chapter in chapters:
+                        try:
+                            first_lesson = Lesson.objects.filter(chapter=chapter).order_by("order_number").first()
+                            first_lesson.order_number = self.order_number + step
+                            first_lesson.save()
+                        except AttributeError:
+                            pass
+
         def save(self, *args, **kwargs):
             """Change ordering method."""
             check_for_update = kwargs.get("update_fields", None)
@@ -77,9 +122,9 @@ def order_number_mixin(step, parent_field, name_of_instance):
                 check_for_update is not None and "order_number" in check_for_update
             ):
                 super().save(*args, **kwargs)
-                reset_ordering(self, self.order_queryset, step, self.parent_order)
+                self.reset_ordering(self.order_queryset, step, self.parent_order)
             else:
-                set_ordering(self, self.order_queryset, step, self.parent_order)
+                self.set_ordering(self.order_queryset, step, self.parent_order)
                 super().save(*args, **kwargs)
 
     return SaveOrderingMixin

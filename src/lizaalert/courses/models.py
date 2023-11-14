@@ -105,7 +105,7 @@ class Course(TimeStampedModel):
         )
 
 
-class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course", name_of_instance="главы")):
+class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
     """
     Модель главы.
 
@@ -161,7 +161,7 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course", name_
             self.course.finish(user)
 
 
-class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter", name_of_instance="урока")):
+class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
     """
     Модель урока.
 
