@@ -41,7 +41,7 @@ class HideOrderNumberMixin:
         return fields
 
 
-def order_number_mixin(step, name_of_instance):
+def order_number_mixin(step, parent_field, name_of_instance):
     """Order number mixin setter."""
 
     class SaveOrderingMixin(models.Model):
@@ -55,8 +55,20 @@ def order_number_mixin(step, name_of_instance):
         )
 
         @property
-        def chapter_order(self):
-            return None
+        def order_queryset(self):
+            """Queryset for ordering."""
+            cls = type(self)
+            filter_params = {parent_field: getattr(self, parent_field)}
+            return cls.objects.filter(**filter_params)
+
+        @property
+        def parent_order(self):
+            # родительский объект, у которого есть order_number
+            """Chapter order for further ordering."""
+            try:
+                return getattr(getattr(self, parent_field), "order_number")
+            except AttributeError:
+                return None
 
         def save(self, *args, **kwargs):
             """Change ordering method."""
@@ -65,9 +77,9 @@ def order_number_mixin(step, name_of_instance):
                 check_for_update is not None and "order_number" in check_for_update
             ):
                 super().save(*args, **kwargs)
-                reset_ordering(self, self.order_queryset, step, self.chapter_order)
+                reset_ordering(self, self.order_queryset, step, self.parent_order)
             else:
-                set_ordering(self, self.order_queryset, step, self.chapter_order)
+                set_ordering(self, self.order_queryset, step, self.parent_order)
                 super().save(*args, **kwargs)
 
     return SaveOrderingMixin

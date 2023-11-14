@@ -105,7 +105,7 @@ class Course(TimeStampedModel):
         )
 
 
-class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, name_of_instance="главы")):
+class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course", name_of_instance="главы")):
     """
     Модель главы.
 
@@ -160,13 +160,8 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, name_of_instanc
         if chapter_qs["total_chapters"] == progress_qs["finished_chapters"]:
             self.course.finish(user)
 
-    @property
-    def order_queryset(self):
-        """Queryset for ordering."""
-        return self.course.chapters
 
-
-class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, name_of_instance="урока")):
+class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter", name_of_instance="урока")):
     """
     Модель урока.
 
@@ -245,16 +240,6 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, name_of_instance=
         ).aggregate(finished_lessons=Count("id"))
         if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
             self.chapter.finish(user)
-
-    @property
-    def order_queryset(self):
-        """Queryset for ordering."""
-        return self.chapter.lessons
-
-    @property
-    def chapter_order(self):
-        """Chapter order for further ordering."""
-        return self.chapter.order_number
 
 
 class LessonProgressStatus(TimeStampedModel):
