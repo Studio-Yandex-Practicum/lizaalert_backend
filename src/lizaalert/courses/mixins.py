@@ -43,6 +43,7 @@ class HideOrderNumberMixin:
 
 def order_number_mixin(step, name_of_instance):
     """Order number mixin setter."""
+
     class SaveOrderingMixin(models.Model):
         """Ordering mixin."""
 
@@ -68,4 +69,5 @@ def order_number_mixin(step, name_of_instance):
             else:
                 set_ordering(self, self.order_queryset, step, self.chapter_order)
                 super().save(*args, **kwargs)
+
     return SaveOrderingMixin
