@@ -16,7 +16,7 @@ class VolunteerAPIview(APIView):
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.annotate(count_pass_course=Count("volunter_courses")).filter(pk=volunteer.pk)
         serializer = VolunteerSerializer(queryset, context={"request": request}, many=True)
-        return Response(serializer.data[0])
+        return Response(serializer.data)
 
     def patch(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
