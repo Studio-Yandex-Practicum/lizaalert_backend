@@ -64,10 +64,11 @@ def order_number_mixin(step, parent_field):
         def parent_order(self):
             # родительский объект, у которого есть order_number
             """Chapter order for further ordering."""
-            try:
-                return getattr(getattr(self, parent_field), "order_number")
-            except AttributeError:
-                return None
+            # try:
+            #     return getattr(getattr(self, parent_field), "order_number")
+            # except AttributeError:
+            #     return None
+            return getattr(getattr(self, parent_field), "order_number", None)
 
         def set_ordering(self, queryset, order_factor, chapter_order=None):
             """
