@@ -41,11 +41,10 @@ class HideOrderNumberMixin:
         return fields
 
 
-def order_number_mixin(name_of_instance):
+def order_number_mixin(step, name_of_instance):
     """Order number mixin setter."""
-
-    class OrderNumberMixin(models.Model):
-        """Order number mixin."""
+    class SaveOrderingMixin(models.Model):
+        """Ordering mixin."""
 
         class Meta:
             abstract = True
@@ -54,27 +53,19 @@ def order_number_mixin(name_of_instance):
             verbose_name=f"порядковый номер {name_of_instance}", validators=[MinValueValidator(1)], blank=True
         )
 
-    return OrderNumberMixin
+        @property
+        def chapter_order(self):
+            return None
 
-
-class SaveOrderingMixin(models.Model):
-    """Ordering mixin."""
-
-    class Meta:
-        abstract = True
-
-    @property
-    def chapter_order(self):
-        return None
-
-    def save(self, *args, **kwargs):
-        """Change ordering method."""
-        check_for_update = kwargs.get("update_fields", None)
-        if (self.id and check_for_update is None) or (
-            check_for_update is not None and "order_number" in check_for_update
-        ):
-            super().save(*args, **kwargs)
-            reset_ordering(self, self.order_queryset, self.order_step, self.chapter_order)
-        else:
-            set_ordering(self, self.order_queryset, self.order_step, self.chapter_order)
-            super().save(*args, **kwargs)
+        def save(self, *args, **kwargs):
+            """Change ordering method."""
+            check_for_update = kwargs.get("update_fields", None)
+            if (self.id and check_for_update is None) or (
+                check_for_update is not None and "order_number" in check_for_update
+            ):
+                super().save(*args, **kwargs)
+                reset_ordering(self, self.order_queryset, step, self.chapter_order)
+            else:
+                set_ordering(self, self.order_queryset, step, self.chapter_order)
+                super().save(*args, **kwargs)
+    return SaveOrderingMixin
