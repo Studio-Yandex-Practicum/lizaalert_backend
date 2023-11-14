@@ -1,4 +1,4 @@
-from django.db import models, transaction
+from django.db import models
 
 
 class TimeStampedModel(models.Model):
@@ -17,19 +17,3 @@ class TimeStampedModel(models.Model):
 
     class Meta:
         abstract = True
-
-
-class ActivateLessonMixin(models.Model):
-    """Абстрактная модель активации прохождения урока."""
-
-    class Meta:
-        abstract = True
-
-    @transaction.atomic
-    def activate(self, user):
-        """Активировать урок."""
-        from lizaalert.courses.models import LessonProgressStatus
-
-        progress, created = LessonProgressStatus.objects.get_or_create(user=user, lesson=self)
-        progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
-        progress.save()

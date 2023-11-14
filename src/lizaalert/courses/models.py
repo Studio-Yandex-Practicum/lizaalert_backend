@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Count
 
-from lizaalert.courses.mixins import ActivateLessonMixin, TimeStampedModel
+from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.quizzes.models import Quiz
 
 User = get_user_model()
@@ -168,7 +168,7 @@ class Chapter(TimeStampedModel):
             self.course.finish(user)
 
 
-class Lesson(TimeStampedModel, ActivateLessonMixin):
+class Lesson(TimeStampedModel):
     """
     Модель урока.
 

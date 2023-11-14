@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Course, Lesson, LessonProgressStatus
+from lizaalert.courses.models import Course, Lesson
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -326,21 +326,6 @@ class TestCourse:
         assert response_course_detail.status_code == status.HTTP_200_OK
         assert response_course_list.status_code == status.HTTP_200_OK
 
-    def test_activate_lesson_mixin(self, user, user_client):
-        """
-        Тест миксина активирующего урок.
-
-        1. Проверка активации урока
-        2. Проверка ошибки активации урока при наличии более 1 активного урока.
-        """
-        # Проверка активации урока
-        lesson = LessonFactory()
-        lesson.activate(user)
-        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
-        response = user_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_lesson_progress"] == int(LessonProgressStatus.ProgressStatus.ACTIVE.value)
-
     def test_current_lesson_and_chapter_in_course(self, user_client, user):
         """
         Тест, что текущая глава и урок отображаются на странице курса.
@@ -362,7 +347,6 @@ class TestCourse:
 
         # Проверяем, возвращается активный урок
         first_lesson.finish(user)
-        second_lesson.activate(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
         assert new_response.json()["current_lesson"]["chapter"] == chapter.id

@@ -85,17 +85,17 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
-
-            # active lesson - урок, который проходит пользователь
-            active_lesson = Lesson.objects.filter(
-                chapter__course=self.kwargs.get("pk"),
-                lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.ACTIVE,
-                lesson_progress__user=user,
+            # current lesson - текущий урок (первый урок после незаконченных уроков)
+            current_lesson = (
+                Lesson.objects.filter(
+                    chapter__course=OuterRef("id"),
+                    status=Lesson.LessonStatus.PUBLISHED,
+                )
+                .exclude(
+                    lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED,
+                )
+                .order_by("order_number")
             )
-            # initial lesson - первый урок курса
-            initial_lesson = Lesson.objects.filter(
-                chapter__course=OuterRef("id"), status=Lesson.LessonStatus.PUBLISHED
-            ).order_by("order_number")
 
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
@@ -110,14 +110,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     ),
                     Value(0),
                 ),
-                "current_lesson": Coalesce(
-                    active_lesson.values("id"),
-                    initial_lesson.values("id")[:1],
-                ),
-                "current_chapter": Coalesce(
-                    active_lesson.values("chapter_id"),
-                    initial_lesson.values("chapter_id")[:1],
-                ),
+                "current_lesson": current_lesson.values("id")[:1],
+                "current_chapter": current_lesson.values("chapter_id")[:1],
             }
             return (
                 Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
@@ -225,13 +219,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
         lesson.finish(user)
-        next_lesson = (
-            Lesson.objects.filter(chapter__course=lesson.chapter.course, order_number__gt=lesson.order_number)
-            .order_by("order_number")
-            .first()
-        )
-        if next_lesson:
-            next_lesson.activate(user)
         return Response(status=status.HTTP_201_CREATED)
 
 
