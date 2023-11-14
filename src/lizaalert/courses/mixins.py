@@ -30,6 +30,6 @@ class ActivateLessonMixin(models.Model):
         """Активировать урок."""
         from lizaalert.courses.models import LessonProgressStatus
 
-        progress = LessonProgressStatus.objects.get_or_create(user=user, lesson=self)
-        progress[0].userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
-        progress[0].save()
+        progress, created = LessonProgressStatus.objects.get_or_create(user=user, lesson=self)
+        progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
+        progress.save()
