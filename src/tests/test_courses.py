@@ -2,8 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Chapter, Course, Lesson
 from lizaalert.courses.mixins import order_number_mixin
+from lizaalert.courses.models import Chapter, Course, Lesson
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,

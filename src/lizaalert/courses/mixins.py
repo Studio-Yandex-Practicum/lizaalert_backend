@@ -1,6 +1,6 @@
-from django.db.models import Max
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Max
 
 
 class TimeStampedModel(models.Model):
