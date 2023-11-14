@@ -1,6 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from lizaalert.courses.utils import reset_ordering, set_ordering
+
 
 class TimeStampedModel(models.Model):
     """
@@ -53,3 +55,26 @@ def order_number_mixin(name_of_instance):
         )
 
     return OrderNumberMixin
+
+
+class SaveOrderingMixin(models.Model):
+    """Ordering mixin."""
+
+    class Meta:
+        abstract = True
+
+    @property
+    def chapter_order(self):
+        return None
+
+    def save(self, *args, **kwargs):
+        """Change ordering method."""
+        check_for_update = kwargs.get("update_fields", None)
+        if (self.id and check_for_update is None) or (
+            check_for_update is not None and "order_number" in check_for_update
+        ):
+            super().save(*args, **kwargs)
+            reset_ordering(self, self.order_queryset, self.order_step, self.chapter_order)
+        else:
+            set_ordering(self, self.order_queryset, self.order_step, self.chapter_order)
+            super().save(*args, **kwargs)

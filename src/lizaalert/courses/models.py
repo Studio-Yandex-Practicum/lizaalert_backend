@@ -3,8 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Count
 
-from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
-from lizaalert.courses.utils import reset_ordering, set_ordering
+from lizaalert.courses.mixins import SaveOrderingMixin, TimeStampedModel, order_number_mixin
 from lizaalert.quizzes.models import Quiz
 
 User = get_user_model()
@@ -106,7 +105,7 @@ class Course(TimeStampedModel):
         )
 
 
-class Chapter(TimeStampedModel, order_number_mixin(name_of_instance="главы")):
+class Chapter(TimeStampedModel, SaveOrderingMixin, order_number_mixin(name_of_instance="главы")):
     """
     Модель главы.
 
@@ -161,17 +160,18 @@ class Chapter(TimeStampedModel, order_number_mixin(name_of_instance="главы"
         if chapter_qs["total_chapters"] == progress_qs["finished_chapters"]:
             self.course.finish(user)
 
-    def save(self, *args, **kwargs):
-        """Изменяем функцию присвоения порядкового номера."""
-        if self.id:
-            super().save(*args, **kwargs)
-            reset_ordering(self, self.course.chapters, CHAPTER_STEP)
-        else:
-            set_ordering(self, self.course.chapters, CHAPTER_STEP)
-            super().save(*args, **kwargs)
+    @property
+    def order_queryset(self):
+        """Queryset for ordering."""
+        return self.course.chapters
+
+    @property
+    def order_step(self):
+        """Step for ordering."""
+        return CHAPTER_STEP
 
 
-class Lesson(TimeStampedModel, order_number_mixin(name_of_instance="урока")):
+class Lesson(TimeStampedModel, SaveOrderingMixin, order_number_mixin(name_of_instance="урока")):
     """
     Модель урока.
 
@@ -251,14 +251,20 @@ class Lesson(TimeStampedModel, order_number_mixin(name_of_instance="урока")
         if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
             self.chapter.finish(user)
 
-    def save(self, *args, **kwargs):
-        """Изменяем функцию присвоения порядкового номера."""
-        if self.id:
-            super().save(*args, **kwargs)
-            reset_ordering(self, self.chapter.lessons, LESSON_STEP, self.chapter.order_number)
-        else:
-            set_ordering(self, self.chapter.lessons, LESSON_STEP, self.chapter.order_number)
-            super().save(*args, **kwargs)
+    @property
+    def order_queryset(self):
+        """Queryset for ordering."""
+        return self.chapter.lessons
+
+    @property
+    def order_step(self):
+        """Step for ordering."""
+        return LESSON_STEP
+
+    @property
+    def chapter_order(self):
+        """Chapter order for further ordering."""
+        return self.chapter.order_number
 
 
 class LessonProgressStatus(TimeStampedModel):
