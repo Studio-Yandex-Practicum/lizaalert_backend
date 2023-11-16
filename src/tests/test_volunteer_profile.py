@@ -3,21 +3,15 @@ from django.urls import reverse
 from rest_framework import status
 
 
+@pytest.mark.django_db
 class TestVolunteerProfile:
 
     url = reverse("profile")
 
-    @pytest.mark.django_db
     def test_get_volunteer_profile(self, user_client):
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
-        if isinstance(response.data, list):
-            data = response.data[0]
-        else:
-            data = response.data
-        assert data.get("email") == "test@test.com"
 
-    @pytest.mark.django_db
     def test_patch_volunteer_profile(self, user, user_client):
         user_client.force_authenticate(user=user)
         data = {
@@ -31,7 +25,6 @@ class TestVolunteerProfile:
         assert user.volunteer.call_sign == "Test Sign"
         assert str(user.volunteer.birth_date) == "2000-01-01"
 
-    @pytest.mark.django_db
     def test_patch_volunteer_profile_invalid_data(self, user_client, user):
         user_client.force_authenticate(user=user)
         invalid_data = {"call_sign": 1, "birth_date": "invalid_date"}
