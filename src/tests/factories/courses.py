@@ -182,28 +182,28 @@ class ChapterWith4Lessons(ChapterFactory):
     membership1 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([1]),
+        order_number=factory.Iterator([10]),
         title=factory.Iterator([1]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership2 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([2]),
+        order_number=factory.Iterator([20]),
         title=factory.Iterator([2]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership3 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([3]),
+        order_number=factory.Iterator([30]),
         title=factory.Iterator([3]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership4 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([4]),
+        order_number=factory.Iterator([40]),
         title=factory.Iterator([4]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
