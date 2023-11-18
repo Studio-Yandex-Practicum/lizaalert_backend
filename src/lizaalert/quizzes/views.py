@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 
 from django.utils import timezone
 from rest_framework import generics, status
@@ -12,31 +13,50 @@ from lizaalert.quizzes.utils import compare_answers
 
 
 class QuizException(APIException):
+    """Базовый класс для исключений, связанных с квизами."""
+
     status_code = status.HTTP_400_BAD_REQUEST
 
 
 class TestNotStartedException(QuizException):
+    """Исключение, которое возникает, когда пытаемся обработать тест, который еще не начат."""
+
     default_detail = "Тест еще не начат."
 
 
 class TimeExpiredException(QuizException):
+    """Исключение, которое возникает, когда время для прохождения теста истекло."""
+
     default_detail = "Время вышло. Вы не успели."
 
 
 class CountExpiredException(QuizException):
+    """Исключение, которое возникает, когда заканчивается количество попыток для теста."""
+
     default_detail = "Закончилось количество попыток."
 
 
 class QuizDetailView(generics.RetrieveAPIView):
+    """
+    Отображение деталей квиза.
+
+    Возвращает информацию о квизе и его вопросах.
+
+    Методы:
+    - GET: Получение информации о квизе и его вопросах.
+    """
+
     serializer_class = QuizWithQuestionsSerializer
 
-    def get_object(self):
-        lesson_id = self.kwargs["lesson_id"]
+    def get_object(self) -> Quiz:
+        """Получает объект квиза по идентификатору урока."""
+        lesson_id = self.kwargs.get("lesson_id")
         lesson = Lesson.objects.get(pk=lesson_id)
         return lesson.quiz
 
-    def get_queryset(self):
-        lesson_id = self.kwargs["lesson_id"]
+    def get_queryset(self) -> List[Question]:
+        """Получает список вопросов для данного квиза."""
+        lesson_id = self.kwargs.get("lesson_id")
         return Question.objects.filter(quiz__lesson_id=lesson_id)
 
 
@@ -52,8 +72,9 @@ class RunQuizView(generics.CreateAPIView):
 
     serializer_class = UserAnswerSerializer
 
-    def create(self, request, *args, **kwargs):
-        lesson_id = self.kwargs["lesson_id"]
+    def create(self, request, *args, **kwargs) -> Response:
+        """Создает новую запись UserAnswer и начинает прохождение квиза."""
+        lesson_id = self.kwargs.get("lesson_id")
         user = self.request.user
         quiz = Quiz.objects.get(lesson__id=lesson_id)
         user_answer = UserAnswer.objects.filter(user=user, quiz=quiz).order_by("-id").first()
@@ -85,18 +106,19 @@ class RunQuizView(generics.CreateAPIView):
 
 class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
     """
-    Создает и обновляет запись UserAnswer для ответов пользователя на квиз.
+    Обновляет запись UserAnswer для ответов пользователя на квиз.
 
-    При GET-запросе возвращает информацию о текущем UserAnswer пользователя для данного квиза.
+    При GET-запросе возвращает информацию о текущих ответах пользователя для данного квиза.
 
     При POST-запросе обновляет ответы пользователя и вычисляет результаты теста.
     """
 
     serializer_class = UserAnswerSerializer
 
-    def get_object(self):
+    def get_object(self) -> UserAnswer:
+        """Получает объект UserAnswer для текущего пользователя и квиза."""
         user = self.request.user
-        lesson_id = self.kwargs["lesson_id"]
+        lesson_id = self.kwargs.get("lesson_id")
         user_answer = (
             UserAnswer.objects.filter(user=user, quiz_id__in=Lesson.objects.filter(id=lesson_id).values("quiz_id"))
             .order_by("-id")
@@ -104,12 +126,13 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
         )
         return user_answer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs) -> Response:
+        """Обновляет ответы пользователя и вычисляет результаты теста."""
         data = request.data
 
         user = self.request.user
 
-        lesson_id = self.kwargs["lesson_id"]
+        lesson_id = self.kwargs.get("lesson_id")
         quiz = Quiz.objects.get(lesson=lesson_id)
 
         try:

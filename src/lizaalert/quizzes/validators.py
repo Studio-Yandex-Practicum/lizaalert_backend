@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -18,7 +18,7 @@ class ValidateAnswersModel(BaseModel):
 
 class AnswerModel(BaseModel):
     question_id: int
-    answer_id: List[Union[int, str]]
+    answer_id: List[int | str]
 
 
 class AnswerCheckModel(BaseModel):
