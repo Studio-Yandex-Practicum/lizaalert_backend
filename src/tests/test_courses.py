@@ -4,6 +4,7 @@ from rest_framework import status
 
 from lizaalert.courses.mixins import order_number_mixin
 from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
@@ -46,10 +47,11 @@ class TestCourse:
         course.chapters.add(chapter)
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
         print(response.json())
+        number_of_lessons = len(response.json()["chapters"][0]["lessons"])
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["id"] == chapter.id
-        assert len(response.json()["chapters"][0]["lessons"]) == 3
-        assert response.json()["chapters"][0]["lessons"][2]["order_number"] == 30
+        assert number_of_lessons == 3
+        assert response.json()["chapters"][0]["lessons"][2]["order_number"] == number_of_lessons * LESSON_STEP
 
     def test_course_annotation(self, user_client):
         """
@@ -207,19 +209,21 @@ class TestCourse:
         """
         _ = CourseWith2Chapters()
         lessons = Lesson.objects.all().order_by("id")
+        prev_lesson = None
         for number, lesson in enumerate(lessons):
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            if number == 0:
-                assert response.json()["prev_lesson_id"] is None
-                assert response.json()["next_lesson_id"] == lesson.id + 1
-            elif number == 7:
-                assert response.json()["prev_lesson_id"] == lesson.id - 1
-                assert response.json()["next_lesson_id"] is None
-            else:
-                assert response.json()["prev_lesson_id"] == lesson.id - 1
-                assert response.json()["next_lesson_id"] == lesson.id + 1
+            assert response.json()["prev_lesson_id"] == prev_lesson
+            prev_lesson = response.json()["id"]
+        lessons = Lesson.objects.all().order_by("-id")
+        next_lesson = None
+        for number, lesson in enumerate(lessons):
+            url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["next_lesson_id"] == next_lesson
+            next_lesson = response.json()["id"]
 
     def test_breadcrumbs(self, user_client):
         """Тест, что breadcrumbs отображаются корректно."""
@@ -346,12 +350,12 @@ class TestCourse:
         for i in range(1, 3):
             chapter = response.json()["chapters"][i - 1]
             assert chapter["title"] == str(i)
-            assert chapter["order_number"] == 1000 * i
+            assert chapter["order_number"] == CHAPTER_STEP * i
 
             for n in range(1, 5):
                 lesson = chapter["lessons"][n - 1]
                 assert lesson["title"] == str(n)
-                assert lesson["order_number"] == n * 10
+                assert lesson["order_number"] == n * LESSON_STEP
 
         # Проверям корректность порядка, после переноса урока на другую позицию
         chapter = Chapter.objects.filter(course=course).order_by("order_number").first()
@@ -367,7 +371,7 @@ class TestCourse:
         new_order = ("1", "4", "2", "3")  # новый порядок уроков
         for n in range(4):
             lesson = lessons[n]
-            assert lesson["order_number"] == (n + 1) * 10
+            assert lesson["order_number"] == (n + 1) * LESSON_STEP
             assert lesson["title"] == new_order[n]
 
         # Проверяем порядок глав
@@ -380,21 +384,20 @@ class TestCourse:
         new_order = ("2", "1")
         for i in range(1):
             chapter = chapters[i]
-            assert chapter["order_number"] == 1000 * (i + 1)
+            assert chapter["order_number"] == CHAPTER_STEP * (i + 1)
             assert chapter["title"] == new_order[i]
             # Проверяем, что после изменения порядка глав, номера уроков такжже поменялись
             for n in range(4):
                 lesson = chapter["lessons"][n]
-                assert lesson["order_number"] == (n + 1) * 10
+                assert lesson["order_number"] == (n + 1) * LESSON_STEP
 
     def test_set_ordering_chapter(self):
         """Тест функции распределения порядковых номеров главы."""
         CourseWith2Chapters()
         new_chapter = ChapterFactory.build()
         queryset = Chapter.objects.all()
-        order_factor = 1000
-        mixin = order_number_mixin(order_factor, "course")
-        mixin.set_ordering(new_chapter, queryset, order_factor)
+        mixin = order_number_mixin(CHAPTER_STEP, "course")
+        mixin.set_ordering(new_chapter, queryset, CHAPTER_STEP)
         assert new_chapter.order_number == 3000
 
     def test_set_ordering_lesson(self):
@@ -402,7 +405,6 @@ class TestCourse:
         _ = ChapterWith3Lessons()
         new_lesson = LessonFactory.build()
         queryset = Lesson.objects.all()
-        order_factor = 10
-        mixin = order_number_mixin(order_factor, "chapter")
-        mixin.set_ordering(new_lesson, queryset, order_factor)
+        mixin = order_number_mixin(LESSON_STEP, "chapter")
+        mixin.set_ordering(new_lesson, queryset, LESSON_STEP)
         assert new_lesson.order_number == 40

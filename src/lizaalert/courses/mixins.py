@@ -1,6 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Max
+from django.db.models import F, Max
+
+from lizaalert.courses.exceptions import WrongMethodException
 
 
 class TimeStampedModel(models.Model):
@@ -47,7 +49,7 @@ def order_number_mixin(step, parent_field):
 
             self - глава/урок
             queryset - вызываем объект более высокого уровня
-            order_factor - номер порядка, 1000 или 10
+            order_factor - номер порядка, 1000 или 10.
             """
             if not self.id:
                 max_order_number = queryset.aggregate(Max("order_number")).get("order_number__max")
@@ -59,7 +61,7 @@ def order_number_mixin(step, parent_field):
 
             self - глава/урок
             queryset - вызываем объект более высокого уровня
-            order_factor - номер порядка, 1000 или 10
+            order_factor - номер порядка, 1000 или 10.
             """
             if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
                 objects = queryset.order_by("order_number")
@@ -78,5 +80,42 @@ def order_number_mixin(step, parent_field):
             else:
                 self.set_ordering(self.order_queryset, step)
                 super().save(*args, **kwargs)
+
+        @property
+        def ordered(self):
+            """Вернуть очередность всех уроков курса с полем ordering."""
+            if parent_field == "chapter":
+                cls = type(self)
+                return (
+                    cls.objects.filter(chapter__course=self.chapter.course)
+                    .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                    .order_by("ordering")
+                )
+            raise WrongMethodException
+
+        @property
+        def next_lesson(self):
+            """Вернуть следующий по очереди урок."""
+            if parent_field == "chapter":
+                ordered_lessons = self.ordered
+                return ordered_lessons.filter(ordering__gt=self.ordering).order_by("ordering").values("id")[:1]
+            raise WrongMethodException
+
+        @property
+        def prev_lesson(self):
+            """Вернуть предыдущий по очереди урок."""
+            if parent_field == "chapter":
+                ordered_lessons = self.ordered
+                return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering").values("id")[:1]
+            raise WrongMethodException
+
+        @classmethod
+        def old_order_number_getter(cls, instance):
+            """Получить старый порядковый номер."""
+            if instance.id:
+                old_instance = type(instance).objects.get(id=instance.id)
+                instance._old_order_number = old_instance.order_number
+            else:
+                instance._old_order_number = None
 
     return SaveOrderingMixin

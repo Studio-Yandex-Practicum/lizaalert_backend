@@ -70,6 +70,11 @@ class ChapterAdmin(admin.ModelAdmin):
 
     inlines = (LessonInline,)
     ordering = ("-order_number",)
+    raw_id_fields = (
+        "user_created",
+        "user_modifier",
+        "course",
+    )
 
 
 @admin.register(LessonProgressStatus)
@@ -107,7 +112,11 @@ class KnowledgeAdmin(admin.ModelAdmin):
 class LessonAdmin(admin.ModelAdmin):
     """Админка для урока."""
 
-    pass
+    raw_id_fields = (
+        "user_created",
+        "user_modifier",
+        "chapter",
+    )
 
 
 admin.site.register(Course, CourseAdmin)

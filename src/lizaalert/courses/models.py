@@ -1,14 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, F
+from django.db.models import Count
 
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
 from lizaalert.quizzes.models import Quiz
+from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 
 User = get_user_model()
-CHAPTER_STEP = 1000
-LESSON_STEP = 10
 
 
 class FAQ(TimeStampedModel):
@@ -102,15 +101,6 @@ class Course(TimeStampedModel):
         """Закончить весь курс."""
         CourseProgressStatus.objects.get_or_create(
             user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
-        )
-
-    @property
-    def ordered_lessons(self):
-        """Вернуть очередность всех уроков курса с полем ordering."""
-        return (
-            Lesson.objects.filter(chapter__course=self)
-            .annotate(ordering=F("chapter__order_number") + F("order_number"))
-            .order_by("ordering")
         )
 
 

@@ -18,12 +18,3 @@ class BreadcrumbSchema(serializers.Serializer):
 
     course = CourseBreadcrumbSerializer()
     chapter = ChapterBreadcrumbSerializer()
-
-
-def old_order_number_getter(instance):
-    """Получить старый порядковый номер."""
-    if instance.id:
-        old_instance = type(instance).objects.get(id=instance.id)
-        instance._old_order_number = old_instance.order_number
-    else:
-        instance._old_order_number = None

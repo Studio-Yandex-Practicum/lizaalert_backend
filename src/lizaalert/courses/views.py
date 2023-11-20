@@ -156,15 +156,11 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         user = self.request.user
         lesson_id = self.kwargs.get("pk")
-        course = get_object_or_404(Course, chapters__lessons=lesson_id)
-        current_lesson_with_ordering = course.ordered_lessons.get(id=lesson_id)
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        lesson_with_ordering = lesson.ordered.get(id=lesson_id)
         base_annotations = {
-            "next_lesson_id": course.ordered_lessons.filter(ordering__gt=current_lesson_with_ordering.ordering)
-            .order_by("ordering")
-            .values("id")[:1],
-            "prev_lesson_id": course.ordered_lessons.filter(ordering__lt=current_lesson_with_ordering.ordering)
-            .order_by("-ordering")
-            .values("id")[:1],
+            "next_lesson_id": lesson_with_ordering.next_lesson,
+            "prev_lesson_id": lesson_with_ordering.prev_lesson,
         }
         if user.is_authenticated:
             user_annotations = {
