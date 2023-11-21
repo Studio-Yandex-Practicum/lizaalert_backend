@@ -63,23 +63,70 @@ def order_number_mixin(step, parent_field):
             queryset - вызываем объект более высокого уровня
             order_factor - номер порядка, 1000 или 10.
             """
-            if hasattr(self, "_old_order_number") and self._old_order_number != self.order_number:
+            old_order_number = type(self).objects.get(id=self.id)
+            if old_order_number != self.order_number:
                 objects = queryset.order_by("order_number")
                 for position, object in enumerate(objects):
                     object.order_number = (position + 1) * order_factor
                 queryset.model.objects.bulk_update(objects, ["order_number"])
 
+        def _set_ordering(self, queryset, order_factor):
+            """
+            Установить/переустановить очередность глав и уроков.
+
+            self - глава/урок
+            queryset - вызываем объект более высокого уровня
+            order_factor - номер порядка, 1000 или 10.
+            """
+            if not self.id:
+                max_order_number = queryset.aggregate(Max("order_number")).get("order_number__max")
+                self.order_number = (max_order_number or 0) + order_factor
+            else:
+                # получаем старый порядковый номер
+                old_order_number = type(self).objects.get(id=self.id)
+                # округляем новый порядковый номер до шага очередности
+                if self.order_number % 10 != 0:
+                    rounded_new_order_number = (self.order_number // order_factor + 1) * order_factor
+                else:
+                    rounded_new_order_number = self.order_number
+                if old_order_number.order_number != self.order_number:
+                    objects = queryset.exclude(id=self.id).order_by("order_number")
+                    objects_to_update = []
+                    modifier_flag = False
+                    for position, object in enumerate(objects):
+                        if modifier_flag:
+                            object.order_number = (position + 2) * order_factor
+                            objects_to_update.append(object)
+
+                        # переносим все последующие уроки на один шаг вперед
+                        elif object.order_number == rounded_new_order_number:
+                            object.order_number = (position + 2) * order_factor
+                            modifier_flag = True
+                            objects_to_update.append(object)
+
+                        # если есть окно, заполняем его уроками
+                        elif (position + 1) * order_factor != object.order_number:
+                            object.order_number = (position + 1) * order_factor
+                            objects_to_update.append(object)
+                    if modifier_flag:
+                        self.order_number = rounded_new_order_number
+                    else:
+                        # если менялся только порядок последнего урока, то назначаем номер от последнего-1 урока
+                        if objects_to_update:
+                            max_order_number = max(obj.order_number for obj in objects_to_update)
+                        else:
+                            max_order_number = max(obj.order_number for obj in objects)
+                        self.order_number = max_order_number + order_factor
+                    queryset.model.objects.bulk_update(objects_to_update, ["order_number"])
+
         def save(self, *args, **kwargs):
             """Change ordering method."""
-            check_for_update = kwargs.get("update_fields", None)
-            if (self.id and check_for_update is None) or (
-                check_for_update is not None and "order_number" in check_for_update
-            ):
-                super().save(*args, **kwargs)
-                self.reset_ordering(self.order_queryset, step)
-            else:
-                self.set_ordering(self.order_queryset, step)
-                super().save(*args, **kwargs)
+            self._set_ordering(self.order_queryset, step)
+            # if not self.id:
+            #     self.set_ordering(self.order_queryset, step)
+            # else:
+            #     self.reset_ordering(self.order_queryset, step)
+            super().save(*args, **kwargs)
 
         @property
         def ordered(self):
@@ -108,14 +155,5 @@ def order_number_mixin(step, parent_field):
                 ordered_lessons = self.ordered
                 return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering").values("id")[:1]
             raise WrongMethodException
-
-        @classmethod
-        def old_order_number_getter(cls, instance):
-            """Получить старый порядковый номер."""
-            if instance.id:
-                old_instance = type(instance).objects.get(id=instance.id)
-                instance._old_order_number = old_instance.order_number
-            else:
-                instance._old_order_number = None
 
     return SaveOrderingMixin
