@@ -228,9 +228,12 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
         В случае если, текущий урок является последним и остальные уроки в главе пройдены
         активируется метод finish() отмечающий прохождение главы этого урока.
         """
-        progress, created = LessonProgressStatus.objects.get_or_create(user=user, lesson=self)
-        progress.userlessonprogress = LessonProgressStatus.ProgressStatus.FINISHED
-        progress.save()
+        progress, created = LessonProgressStatus.objects.get_or_create(
+            user=user, lesson=self, defaults={"userlessonprogress": LessonProgressStatus.ProgressStatus.FINISHED}
+        )
+        if not created:
+            progress.userlessonprogress = LessonProgressStatus.ProgressStatus.FINISHED
+            progress.save()
         lesson_qs = Lesson.objects.filter(chapter=self.chapter, status=self.LessonStatus.PUBLISHED).aggregate(
             total_lessons=Count("id")
         )

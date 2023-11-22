@@ -347,21 +347,21 @@ class TestCourse:
         2. Проверям, что авторизированный пользователь начавший курс, получает
         активный урок.
         """
-        chapter = ChapterWith3Lessons()
-        url = reverse("courses-detail", kwargs={"pk": chapter.course.id})
+        course = CourseWith2Chapters()
+        url = reverse("courses-detail", kwargs={"pk": course.id})
         response = user_client.get(url)
-        lessons = Lesson.objects.filter(chapter=chapter).order_by("order_number")
+        lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
         second_lesson = lessons[1]
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["current_lesson"]["chapter"] == chapter.id
+        assert response.json()["current_lesson"]["chapter"] == first_lesson.chapter.id
         assert response.json()["current_lesson"]["lesson"] == first_lesson.id
 
         # Проверяем, возвращается активный урок
         first_lesson.finish(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
-        assert new_response.json()["current_lesson"]["chapter"] == chapter.id
+        assert new_response.json()["current_lesson"]["chapter"] == second_lesson.chapter.id
         assert new_response.json()["current_lesson"]["lesson"] == second_lesson.id
 
     def test_ordering_working_properly(self, user_client):

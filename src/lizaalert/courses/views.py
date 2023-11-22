@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -94,7 +94,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 .exclude(
                     lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED,
                 )
-                .order_by("order_number")
+                .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                .order_by("ordering")
             )
 
             users_annotations = {
