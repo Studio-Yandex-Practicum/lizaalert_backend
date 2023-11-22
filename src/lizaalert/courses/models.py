@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, F
 
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
 from lizaalert.quizzes.models import Quiz
@@ -239,6 +239,27 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
         ).aggregate(finished_lessons=Count("id"))
         if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
             self.chapter.finish(user)
+
+    @property
+    def ordered(self):
+        """Вернуть очередность всех уроков курса с полем ordering."""
+        return (
+            Lesson.objects.filter(chapter__course=self.chapter.course)
+            .annotate(ordering=F("chapter__order_number") + F("order_number"))
+            .order_by("ordering")
+        )
+
+    @property
+    def next_lesson(self):
+        """Вернуть следующий по очереди урок."""
+        ordered_lessons = self.ordered
+        return ordered_lessons.filter(ordering__gt=self.ordering).order_by("ordering").values("id")[:1]
+
+    @property
+    def prev_lesson(self):
+        """Вернуть предыдущий по очереди урок."""
+        ordered_lessons = self.ordered
+        return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering").values("id")[:1]
 
 
 class LessonProgressStatus(TimeStampedModel):

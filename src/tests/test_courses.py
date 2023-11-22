@@ -46,7 +46,6 @@ class TestCourse:
         course = CourseFactory()
         course.chapters.add(chapter)
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
-        print(response.json())
         number_of_lessons = len(response.json()["chapters"][0]["lessons"])
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["id"] == chapter.id
