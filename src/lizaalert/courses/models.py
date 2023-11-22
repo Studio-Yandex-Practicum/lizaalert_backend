@@ -1,10 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, F
 
-from lizaalert.courses.mixins import TimeStampedModel
+from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
 from lizaalert.quizzes.models import Quiz
+from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 
 User = get_user_model()
 
@@ -103,7 +104,7 @@ class Course(TimeStampedModel):
         )
 
 
-class Chapter(TimeStampedModel):
+class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
     """
     Модель главы.
 
@@ -132,20 +133,11 @@ class Chapter(TimeStampedModel):
         on_delete=models.PROTECT,
         verbose_name="пользователь, внёсший изменения в главу",
     )
-    order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер главы", validators=[MinValueValidator(1)], default=1
-    )
 
     class Meta:
         ordering = ("order_number",)
         verbose_name = "глава"
         verbose_name_plural = "глава"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["order_number", "course"],
-                name="unique_order_number",
-            )
-        ]
 
     def __str__(self):
         return f"Курс {self.course.title}: Глава {self.title}"
@@ -168,7 +160,7 @@ class Chapter(TimeStampedModel):
             self.course.finish(user)
 
 
-class Lesson(TimeStampedModel):
+class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
     """
     Модель урока.
 
@@ -220,20 +212,11 @@ class Lesson(TimeStampedModel):
     status = models.IntegerField(verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT)
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
-    order_number = models.PositiveSmallIntegerField(
-        verbose_name="порядковый номер урока", validators=[MinValueValidator(1)], default=1
-    )
 
     class Meta:
         ordering = ("order_number",)
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["order_number", "chapter"],
-                name="unique_lesson_order_number",
-            )
-        ]
 
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
@@ -256,6 +239,27 @@ class Lesson(TimeStampedModel):
         ).aggregate(finished_lessons=Count("id"))
         if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
             self.chapter.finish(user)
+
+    @property
+    def ordered(self):
+        """Вернуть очередность всех уроков курса с полем ordering."""
+        return (
+            Lesson.objects.filter(chapter__course=self.chapter.course)
+            .annotate(ordering=F("chapter__order_number") + F("order_number"))
+            .order_by("ordering")
+        )
+
+    @property
+    def next_lesson(self):
+        """Вернуть следующий по очереди урок."""
+        ordered_lessons = self.ordered
+        return ordered_lessons.filter(ordering__gt=self.ordering).order_by("ordering").values("id")[:1]
+
+    @property
+    def prev_lesson(self):
+        """Вернуть предыдущий по очереди урок."""
+        ordered_lessons = self.ordered
+        return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering").values("id")[:1]
 
 
 class LessonProgressStatus(TimeStampedModel):

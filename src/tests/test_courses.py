@@ -2,13 +2,16 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.courses.models import Course, Lesson
+from lizaalert.courses.mixins import order_number_mixin
+from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,
     CourseFactory,
     CourseFaqFactory,
     CourseKnowledgeFactory,
+    CourseWith2Chapters,
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     LessonFactory,
@@ -43,11 +46,11 @@ class TestCourse:
         course = CourseFactory()
         course.chapters.add(chapter)
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
-        print(response.json())
+        number_of_lessons = len(response.json()["chapters"][0]["lessons"])
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["id"] == chapter.id
-        assert len(response.json()["chapters"][0]["lessons"]) == 3
-        assert response.json()["chapters"][0]["lessons"][2]["order_number"] == 3
+        assert number_of_lessons == 3
+        assert response.json()["chapters"][0]["lessons"][2]["order_number"] == number_of_lessons * LESSON_STEP
 
     def test_course_annotation(self, user_client):
         """
@@ -196,21 +199,30 @@ class TestCourse:
         assert response.json()["course_id"] == lesson.chapter.course_id
 
     def test_lessons_pagination_works(self, user_client):
-        """Тест, что работает переключение между уроками."""
-        chapter = ChapterFactory()
-        lesson_1 = LessonFactory(chapter=chapter, order_number=1)
-        lesson_2 = LessonFactory(chapter=chapter, order_number=2)
-        lesson_3 = LessonFactory(chapter=chapter, order_number=3)
-        url_1 = reverse("lessons-detail", kwargs={"pk": lesson_2.id})
-        url_2 = reverse("lessons-detail", kwargs={"pk": lesson_3.id})
-        response_1 = user_client.get(url_1)
-        response_2 = user_client.get(url_2)
-        assert response_1.status_code == status.HTTP_200_OK
-        assert response_2.status_code == status.HTTP_200_OK
-        assert response_1.json()["next_lesson_id"] == lesson_3.id
-        assert response_1.json()["prev_lesson_id"] == lesson_1.id
-        assert response_2.json()["next_lesson_id"] is None
-        assert response_2.json()["prev_lesson_id"] == lesson_2.id
+        """
+        Тест, что работает переключение между уроками.
+
+        Создается курс с 2 Главами по 4 урока в каждой.
+        Проверяется навигация по всем 8 урокам, при этой первый и последний урок
+        должны выдавать None при отсутствии крайних уроков.
+        """
+        _ = CourseWith2Chapters()
+        lessons = Lesson.objects.all().order_by("id")
+        prev_lesson = None
+        for number, lesson in enumerate(lessons):
+            url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["prev_lesson_id"] == prev_lesson
+            prev_lesson = response.json()["id"]
+        lessons = Lesson.objects.all().order_by("-id")
+        next_lesson = None
+        for number, lesson in enumerate(lessons):
+            url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["next_lesson_id"] == next_lesson
+            next_lesson = response.json()["id"]
 
     def test_breadcrumbs(self, user_client):
         """Тест, что breadcrumbs отображаются корректно."""
@@ -325,3 +337,73 @@ class TestCourse:
         assert response_lesson.status_code == status.HTTP_200_OK
         assert response_course_detail.status_code == status.HTTP_200_OK
         assert response_course_list.status_code == status.HTTP_200_OK
+
+    def test_ordering_working_properly(self, user_client):
+        """Тест, что автоматическое назначение очередности работает корректно."""
+        course = CourseWith2Chapters()
+        url = reverse("courses-detail", kwargs={"pk": course.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+        # Проверяем корректность изначального порядка в главах и уроках
+        for i in range(1, 3):
+            chapter = response.json()["chapters"][i - 1]
+            assert chapter["title"] == str(i)
+            assert chapter["order_number"] == CHAPTER_STEP * i
+
+            for n in range(1, 5):
+                lesson = chapter["lessons"][n - 1]
+                assert lesson["title"] == str(n)
+                assert lesson["order_number"] == n * LESSON_STEP
+
+        # Проверям корректность порядка, после переноса урока на другую позицию
+        chapter = Chapter.objects.filter(course=course).order_by("order_number").first()
+        lesson = Lesson.objects.filter(chapter=chapter, title="4").first()
+
+        # Проверяем порядок уроков
+        lesson.order_number = 13
+        lesson.save()
+
+        response_new_order = user_client.get(url)
+        assert response_new_order.status_code == status.HTTP_200_OK
+        lessons = response_new_order.json()["chapters"][0]["lessons"]
+        new_order = ("1", "4", "2", "3")  # новый порядок уроков
+        for n in range(4):
+            lesson = lessons[n]
+            assert lesson["order_number"] == (n + 1) * LESSON_STEP
+            assert lesson["title"] == new_order[n]
+
+        # Проверяем порядок глав
+        chapter.order_number = 3947
+        chapter.save()
+
+        response_new_chapter_order = user_client.get(url)
+        assert response_new_order.status_code == status.HTTP_200_OK
+        chapters = response_new_chapter_order.json()["chapters"]
+        new_order = ("2", "1")
+        for i in range(1):
+            chapter = chapters[i]
+            assert chapter["order_number"] == CHAPTER_STEP * (i + 1)
+            assert chapter["title"] == new_order[i]
+            # Проверяем, что после изменения порядка глав, номера уроков такжже поменялись
+            for n in range(4):
+                lesson = chapter["lessons"][n]
+                assert lesson["order_number"] == (n + 1) * LESSON_STEP
+
+    def test_set_ordering_chapter(self):
+        """Тест функции распределения порядковых номеров главы."""
+        CourseWith2Chapters()
+        new_chapter = ChapterFactory.build()
+        queryset = Chapter.objects.all()
+        mixin = order_number_mixin(CHAPTER_STEP, "course")
+        mixin.set_ordering(new_chapter, queryset, CHAPTER_STEP)
+        assert new_chapter.order_number == 3000
+
+    def test_set_ordering_lesson(self):
+        """Тест функции распределения порядковых номеров урока."""
+        _ = ChapterWith3Lessons()
+        new_lesson = LessonFactory.build()
+        queryset = Lesson.objects.all()
+        mixin = order_number_mixin(LESSON_STEP, "chapter")
+        mixin.set_ordering(new_lesson, queryset, LESSON_STEP)
+        assert new_lesson.order_number == 40

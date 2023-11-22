@@ -101,6 +101,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "user_chapter_progress",
+            "order_number",
             "lessons",
         )
 
