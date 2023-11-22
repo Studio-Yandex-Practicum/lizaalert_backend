@@ -170,17 +170,12 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         prev_lesson_id - returns the int id of the previous lesson in current course.
         """
         user = self.request.user
+        lesson_id = self.kwargs.get("pk")
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        lesson_with_ordering = lesson.ordered.get(id=lesson_id)
         base_annotations = {
-            "next_lesson_id": Subquery(
-                Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__gt=OuterRef("order_number"))
-                .order_by("order_number")
-                .values("id")[:1]
-            ),
-            "prev_lesson_id": Subquery(
-                Lesson.objects.filter(chapter=OuterRef("chapter"), order_number__lt=OuterRef("order_number"))
-                .order_by("-order_number")
-                .values("id")[:1]
-            ),
+            "next_lesson_id": lesson_with_ordering.next_lesson,
+            "prev_lesson_id": lesson_with_ordering.prev_lesson,
         }
         if user.is_authenticated:
             user_annotations = {

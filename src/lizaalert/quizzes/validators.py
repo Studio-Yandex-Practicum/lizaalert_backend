@@ -18,12 +18,12 @@ class ValidateAnswersModel(BaseModel):
 
 class AnswerModel(BaseModel):
     question_id: int
-    answer_id: List[int]
+    answer_id: List[int | str]
 
 
 class AnswerCheckModel(BaseModel):
     question_id: int
-    answer_id: List[int]
+    correct_answer_id: List[int]
     is_correct: bool
 
 
