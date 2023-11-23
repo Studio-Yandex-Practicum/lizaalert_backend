@@ -253,13 +253,13 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
     def next_lesson(self):
         """Вернуть следующий по очереди урок."""
         ordered_lessons = self.ordered
-        return ordered_lessons.filter(ordering__gt=self.ordering).order_by("ordering").values("id")[:1]
+        return ordered_lessons.filter(ordering__gt=self.ordering).order_by("ordering")[:1]
 
     @property
     def prev_lesson(self):
         """Вернуть предыдущий по очереди урок."""
         ordered_lessons = self.ordered
-        return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering").values("id")[:1]
+        return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering")[:1]
 
 
 class LessonProgressStatus(TimeStampedModel):

@@ -2,7 +2,7 @@ from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson
-from lizaalert.courses.utils import BreadcrumbSchema
+from lizaalert.courses.utils import BreadcrumbSchema, NeighbourLessonSerializer
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -131,8 +131,8 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
 
 
 class LessonSerializer(serializers.ModelSerializer):
-    next_lesson_id = serializers.IntegerField()
-    prev_lesson_id = serializers.IntegerField()
+    next_lesson = serializers.SerializerMethodField()
+    prev_lesson = serializers.SerializerMethodField()
     user_lesson_progress = serializers.IntegerField(default=0)
     course_id = serializers.IntegerField(source="chapter.course_id")
     breadcrumbs = serializers.SerializerMethodField()
@@ -153,14 +153,24 @@ class LessonSerializer(serializers.ModelSerializer):
             "diploma",
             "breadcrumbs",
             "user_lesson_progress",
-            "next_lesson_id",
-            "prev_lesson_id",
+            "next_lesson",
+            "prev_lesson",
         )
 
     @swagger_serializer_method(serializer_or_field=BreadcrumbSchema)
     def get_breadcrumbs(self, obj):
         breadcrumb_serializer = BreadcrumbSchema({"course": obj.chapter.course, "chapter": obj.chapter})
         return breadcrumb_serializer.data
+
+    @swagger_serializer_method(serializer_or_field=NeighbourLessonSerializer)
+    def get_next_lesson(self, obj):
+        current_lesson = NeighbourLessonSerializer({"chapter": obj.next_chapter_id, "lesson": obj.next_lesson_id})
+        return current_lesson.data
+
+    @swagger_serializer_method(serializer_or_field=NeighbourLessonSerializer)
+    def get_prev_lesson(self, obj):
+        current_lesson = NeighbourLessonSerializer({"chapter": obj.prev_chapter_id, "lesson": obj.prev_lesson_id})
+        return current_lesson.data
 
 
 class OptionSerializer(serializers.Serializer):
