@@ -164,12 +164,12 @@ class LessonSerializer(serializers.ModelSerializer):
 
     @swagger_serializer_method(serializer_or_field=NeighbourLessonSerializer)
     def get_next_lesson(self, obj):
-        current_lesson = NeighbourLessonSerializer({"chapter": obj.next_chapter_id, "lesson": obj.next_lesson_id})
+        current_lesson = NeighbourLessonSerializer({"chapter_id": obj.next_chapter_id, "lesson_id": obj.next_lesson_id})
         return current_lesson.data
 
     @swagger_serializer_method(serializer_or_field=NeighbourLessonSerializer)
     def get_prev_lesson(self, obj):
-        current_lesson = NeighbourLessonSerializer({"chapter": obj.prev_chapter_id, "lesson": obj.prev_lesson_id})
+        current_lesson = NeighbourLessonSerializer({"chapter_id": obj.prev_chapter_id, "lesson_id": obj.prev_lesson_id})
         return current_lesson.data
 
 
