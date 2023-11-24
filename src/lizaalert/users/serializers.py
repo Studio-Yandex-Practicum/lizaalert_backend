@@ -16,59 +16,60 @@ class BageSerializer(serializers.ModelSerializer):
         ]
 
 
-class FullNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["first_name", "last_name", "patronymic"]
+# class FullNameSerializer(serializers.ModelSerializer):
+#     full_name = serializers.CharField(max_length=255, allow_blank=True)
+#     # class Meta:
+#     #     model = User
+#     #     fields = ["full_name"]
 
-    def update(self, instance, validated_data):
-        instance.first_name = validated_data.get("first_name", instance.first_name)
-        instance.last_name = validated_data.get("last_name", instance.last_name)
-        instance.patronymic = validated_data.get("patronymic", instance.patronymic)
-        instance.save()
-        return instance
+#     def to_representation(self, instance):
+#         return instance.full_name
+
+#     def update(self, instance, validated_data):
+#         instance.full_name = validated_data.get("full_name", instance.full_name)
+#         instance.save()
+#         return instance
 
 
 class VolunteerSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=True)
     location = serializers.CharField(required=False, allow_null=True, source="location.region")
-    full_name = FullNameSerializer(source="user")
+    full_name = serializers.CharField(source="user.full_name", allow_blank=True, required=False)
     photo = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
-    level = serializers.CharField(source="level_confirmed", read_only=True)
-    badges = BageSerializer(many=True, read_only=True)
+    level = serializers.CharField(source="level_confirmed.level.name", read_only=True)
     count_pass_course = serializers.IntegerField(read_only=True)
+    phone_number = serializers.CharField(source="user.phone", read_only=True)
+    department = serializers.CharField(required=False, allow_null=True, source="department.title")
 
     class Meta:
         model = Volunteer
         fields = [
             "id",
-            "phone_number",
-            "email",
+            "photo",
             "full_name",
+            "level",
+            "department",
+            "count_pass_course",
             "birth_date",
             "location",
             "call_sign",
-            "photo",
-            "level",
-            "badges",
-            "count_pass_course",
+            "phone_number",
+            "email",
         ]
 
     @transaction.non_atomic_requests
     def update(self, instance, validated_data):
         instance.birth_date = validated_data.get("birth_date", instance.birth_date)
         instance.call_sign = validated_data.get("call_sign", instance.call_sign)
-        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
 
         location = validated_data.get("location", None)
         if location and (Location.objects.filter(region=location["region"]).exists()):
             instance.location = Location.objects.get(region=location["region"])
 
-        full_name = validated_data.get("user", None)
-        if full_name:
-            serializer = FullNameSerializer(instance.user, data=full_name, partial=True)
-            if serializer.is_valid():
-                serializer.save()
+        full_name = validated_data.get("user", {}).get("full_name", None)
+        if full_name is not None:
+            instance.user.full_name = full_name
+            instance.user.save()
 
         if validated_data.get("photo") is not None:
             instance.photo = validated_data.pop("photo")
