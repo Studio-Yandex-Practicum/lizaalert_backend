@@ -1,4 +1,5 @@
 import pytest
+from django.db.models import F
 from django.urls import reverse
 from rest_framework import status
 
@@ -206,23 +207,38 @@ class TestCourse:
         Проверяется навигация по всем 8 урокам, при этой первый и последний урок
         должны выдавать None при отсутствии крайних уроков.
         """
-        _ = CourseWith2Chapters()
-        lessons = Lesson.objects.all().order_by("id")
-        prev_lesson = None
-        for number, lesson in enumerate(lessons):
+        course = CourseWith2Chapters()
+        lessons = (
+            Lesson.objects.filter(chapter__course=course)
+            .annotate(ordering=F("chapter__order_number") + F("order_number"))
+            .order_by("ordering")
+        )
+        lesson_id = None
+        chapter_id = None
+        for lesson in lessons:
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["prev_lesson_id"] == prev_lesson
-            prev_lesson = response.json()["id"]
-        lessons = Lesson.objects.all().order_by("-id")
-        next_lesson = None
-        for number, lesson in enumerate(lessons):
+            assert response.json()["prev_lesson"]["lesson_id"] == lesson_id
+            assert response.json()["prev_lesson"]["chapter_id"] == chapter_id
+            lesson_id = response.json()["id"]
+            chapter_id = response.json()["chapter_id"]
+
+        lessons = (
+            Lesson.objects.filter(chapter__course=course)
+            .annotate(ordering=F("chapter__order_number") + F("order_number"))
+            .order_by("-ordering")
+        )
+        lesson_id = None
+        chapter_id = None
+        for lesson in lessons:
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["next_lesson_id"] == next_lesson
-            next_lesson = response.json()["id"]
+            assert response.json()["next_lesson"]["lesson_id"] == lesson_id
+            assert response.json()["next_lesson"]["chapter_id"] == chapter_id
+            lesson_id = response.json()["id"]
+            chapter_id = response.json()["chapter_id"]
 
     def test_breadcrumbs(self, user_client):
         """Тест, что breadcrumbs отображаются корректно."""
