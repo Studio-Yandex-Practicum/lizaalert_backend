@@ -67,7 +67,7 @@ jobs:
       #              run checks
       #----------------------------------------------
       - name: Run tests
-        run: cd src && pytest
+        run: cd src && poetry run pytest
 
 
   # test:
