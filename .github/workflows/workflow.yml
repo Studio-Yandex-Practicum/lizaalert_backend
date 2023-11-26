@@ -63,6 +63,13 @@ jobs:
       - name: Black check
         run: cd src && poetry run black --check .
 
+      #----------------------------------------------
+      #              run checks
+      #----------------------------------------------
+      - name: Run tests
+        run: cd src && pytest
+
+
   # test:
   #   name: Test
   #   runs-on: ubuntu-latest
