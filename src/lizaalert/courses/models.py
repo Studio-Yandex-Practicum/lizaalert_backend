@@ -103,6 +103,19 @@ class Course(TimeStampedModel):
             user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
 
+    @property
+    def initial_lesson(self):
+        """Самый первый урок курса."""
+        return (
+            Lesson.objects.filter(
+                chapter__course=self,
+                status=Lesson.LessonStatus.PUBLISHED,
+            )
+            .annotate(ordering=F("chapter__order_number") + F("order_number"))
+            .order_by("ordering")
+            .first()
+        )
+
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
     """

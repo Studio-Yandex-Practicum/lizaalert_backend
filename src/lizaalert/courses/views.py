@@ -21,6 +21,7 @@ from lizaalert.courses.models import (
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
+from lizaalert.courses.utils import CurrentLessonSerializer
 from lizaalert.users.models import Level
 
 
@@ -137,7 +138,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
         Subscription.objects.create(user=user, course=course)
-        return Response(status=status.HTTP_201_CREATED)
+        initial_lesson = {"chapter": course.initial_lesson.chapter.id, "lesson": course.initial_lesson.id}
+        serializer = CurrentLessonSerializer(initial_lesson)
+        return Response({"initial_lesson": serializer.data}, status=status.HTTP_201_CREATED)
 
     @action(
         detail=True,

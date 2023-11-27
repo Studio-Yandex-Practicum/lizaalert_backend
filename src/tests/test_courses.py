@@ -348,12 +348,16 @@ class TestCourse:
         активный урок.
         """
         course = CourseWith2Chapters()
+        subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
+        serializer_response = user_client.post(subscribe)
         url = reverse("courses-detail", kwargs={"pk": course.id})
         response = user_client.get(url)
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
         second_lesson = lessons[1]
         assert response.status_code == status.HTTP_200_OK
+        assert serializer_response.json()["initial_lesson"]["chapter"] == first_lesson.chapter.id
+        assert serializer_response.json()["initial_lesson"]["lesson"] == first_lesson.id
         assert response.json()["current_lesson"]["chapter"] == first_lesson.chapter.id
         assert response.json()["current_lesson"]["lesson"] == first_lesson.id
 
