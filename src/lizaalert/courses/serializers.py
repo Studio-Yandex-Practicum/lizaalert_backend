@@ -2,7 +2,7 @@ from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson
-from lizaalert.courses.utils import BreadcrumbSchema
+from lizaalert.courses.utils import BreadcrumbSchema, CurrentLessonSerializer
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -110,6 +110,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
     user_status = serializers.StringRelatedField(default=False)
     user_course_progress = serializers.IntegerField(default=0)
+    current_lesson = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -127,7 +128,16 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "chapters",
             "user_status",
             "user_course_progress",
+            "current_lesson",
         )
+
+    @swagger_serializer_method(serializer_or_field=CurrentLessonSerializer)
+    def get_current_lesson(self, obj):
+        user = self.context.get("request").user
+        if user.is_authenticated:
+            current_lesson = CurrentLessonSerializer({"chapter": obj.current_chapter, "lesson": obj.current_lesson})
+            return current_lesson.data
+        return None
 
 
 class LessonSerializer(serializers.ModelSerializer):
