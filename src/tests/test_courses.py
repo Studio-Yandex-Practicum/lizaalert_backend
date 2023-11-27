@@ -1,5 +1,4 @@
 import pytest
-from django.db.models import F
 from django.urls import reverse
 from rest_framework import status
 
@@ -208,11 +207,8 @@ class TestCourse:
         должны выдавать None при отсутствии крайних уроков.
         """
         course = CourseWith2Chapters()
-        lessons = (
-            Lesson.objects.filter(chapter__course=course)
-            .annotate(ordering=F("chapter__order_number") + F("order_number"))
-            .order_by("ordering")
-        )
+        lesson = Lesson.objects.filter(chapter__course=course).first()
+        lessons = lesson.ordered
         lesson_id = None
         chapter_id = None
         for lesson in lessons:
@@ -224,11 +220,8 @@ class TestCourse:
             lesson_id = response.json()["id"]
             chapter_id = response.json()["chapter_id"]
 
-        lessons = (
-            Lesson.objects.filter(chapter__course=course)
-            .annotate(ordering=F("chapter__order_number") + F("order_number"))
-            .order_by("-ordering")
-        )
+        lesson = Lesson.objects.filter(chapter__course=course).first()
+        lessons = lesson.ordered.order_by("-ordering")
         lesson_id = None
         chapter_id = None
         for lesson in lessons:
