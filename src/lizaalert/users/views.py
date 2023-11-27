@@ -1,9 +1,11 @@
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from lizaalert.courses.models import CourseProgressStatus
 from lizaalert.users.models import Level, User, UserRole, Volunteer
 from lizaalert.users.serializers import LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
@@ -13,8 +15,22 @@ class VolunteerAPIview(APIView):
 
     def get(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
-        serializer = VolunteerSerializer(volunteer, context={"request": request})
-        return Response(serializer.data)
+        queryset = Volunteer.objects.annotate(
+            count_pass_course=Subquery(
+                CourseProgressStatus.objects.filter(
+                    course__course_volunteers__volunteer=OuterRef("pk"),
+                    user=request.user,
+                    usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED,
+                )
+                .values("course__course_volunteers__volunteer")
+                .annotate(count_pass_course=Count("pk"))
+                .values("count_pass_course")[:1]
+            )
+        ).filter(pk=volunteer.pk)
+        serializer = VolunteerSerializer(queryset, context={"request": request}, many=True)
+        if queryset:
+            return Response(serializer.data[0])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def patch(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
