@@ -16,21 +16,6 @@ class BageSerializer(serializers.ModelSerializer):
         ]
 
 
-# class FullNameSerializer(serializers.ModelSerializer):
-#     full_name = serializers.CharField(max_length=255, allow_blank=True)
-#     # class Meta:
-#     #     model = User
-#     #     fields = ["full_name"]
-
-#     def to_representation(self, instance):
-#         return instance.full_name
-
-#     def update(self, instance, validated_data):
-#         instance.full_name = validated_data.get("full_name", instance.full_name)
-#         instance.save()
-#         return instance
-
-
 class VolunteerSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=True)
     location = serializers.CharField(required=False, allow_null=True, source="location.region")
@@ -57,24 +42,24 @@ class VolunteerSerializer(serializers.ModelSerializer):
             "email",
         ]
 
-    @transaction.non_atomic_requests
     def update(self, instance, validated_data):
-        instance.birth_date = validated_data.get("birth_date", instance.birth_date)
-        instance.call_sign = validated_data.get("call_sign", instance.call_sign)
+        with transaction.atomic():
+            instance.birth_date = validated_data.get("birth_date", instance.birth_date)
+            instance.call_sign = validated_data.get("call_sign", instance.call_sign)
 
-        location = validated_data.get("location", None)
-        if location and (Location.objects.filter(region=location["region"]).exists()):
-            instance.location = Location.objects.get(region=location["region"])
+            location = validated_data.get("location", None)
+            if location and (Location.objects.filter(region=location["region"]).exists()):
+                instance.location = Location.objects.get(region=location["region"])
 
-        full_name = validated_data.get("user", {}).get("full_name", None)
-        if full_name is not None:
-            instance.user.full_name = full_name
-            instance.user.save()
+            full_name = validated_data.get("user", {}).get("full_name", None)
+            if full_name is not None:
+                instance.user.full_name = full_name
+                instance.user.save()
 
-        if validated_data.get("photo") is not None:
-            instance.photo = validated_data.pop("photo")
-        instance.save()
-        return instance
+            if validated_data.get("photo") is not None:
+                instance.photo = validated_data.pop("photo")
+            instance.save()
+            return instance
 
 
 class LevelSerializer(serializers.ModelSerializer):
