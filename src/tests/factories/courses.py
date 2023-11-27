@@ -3,17 +3,7 @@ import json
 
 import factory.fuzzy
 
-from lizaalert.courses.models import (
-    FAQ,
-    Chapter,
-    Course,
-    CourseFaq,
-    CourseKnowledge,
-    CourseStatus,
-    Knowledge,
-    Lesson,
-    Subscription,
-)
+from lizaalert.courses.models import FAQ, Chapter, Course, CourseFaq, CourseKnowledge, Knowledge, Lesson, Subscription
 from tests.factories.users import LevelFactory, UserFactory
 
 
@@ -41,6 +31,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
     user_created = factory.SubFactory(UserFactory)
+    status = Course.CourseStatus.PUBLISHED
 
 
 class ChapterFactory(factory.django.DjangoModelFactory):
@@ -61,20 +52,18 @@ class LessonFactory(factory.django.DjangoModelFactory):
     chapter = factory.SubFactory(ChapterFactory)
     description = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
     lesson_type = factory.fuzzy.FuzzyChoice(list(Lesson.LessonType))
-    lesson_status = Lesson.LessonStatus.PUBLISHED
+    status = Lesson.LessonStatus.PUBLISHED
     tags = factory.Faker("words", nb=5)
     duration = factory.fuzzy.FuzzyInteger(0, 10)
     user_created = factory.SubFactory(UserFactory)
     user_modifier = factory.SubFactory(UserFactory)
     order_number = factory.fuzzy.FuzzyInteger(0, 10)
 
-
-class CourseStatusFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = CourseStatus
-
-    name = factory.Sequence(lambda n: "Статус {}".format(n))
-    slug = factory.fuzzy.FuzzyChoice(list(CourseStatus.CourseStatusChoices))
+    @factory.lazy_attribute
+    def video_link(self):
+        if self.lesson_type == Lesson.LessonType.VIDEOLESSON:
+            return factory.Faker("url")
+        return ""
 
 
 class FaqFactory(factory.django.DjangoModelFactory):
@@ -170,18 +159,71 @@ class ChapterWith3Lessons(ChapterFactory):
     membership1 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([1]),
+        order_number=factory.Iterator([3]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership2 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([2]),
+        order_number=factory.Iterator([1]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership3 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([3]),
+        order_number=factory.Iterator([2]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+
+
+class ChapterWith4Lessons(ChapterFactory):
+    """Test Chapter factory with 4 related lessons."""
+
+    membership1 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([10]),
+        title=factory.Iterator([1]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+    membership2 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([20]),
+        title=factory.Iterator([2]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+    membership3 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([30]),
+        title=factory.Iterator([3]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+    membership4 = factory.RelatedFactory(
+        LessonFactory,
+        factory_related_name="chapter",
+        order_number=factory.Iterator([40]),
+        title=factory.Iterator([4]),
+        duration=factory.fuzzy.FuzzyInteger(0, 10),
+    )
+
+
+class CourseWith2Chapters(CourseFactory):
+    """
+    Создает курс, 2 главы с 4 уроками в каждой.
+
+    В заголовках прописана изначальная нумерация для проверки
+     корректности работы ordering.
+    """
+
+    membership1 = factory.RelatedFactory(
+        ChapterWith4Lessons,
+        factory_related_name="course",
+        title=factory.Iterator([1]),
+    )
+    membership2 = factory.RelatedFactory(
+        ChapterWith4Lessons,
+        factory_related_name="course",
+        title=factory.Iterator([2]),
     )
