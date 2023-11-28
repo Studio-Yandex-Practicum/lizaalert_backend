@@ -10,8 +10,8 @@ from .managers import UserManager
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    patronymic = models.CharField(max_length=100, blank=True, verbose_name="отчество")
-    phone = models.CharField(max_length=20, null=True, blank=True, verbose_name="телефон")
+    full_name = models.CharField(max_length=255, blank=True, verbose_name="Полное имя")
+    phone = PhoneNumberField(max_length=20, null=True, blank=True, verbose_name="телефон")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
@@ -209,7 +209,6 @@ class Volunteer(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Пользователь",
     )
-    phone_number = PhoneNumberField(verbose_name="Номер телефона", blank=True, null=True)
     birth_date = models.DateField("Дата рождения", blank=True, null=True)
     location = models.ForeignKey(
         Location,
@@ -259,10 +258,6 @@ class Volunteer(models.Model):
         db_table = "volunteers"
         verbose_name = "Волонтер"
         verbose_name_plural = "Волонтеры"
-
-    @property
-    def count_pass_course(self):
-        return len(self.volunter_courses.filter(status="complete"))
 
     @property
     def level_confirmed(self):

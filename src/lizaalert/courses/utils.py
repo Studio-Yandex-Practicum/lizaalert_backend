@@ -25,3 +25,10 @@ class NeighbourLessonSerializer(serializers.Serializer):
 
     chapter_id = serializers.IntegerField()
     lesson_id = serializers.IntegerField()
+
+
+class CurrentLessonSerializer(serializers.Serializer):
+    """Schema serializer for OpenAPI/Swagger."""
+
+    chapter = serializers.IntegerField()
+    lesson = serializers.IntegerField()

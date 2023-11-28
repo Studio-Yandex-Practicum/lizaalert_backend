@@ -1,4 +1,5 @@
-from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db import transaction
+from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -84,6 +85,19 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
+            # current lesson - текущий урок (первый урок после незаконченных уроков)
+            current_lesson = (
+                Lesson.objects.filter(
+                    chapter__course=OuterRef("id"),
+                    status=Lesson.LessonStatus.PUBLISHED,
+                )
+                .exclude(
+                    lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED,
+                )
+                .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                .order_by("ordering")
+            )
+
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
                 "user_course_progress": Coalesce(
@@ -97,6 +111,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     ),
                     Value(0),
                 ),
+                "current_lesson": current_lesson.values("id")[:1],
+                "current_chapter": current_lesson.values("chapter_id")[:1],
             }
             return (
                 Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
@@ -151,8 +167,8 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         Create custom queryset for lessons.
 
         user_lesson_progress - returns the progress (int: id) of current user with the current lesson
-        next_lesson_id - returns the int id of the next lesson in current chapter
-        prev_lesson_id - returns the int id of the previous lesson in current chapter.
+        next_lesson_id - returns the int id of the next lesson in current course
+        prev_lesson_id - returns the int id of the previous lesson in current course.
         """
         user = self.request.user
         lesson_id = self.kwargs.get("pk")
@@ -188,6 +204,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             return None
         return LessonSerializer
 
+    @transaction.atomic
     @action(
         detail=True,
         methods=["post"],

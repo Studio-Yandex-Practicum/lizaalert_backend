@@ -159,19 +159,19 @@ class ChapterWith3Lessons(ChapterFactory):
     membership1 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([1]),
+        order_number=factory.Iterator([3]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership2 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([2]),
+        order_number=factory.Iterator([1]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
     membership3 = factory.RelatedFactory(
         LessonFactory,
         factory_related_name="chapter",
-        order_number=factory.Iterator([3]),
+        order_number=factory.Iterator([2]),
         duration=factory.fuzzy.FuzzyInteger(0, 10),
     )
 
