@@ -175,8 +175,10 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         lesson = get_object_or_404(Lesson, id=lesson_id)
         lesson_with_ordering = lesson.ordered.get(id=lesson_id)
         base_annotations = {
-            "next_lesson_id": lesson_with_ordering.next_lesson,
-            "prev_lesson_id": lesson_with_ordering.prev_lesson,
+            "next_lesson_id": lesson_with_ordering.next_lesson.values("id"),
+            "prev_lesson_id": lesson_with_ordering.prev_lesson.values("id"),
+            "next_chapter_id": lesson_with_ordering.next_lesson.values("chapter_id"),
+            "prev_chapter_id": lesson_with_ordering.prev_lesson.values("chapter_id"),
         }
         if user.is_authenticated:
             user_annotations = {
