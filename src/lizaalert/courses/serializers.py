@@ -135,7 +135,9 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
     def get_current_lesson(self, obj):
         user = self.context.get("request").user
         if user.is_authenticated:
-            current_lesson = BreadcrumbLessonSerializer({"chapter": obj.current_chapter, "lesson": obj.current_lesson})
+            current_lesson = BreadcrumbLessonSerializer(
+                {"chapter_id": obj.current_chapter, "lesson_id": obj.current_lesson}
+            )
             return current_lesson.data
         return None
 
@@ -174,12 +176,16 @@ class LessonSerializer(serializers.ModelSerializer):
 
     @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
     def get_next_lesson(self, obj):
-        current_lesson = BreadcrumbLessonSerializer({"chapter": obj.next_chapter_id, "lesson": obj.next_lesson_id})
+        current_lesson = BreadcrumbLessonSerializer(
+            {"chapter_id": obj.next_chapter_id, "lesson_id": obj.next_lesson_id}
+        )
         return current_lesson.data
 
     @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
     def get_prev_lesson(self, obj):
-        current_lesson = BreadcrumbLessonSerializer({"chapter": obj.prev_chapter_id, "lesson": obj.prev_lesson_id})
+        current_lesson = BreadcrumbLessonSerializer(
+            {"chapter_id": obj.prev_chapter_id, "lesson_id": obj.prev_lesson_id}
+        )
         return current_lesson.data
 
 
