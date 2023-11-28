@@ -215,8 +215,8 @@ class TestCourse:
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["prev_lesson"]["lesson_id"] == lesson_id
-            assert response.json()["prev_lesson"]["chapter_id"] == chapter_id
+            assert response.json()["prev_lesson"]["lesson"] == lesson_id
+            assert response.json()["prev_lesson"]["chapter"] == chapter_id
             lesson_id = response.json()["id"]
             chapter_id = response.json()["chapter_id"]
 
@@ -228,8 +228,8 @@ class TestCourse:
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["next_lesson"]["lesson_id"] == lesson_id
-            assert response.json()["next_lesson"]["chapter_id"] == chapter_id
+            assert response.json()["next_lesson"]["lesson"] == lesson_id
+            assert response.json()["next_lesson"]["chapter"] == chapter_id
             lesson_id = response.json()["id"]
             chapter_id = response.json()["chapter_id"]
 
