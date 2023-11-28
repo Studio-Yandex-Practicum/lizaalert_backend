@@ -153,8 +153,11 @@ class TestCourse:
 
     def test_user_subscription_to_course(self, user_client, user, user_2):
         """Тест, что пользователь может подписаться на курс."""
+        course = CourseFactory()
         subscription_1 = SubscriptionFactory(user=user)
         subscription_2 = SubscriptionFactory(user=user_2)
+        subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
+        subscription_response = user_client.post(subscribe)
         course_id_1 = subscription_1.course.id
         course_id_2 = subscription_2.course.id
         url_1 = reverse("courses-detail", kwargs={"pk": course_id_1})
@@ -162,8 +165,13 @@ class TestCourse:
         response_1 = user_client.get(url_1)
         response_2 = user_client.get(url_2)
         assert response_1.status_code == status.HTTP_200_OK
+        assert subscription_response.status_code == status.HTTP_201_CREATED
         assert response_1.json()["user_status"] == "True"
         assert response_2.json()["user_status"] == "False"
+
+        # Повторная подписка невозможна
+        subscription_response = user_client.post(subscribe)
+        assert subscription_response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_user_unsubscription_from_course(self, user_client, user):
         """Тест, что пользователь может отписаться от курса."""
@@ -372,6 +380,8 @@ class TestCourse:
         first_lesson.finish(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
+        assert serializer_response.json()["chapter_id"] == first_lesson.chapter.id
+        assert serializer_response.json()["lesson_id"] == first_lesson.id
         assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
         assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
 

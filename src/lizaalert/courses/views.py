@@ -3,6 +3,7 @@ from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch,
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -21,7 +22,7 @@ from lizaalert.courses.models import (
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import CurrentLessonSerializer
+from lizaalert.courses.utils import BreadcrumbLessonSerializer, ErrorSerializer
 from lizaalert.users.models import Level
 
 
@@ -132,15 +133,23 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
+    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer})
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """Subscribe user for given course."""
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
+        check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
+        if check_for_subscription:
+            serializer = ErrorSerializer({"error": "Subscription already exists."})
+            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
         Subscription.objects.create(user=user, course=course)
-        initial_lesson = {"chapter": course.initial_lesson.chapter.id, "lesson": course.initial_lesson.id}
-        serializer = CurrentLessonSerializer(initial_lesson)
-        return Response({"initial_lesson": serializer.data}, status=status.HTTP_201_CREATED)
+        if course.initial_lesson:
+            initial_lesson = {"chapter_id": course.initial_lesson.chapter.id, "lesson_id": course.initial_lesson.id}
+        else:
+            initial_lesson = {"chapter_id": None, "lesson_id": None}
+        serializer = BreadcrumbLessonSerializer(initial_lesson)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=True,
