@@ -2,7 +2,7 @@ from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson
-from lizaalert.courses.utils import BreadcrumbSchema, CurrentLessonSerializer, NeighbourLessonSerializer
+from lizaalert.courses.utils import BreadcrumbLessonSerializer, BreadcrumbSchema
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -131,11 +131,13 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "current_lesson",
         )
 
-    @swagger_serializer_method(serializer_or_field=CurrentLessonSerializer)
+    @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
     def get_current_lesson(self, obj):
         user = self.context.get("request").user
         if user.is_authenticated:
-            current_lesson = CurrentLessonSerializer({"chapter": obj.current_chapter, "lesson": obj.current_lesson})
+            current_lesson = BreadcrumbLessonSerializer(
+                {"chapter_id": obj.current_chapter, "lesson_id": obj.current_lesson}
+            )
             return current_lesson.data
         return None
 
@@ -172,14 +174,18 @@ class LessonSerializer(serializers.ModelSerializer):
         breadcrumb_serializer = BreadcrumbSchema({"course": obj.chapter.course, "chapter": obj.chapter})
         return breadcrumb_serializer.data
 
-    @swagger_serializer_method(serializer_or_field=NeighbourLessonSerializer)
+    @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
     def get_next_lesson(self, obj):
-        current_lesson = NeighbourLessonSerializer({"chapter_id": obj.next_chapter_id, "lesson_id": obj.next_lesson_id})
+        current_lesson = BreadcrumbLessonSerializer(
+            {"chapter_id": obj.next_chapter_id, "lesson_id": obj.next_lesson_id}
+        )
         return current_lesson.data
 
-    @swagger_serializer_method(serializer_or_field=NeighbourLessonSerializer)
+    @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
     def get_prev_lesson(self, obj):
-        current_lesson = NeighbourLessonSerializer({"chapter_id": obj.prev_chapter_id, "lesson_id": obj.prev_lesson_id})
+        current_lesson = BreadcrumbLessonSerializer(
+            {"chapter_id": obj.prev_chapter_id, "lesson_id": obj.prev_lesson_id}
+        )
         return current_lesson.data
 
 

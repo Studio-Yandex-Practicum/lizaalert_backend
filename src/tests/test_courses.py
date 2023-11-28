@@ -363,15 +363,15 @@ class TestCourse:
         first_lesson = lessons[0]
         second_lesson = lessons[1]
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["current_lesson"]["chapter"] == first_lesson.chapter.id
-        assert response.json()["current_lesson"]["lesson"] == first_lesson.id
+        assert response.json()["current_lesson"]["chapter_id"] == first_lesson.chapter.id
+        assert response.json()["current_lesson"]["lesson_id"] == first_lesson.id
 
         # Проверяем, возвращается активный урок
         first_lesson.finish(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
-        assert new_response.json()["current_lesson"]["chapter"] == second_lesson.chapter.id
-        assert new_response.json()["current_lesson"]["lesson"] == second_lesson.id
+        assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
+        assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""

@@ -20,15 +20,8 @@ class BreadcrumbSchema(serializers.Serializer):
     chapter = ChapterBreadcrumbSerializer()
 
 
-class NeighbourLessonSerializer(serializers.Serializer):
+class BreadcrumbLessonSerializer(serializers.Serializer):
     """Schema serializer for OpenAPI/Swagger."""
 
     chapter_id = serializers.IntegerField()
     lesson_id = serializers.IntegerField()
-
-
-class CurrentLessonSerializer(serializers.Serializer):
-    """Schema serializer for OpenAPI/Swagger."""
-
-    chapter = serializers.IntegerField()
-    lesson = serializers.IntegerField()
