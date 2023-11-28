@@ -206,23 +206,32 @@ class TestCourse:
         Проверяется навигация по всем 8 урокам, при этой первый и последний урок
         должны выдавать None при отсутствии крайних уроков.
         """
-        _ = CourseWith2Chapters()
-        lessons = Lesson.objects.all().order_by("id")
-        prev_lesson = None
-        for number, lesson in enumerate(lessons):
+        course = CourseWith2Chapters()
+        lesson = Lesson.objects.filter(chapter__course=course).first()
+        lessons = lesson.ordered
+        lesson_id = None
+        chapter_id = None
+        for lesson in lessons:
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["prev_lesson_id"] == prev_lesson
-            prev_lesson = response.json()["id"]
-        lessons = Lesson.objects.all().order_by("-id")
-        next_lesson = None
-        for number, lesson in enumerate(lessons):
+            assert response.json()["prev_lesson"]["lesson_id"] == lesson_id
+            assert response.json()["prev_lesson"]["chapter_id"] == chapter_id
+            lesson_id = response.json()["id"]
+            chapter_id = response.json()["chapter_id"]
+
+        lesson = Lesson.objects.filter(chapter__course=course).first()
+        lessons = lesson.ordered.order_by("-ordering")
+        lesson_id = None
+        chapter_id = None
+        for lesson in lessons:
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["next_lesson_id"] == next_lesson
-            next_lesson = response.json()["id"]
+            assert response.json()["next_lesson"]["lesson_id"] == lesson_id
+            assert response.json()["next_lesson"]["chapter_id"] == chapter_id
+            lesson_id = response.json()["id"]
+            chapter_id = response.json()["chapter_id"]
 
     def test_breadcrumbs(self, user_client):
         """Тест, что breadcrumbs отображаются корректно."""
@@ -356,17 +365,15 @@ class TestCourse:
         first_lesson = lessons[0]
         second_lesson = lessons[1]
         assert response.status_code == status.HTTP_200_OK
-        assert serializer_response.json()["initial_lesson"]["chapter"] == first_lesson.chapter.id
-        assert serializer_response.json()["initial_lesson"]["lesson"] == first_lesson.id
-        assert response.json()["current_lesson"]["chapter"] == first_lesson.chapter.id
-        assert response.json()["current_lesson"]["lesson"] == first_lesson.id
+        assert response.json()["current_lesson"]["chapter_id"] == first_lesson.chapter.id
+        assert response.json()["current_lesson"]["lesson_id"] == first_lesson.id
 
         # Проверяем, возвращается активный урок
         first_lesson.finish(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
-        assert new_response.json()["current_lesson"]["chapter"] == second_lesson.chapter.id
-        assert new_response.json()["current_lesson"]["lesson"] == second_lesson.id
+        assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
+        assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""
