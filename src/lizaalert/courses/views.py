@@ -204,6 +204,15 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             return None
         return LessonSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        lesson = self.get_object()
+        user = self.request.user
+        if user.is_authenticated:
+            any_progress = LessonProgressStatus.objects.filter(user=user, lesson=lesson).exists()
+            if not any_progress:
+                lesson.activate(user)
+        return super().retrieve(request, *args, **kwargs)
+
     @transaction.atomic
     @action(
         detail=True,
