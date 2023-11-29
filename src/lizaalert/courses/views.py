@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,6 +21,7 @@ from lizaalert.courses.models import (
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
+from lizaalert.courses.utils import current_lesson_queryset_getter
 from lizaalert.users.models import Level
 
 
@@ -44,6 +45,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         users_annotations - provide annotations only for auth user.
         """
         user = self.request.user
+        course_id = self.kwargs.get("pk")
+        course = None
+        if course_id:
+            course = get_object_or_404(Course, id=course_id)
         lesson_status = Lesson.LessonStatus.PUBLISHED
         base_annotations = {
             "course_duration": Sum(
@@ -85,18 +90,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
-            # current lesson - текущий урок (первый урок после незаконченных уроков)
-            current_lesson = (
-                Lesson.objects.filter(
-                    chapter__course=OuterRef("id"),
-                    status=Lesson.LessonStatus.PUBLISHED,
-                )
-                .exclude(
-                    lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED,
-                )
-                .annotate(ordering=F("chapter__order_number") + F("order_number"))
-                .order_by("ordering")
-            )
+            current_lesson = current_lesson_queryset_getter(course, user)
 
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),

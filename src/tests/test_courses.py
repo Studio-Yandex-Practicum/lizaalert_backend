@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.courses.models import Chapter, Course, Lesson, LessonProgressStatus
 from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -349,12 +349,12 @@ class TestCourse:
 
     def test_current_lesson_and_chapter_in_course(self, user_client, user):
         """
-        Тест, что текущая глава и урок отображаются на странице курса.
+        Тест текущего урока для четырех ситуаций.
 
-        1. Проверяем, что авторизированный пользователь не начавший курс
-        получает первый урок первой главы курса
-        2. Проверям, что авторизированный пользователь начавший курс, получает
-        активный урок.
+        1. Наличие текущего урока в случе если пользователь не начал прохождение уроков.
+        2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
+        3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
+        4. При прохождении всех уроков current_lesson == Null.
         """
         course = CourseWith2Chapters()
         url = reverse("courses-detail", kwargs={"pk": course.id})
@@ -362,16 +362,35 @@ class TestCourse:
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
         second_lesson = lessons[1]
+
+        # 1. Наличие текущего урока в случе если пользователь не начал прохождение уроков.
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["current_lesson"]["chapter_id"] == first_lesson.chapter.id
         assert response.json()["current_lesson"]["lesson_id"] == first_lesson.id
 
-        # Проверяем, возвращается активный урок
+        # 2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
         first_lesson.finish(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
         assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
         assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
+
+        # 3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
+        # TODO после реализации функционала .acitave() заменить
+        first_lesson.lesson_progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
+        new_response = user_client.get(url)
+        assert new_response.status_code == status.HTTP_200_OK
+        assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
+        assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
+
+        # 4. При прохождении всех уроков current_lesson == Null.
+        lesson = LessonFactory()
+        lesson.finish(user)
+        url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course.id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["current_lesson"]["chapter_id"] is None
+        assert response.json()["current_lesson"]["lesson_id"] is None
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""
