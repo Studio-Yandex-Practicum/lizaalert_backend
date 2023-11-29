@@ -55,6 +55,7 @@ def current_lesson_queryset_getter(course, user):
                 lesson_progress__user=user,
                 lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED,
             )
+            .order_by("-ordering")
             .values("ordering")
             .first()
         )
