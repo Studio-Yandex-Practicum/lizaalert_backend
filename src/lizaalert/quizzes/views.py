@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import List
 
 from django.utils import timezone
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.response import Response
@@ -72,7 +74,14 @@ class RunQuizView(generics.CreateAPIView):
 
     serializer_class = UserAnswerSerializer
 
-    def create(self, request, *args, **kwargs) -> Response:
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={},
+        ),
+        responses={201: UserAnswerSerializer()},
+    )
+    def post(self, request, *args, **kwargs) -> Response:
         """Создает новую запись UserAnswer и начинает прохождение квиза."""
         lesson_id = self.kwargs.get("lesson_id")
         user = self.request.user
@@ -115,6 +124,26 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
 
     serializer_class = UserAnswerSerializer
 
+    post_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "question_id": openapi.Schema(type=openapi.TYPE_INTEGER, description="ID вопроса"),
+            "answer_id": openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(type=openapi.TYPE_INTEGER),
+                description="Список ID ответов",
+            ),
+        },
+    )
+    post_body_list = openapi.Schema(type=openapi.TYPE_ARRAY, items=post_body)
+
+    @swagger_auto_schema(
+        operation_description="Возвращает информацию о текущих ответах пользователя для данного квиза",
+        responses={200: UserAnswerSerializer()},
+    )
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
     def get_object(self) -> UserAnswer:
         """Получает объект UserAnswer для текущего пользователя и квиза."""
         user = self.request.user
@@ -126,6 +155,7 @@ class QuizDetailAnswerView(generics.CreateAPIView, generics.RetrieveAPIView):
         )
         return user_answer
 
+    @swagger_auto_schema(request_body=post_body_list, responses={200: UserAnswerSerializer()})
     def post(self, request, *args, **kwargs) -> Response:
         """Обновляет ответы пользователя и вычисляет результаты теста."""
         data = request.data
