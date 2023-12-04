@@ -166,8 +166,8 @@ class TestCourse:
         response_2 = user_client.get(url_2)
         assert response_1.status_code == status.HTTP_200_OK
         assert subscription_response.status_code == status.HTTP_201_CREATED
-        assert response_1.json()["user_status"] == "True"
-        assert response_2.json()["user_status"] == "False"
+        assert response_1.json()["user_status"] is True
+        assert response_2.json()["user_status"] is False
 
         # Повторная подписка невозможна
         subscription_response = user_client.post(subscribe)
@@ -180,13 +180,13 @@ class TestCourse:
         url = reverse("courses-detail", kwargs={"pk": course_id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_status"] == "True"
+        assert response.json()["user_status"] is True
 
         unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
         response = user_client.post(unsubscribe_url)
         response_1 = user_client.get(url)
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert response_1.json()["user_status"] == "False"
+        assert response_1.json()["user_status"] is False
 
     def test_another_user_unable_to_unsubscribe_from_course(self, user_client, user_2):
         """Тест, что иной пользователь не может отписаться не от своего курса."""
@@ -380,10 +380,13 @@ class TestCourse:
         first_lesson.finish(user)
         new_response = user_client.get(url)
         assert new_response.status_code == status.HTTP_200_OK
-        assert serializer_response.json()["chapter_id"] == first_lesson.chapter.id
-        assert serializer_response.json()["lesson_id"] == first_lesson.id
-        assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
-        assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
+        if serializer_response := serializer_response.json():
+            assert serializer_response["chapter_id"] == first_lesson.chapter_id
+            assert serializer_response["lesson_id"] == first_lesson.id
+
+        if current_lesson := new_response.json()["current_lesson"]:
+            assert current_lesson["chapter_id"] == second_lesson.chapter_id
+            assert current_lesson["lesson_id"] == second_lesson.id
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""

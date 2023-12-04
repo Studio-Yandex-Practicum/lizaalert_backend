@@ -108,7 +108,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    user_status = serializers.StringRelatedField(default=False)
+    user_status = serializers.BooleanField(default=False)
     user_course_progress = serializers.IntegerField(default=0)
     current_lesson = serializers.SerializerMethodField()
 
