@@ -447,18 +447,23 @@ class TestCourse:
         """
         Тест активации урока.
 
-        1. Проверяем активацию урока.
-        2. Проверяем, что после завершения урока, невозможно его повторно активировать
-         переходом по эндпоинту урока.
+        Проверяем активацию урока.
         """
         lesson = LessonFactory()
-        # 1. Активируем урок
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == 1
 
-        # 2. Завершаем урок и проверяем, что он остается завершенным
+    def test_lesson_activation_changes(self, user_client):
+        """
+        Тест активации урока.
+
+        Проверяем, что после завершения урока, невозможно его повторно активировать
+         переходом по эндпоинту урока.
+        """
+        lesson = LessonFactory()
+        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         complete_url = reverse("lessons-complete", kwargs={"pk": lesson.id})
         user_client.post(complete_url)
         response = user_client.get(url)
