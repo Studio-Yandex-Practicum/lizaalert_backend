@@ -144,8 +144,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = ErrorSerializer({"error": "Subscription already exists."})
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
         Subscription.objects.create(user=user, course=course)
-        if course.initial_lesson:
-            initial_lesson = {"chapter_id": course.initial_lesson.chapter.id, "lesson_id": course.initial_lesson.id}
+        current_lesson = course.current_lesson(user).first()
+        if current_lesson:
+            initial_lesson = {"chapter_id": current_lesson.chapter_id, "lesson_id": current_lesson.id}
         else:
             initial_lesson = {"chapter_id": None, "lesson_id": None}
         serializer = BreadcrumbLessonSerializer(initial_lesson)

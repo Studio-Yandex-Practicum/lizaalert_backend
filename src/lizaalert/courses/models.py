@@ -103,17 +103,20 @@ class Course(TimeStampedModel):
             user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
 
-    @property
-    def initial_lesson(self):
-        """Самый первый урок курса."""
+    def current_lesson(self, user):
+        """Вернуть queryset текущего урока."""
         return (
             Lesson.objects.filter(
                 chapter__course=self,
                 status=Lesson.LessonStatus.PUBLISHED,
             )
+            .exclude(
+                id__in=LessonProgressStatus.objects.filter(
+                    userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED, user=user
+                )
+            )
             .annotate(ordering=F("chapter__order_number") + F("order_number"))
             .order_by("ordering")
-            .first()
         )
 
 
