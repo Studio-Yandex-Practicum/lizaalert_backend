@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,7 +21,6 @@ from lizaalert.courses.models import (
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import current_lesson_queryset_getter
 from lizaalert.users.models import Level
 
 
@@ -90,7 +89,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
-            current_lesson = current_lesson_queryset_getter(course, user)
+            if course:
+                current_lesson = course.current_lesson(user)
+            else:
+                current_lesson = (
+                    Lesson.objects.filter(chapter__course=course, status=Lesson.LessonStatus.PUBLISHED)
+                    .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                    .order_by("ordering")
+                )
 
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
