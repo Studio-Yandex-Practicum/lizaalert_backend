@@ -40,7 +40,7 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     lessons_count = serializers.IntegerField()
     course_duration = serializers.IntegerField()
     course_status = serializers.StringRelatedField(read_only=True)
-    user_status = serializers.StringRelatedField()
+    user_status = serializers.BooleanField(default=False)
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
 
