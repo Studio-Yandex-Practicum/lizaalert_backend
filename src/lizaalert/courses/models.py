@@ -103,6 +103,19 @@ class Course(TimeStampedModel):
             user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
 
+    def current_lesson(self, user):
+        """Вернуть queryset текущего урока."""
+        finished_lessons = LessonProgressStatus.objects.filter(
+            user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
+        ).values_list("lesson", flat=True)
+
+        return (
+            Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED)
+            .exclude(id__in=finished_lessons)
+            .annotate(ordering=F("chapter__order_number") + F("order_number"))
+            .order_by("ordering")
+        )
+
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
     """
