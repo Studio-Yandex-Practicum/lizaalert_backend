@@ -358,39 +358,34 @@ class TestCourse:
         """
         course = CourseWith2Chapters()
         url = reverse("courses-detail", kwargs={"pk": course.id})
-        response = user_client.get(url)
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
         second_lesson = lessons[1]
 
+        def request_assert(user_client, url, expected_lesson_id, expected_chapter_id):
+            """Шаблон для проверки ответа."""
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["current_lesson"]["chapter_id"] == expected_chapter_id
+            assert response.json()["current_lesson"]["lesson_id"] == expected_lesson_id
+
         # 1. Наличие текущего урока в случе если пользователь не начал прохождение уроков.
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["current_lesson"]["chapter_id"] == first_lesson.chapter.id
-        assert response.json()["current_lesson"]["lesson_id"] == first_lesson.id
+        request_assert(user_client, url, first_lesson.id, first_lesson.chapter_id)
 
         # 2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
         first_lesson.finish(user)
-        new_response = user_client.get(url)
-        assert new_response.status_code == status.HTTP_200_OK
-        assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
-        assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
+        request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
-        # TODO после реализации функционала .acitave() заменить
+        # TODO после реализации функционала .activate() заменить
         first_lesson.lesson_progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
-        new_response = user_client.get(url)
-        assert new_response.status_code == status.HTTP_200_OK
-        assert new_response.json()["current_lesson"]["chapter_id"] == second_lesson.chapter.id
-        assert new_response.json()["current_lesson"]["lesson_id"] == second_lesson.id
+        request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 4. При прохождении всех уроков current_lesson == Null.
         lesson = LessonFactory()
         lesson.finish(user)
         url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course.id})
-        response = user_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["current_lesson"]["chapter_id"] is None
-        assert response.json()["current_lesson"]["lesson_id"] is None
+        request_assert(user_client, url, None, None)
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""
