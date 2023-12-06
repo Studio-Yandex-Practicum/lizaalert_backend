@@ -1,5 +1,6 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,7 +14,15 @@ from lizaalert.users.serializers import LevelSerializer, UserRoleSerializer, Vol
 class VolunteerAPIview(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            200: VolunteerSerializer(),
+            204: "No Content",
+            400: "Bad Request",
+        }
+    )
     def get(self, request):
+        """Получить профиль пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.annotate(
             count_pass_course=Subquery(
@@ -32,7 +41,15 @@ class VolunteerAPIview(APIView):
             return Response(serializer.data[0])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @swagger_auto_schema(
+        request_body=VolunteerSerializer,
+        responses={
+            200: VolunteerSerializer(),
+            400: "Bad Request",
+        },
+    )
     def patch(self, request):
+        """Изменить профиль пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         serializer = VolunteerSerializer(volunteer, data=request.data, partial=True)
         if serializer.is_valid():
