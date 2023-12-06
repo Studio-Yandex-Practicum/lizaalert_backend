@@ -11,6 +11,8 @@ levels = [
 def create_levels():
     from lizaalert.users.models import Level
 
+    Level.objects.all().delete()
+
     [Level.objects.create(name=level["name"], description="test") for level in levels]
 
 

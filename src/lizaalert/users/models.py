@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.signals import post_migrate, post_save
+from django.dispatch import receiver
 from easy_thumbnails.fields import ThumbnailerImageField
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -59,7 +61,12 @@ class Level(models.Model):
         middle = "Бывалый", "experienced"
         professional = "Профессионал", "professional"
 
-    name = models.CharField("Наименование уровня", max_length=20, choices=LevelName.choices)
+    name = models.CharField(
+        "Наименование уровня",
+        max_length=20,
+        choices=LevelName.choices,
+        unique=True,
+    )
     description = models.TextField(
         "Описание уровня и условия его достижения",
     )
@@ -265,3 +272,21 @@ class Volunteer(models.Model):
 
     def __str__(self):
         return f"{self.user.username}"
+
+
+@receiver(post_migrate)
+def create_levels(sender, **kwargs):
+    for name, _ in Level.LevelName.choices:
+        Level.objects.get_or_create(name=name)
+
+
+@receiver(post_save, sender=User)
+def create_default_volunteer_level(sender, instance, created, **kwargs):
+    if created:
+        volunteer, created = Volunteer.objects.get_or_create(user=instance)
+
+        beginner_level = Level.objects.get(name=Level.LevelName.beginner)
+        existing_record = VolunteerLevel.objects.filter(volunteer=volunteer, level=beginner_level).exists()
+
+        if not existing_record:
+            VolunteerLevel.objects.create(volunteer=volunteer, level=beginner_level, confirmed=True)

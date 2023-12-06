@@ -46,3 +46,10 @@ class LevelFactory(factory.django.DjangoModelFactory):
 
     name = factory.fuzzy.FuzzyChoice(list(Level.LevelName))
     description = factory.Faker("paragraph")
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        name = kwargs.get("name")
+        level, created = model_class.objects.get_or_create(name=name, defaults=kwargs)
+
+        return level
