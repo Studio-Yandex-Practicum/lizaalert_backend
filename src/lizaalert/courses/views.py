@@ -75,8 +75,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 user_chapter_progress=Coalesce(
                     Cast(
                         Subquery(
-                            ChapterProgressStatus.objects.filter(
-                                chapter=OuterRef("id"), user=user)
+                            ChapterProgressStatus.objects.filter(chapter=OuterRef("id"), user=user)
                             .order_by("-updated_at")
                             .values("userchapterprogress")[:1]
                         ),
@@ -90,8 +89,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 user_lesson_progress=Coalesce(
                     Cast(
                         Subquery(
-                            LessonProgressStatus.objects.filter(
-                                lesson=OuterRef("id"), user=user)
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
                             .order_by("-updated_at")
                             .values("userlessonprogress")[:1]
                         ),
@@ -118,8 +116,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 "user_course_progress": Coalesce(
                     Cast(
                         Subquery(
-                            CourseProgressStatus.objects.filter(
-                                course=OuterRef("id"), user=user)
+                            CourseProgressStatus.objects.filter(course=OuterRef("id"), user=user)
                             .order_by("-updated_at")
                             .values("usercourseprogress")[:1]
                         ),
@@ -135,8 +132,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 .annotate(**base_annotations, **users_annotations)
                 .prefetch_related(
                     Prefetch("chapters", queryset=chapters_with_progress),
-                    Prefetch("chapters__lessons",
-                             queryset=lessons_with_progress),
+                    Prefetch("chapters__lessons", queryset=lessons_with_progress),
                 )
             )
         return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
@@ -173,17 +169,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
-        check_for_subscription = Subscription.objects.filter(
-            user=user, course=course).exists()
+        check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
         if check_for_subscription:
-            serializer = ErrorSerializer(
-                {"error": "Subscription already exists."})
+            serializer = ErrorSerializer({"error": "Subscription already exists."})
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
         Subscription.objects.create(user=user, course=course)
         current_lesson = course.current_lesson(user).first()
         if current_lesson:
-            initial_lesson = {
-                "chapter_id": current_lesson.chapter_id, "lesson_id": current_lesson.id}
+            initial_lesson = {"chapter_id": current_lesson.chapter_id, "lesson_id": current_lesson.id}
         else:
             initial_lesson = {"chapter_id": None, "lesson_id": None}
         serializer = BreadcrumbLessonSerializer(initial_lesson)
@@ -217,8 +210,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
-        subscription = get_object_or_404(
-            Subscription, user=user, course=course)
+        subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -272,8 +264,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 "user_lesson_progress": Coalesce(
                     Cast(
                         Subquery(
-                            LessonProgressStatus.objects.filter(
-                                lesson=OuterRef("id"), user=user)
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
                             .order_by("-updated_at")
                             .values("userlessonprogress")[:1]
                         ),
@@ -304,8 +295,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         lesson = self.get_object()
         user = self.request.user
         if user.is_authenticated:
-            any_progress = LessonProgressStatus.objects.filter(
-                user=user, lesson=lesson).exists()
+            any_progress = LessonProgressStatus.objects.filter(user=user, lesson=lesson).exists()
             if not any_progress:
                 lesson.activate(user)
         return super().retrieve(request, *args, **kwargs)
