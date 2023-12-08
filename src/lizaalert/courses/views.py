@@ -283,7 +283,14 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return LessonSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        """Получает детали урока, активируя его для пользователя при необходимости."""
+        """
+        Получает детали урока, активируя его для пользователя при необходимости.
+
+        Возвращает:
+
+                200: Успешный ответ
+                404: Урок не найден
+        """
         lesson = self.get_object()
         user = self.request.user
         if user.is_authenticated:
