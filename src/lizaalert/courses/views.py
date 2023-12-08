@@ -36,7 +36,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     дополнительные действия, такие как запись и отписка от курса.
 
     """
-
     permission_classes = [
         AllowAny,
     ]
@@ -56,7 +55,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             QuerySet: QuerySet для курсов.
 
         """
-
         user = self.request.user
         lesson_status = Lesson.LessonStatus.PUBLISHED
         base_annotations = {
@@ -167,7 +165,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             Это действие требует аутентификации пользователя.
 
         """
-
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
         check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
@@ -208,7 +205,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             Это действие требует аутентификации пользователя и соответствующих прав.
 
         """
-
         user = self.request.user
         course = get_object_or_404(Course, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=course)
@@ -237,7 +233,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     Примечание:
         Для выполнения дополнительных действий, таких как завершение урока, требуется аутентификация пользователя.
     """
-
     permission_classes = [
         AllowAny,
     ]
@@ -250,7 +245,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         next_lesson_id - returns the int id of the next lesson in current course
         prev_lesson_id - returns the int id of the previous lesson in current course.
         """
-
         user = self.request.user
         lesson_id = self.kwargs.get("pk")
         lesson = get_object_or_404(Lesson, id=lesson_id)
@@ -284,7 +278,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         Возвращает класс сериализатора в зависимости от текущего действия.
         """
-
         if self.action == "complete":
             return None
         return LessonSerializer
@@ -293,7 +286,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         Получает детали урока, активируя его для пользователя при необходимости.
         """
-
         lesson = self.get_object()
         user = self.request.user
         if user.is_authenticated:
@@ -327,7 +319,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             Урок завершается с использованием метода `finish`, который выполняет
             необходимые действия по завершению урока для конкретного пользователя.
         """
-
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
         lesson.finish(user)
@@ -344,6 +335,5 @@ class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
         - queryset: Коллекция уровней, используемая для формирования списка фильтров.
         - serializer_class: Сериализатор, преобразующий объекты уровней в формат данных, отправляемый клиенту.
     """
-
     queryset = [Level]
     serializer_class = FilterSerializer
