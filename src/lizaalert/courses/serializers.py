@@ -205,5 +205,6 @@ class FilterSerializer(serializers.Serializer):
     def get_slug(self, model):
         return model._meta.model_name
 
+    @swagger_serializer_method(serializer_or_field=OptionSerializer)
     def get_options(self, model):
         return OptionSerializer(model.objects.all(), many=True).data
