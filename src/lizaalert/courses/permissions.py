@@ -8,3 +8,17 @@ class IsUserOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.user == request.user
+
+
+class CurrentLessonOrProhibited(permissions.BasePermission):
+    """Разрешение на просмотр только текущего/пройденных уроков."""
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if user.is_authenticated:
+            course = obj.chapter.course
+            current_lesson = course.current_lesson(user).first()
+            obj = obj.ordered.get(id=obj.id)
+            if current_lesson.ordering >= obj.ordering:
+                return True
+        return False

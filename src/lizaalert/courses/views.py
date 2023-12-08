@@ -20,7 +20,7 @@ from lizaalert.courses.models import (
     Subscription,
 )
 from lizaalert.courses.pagination import CourseSetPagination
-from lizaalert.courses.permissions import IsUserOrReadOnly
+from lizaalert.courses.permissions import CurrentLessonOrProhibited, IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
 from lizaalert.courses.utils import BreadcrumbLessonSerializer, ErrorSerializer
 from lizaalert.users.models import Level
@@ -173,6 +173,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     permission_classes = [
         AllowAny,
+        CurrentLessonOrProhibited,
     ]
 
     def get_queryset(self):
