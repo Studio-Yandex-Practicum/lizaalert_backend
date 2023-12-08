@@ -371,7 +371,6 @@ class TestCourse:
         4. При прохождении всех уроков current_lesson == Null.
         """
         course = CourseWith2Chapters()
-        subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
         url = reverse("courses-detail", kwargs={"pk": course.id})
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
