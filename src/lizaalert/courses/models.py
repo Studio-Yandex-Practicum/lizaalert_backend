@@ -107,8 +107,7 @@ class Course(TimeStampedModel):
         """Вернуть queryset текущего урока."""
         finished_lessons = LessonProgressStatus.objects.filter(
             user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
-        ).values_list("lesson", flat=True)
-
+        ).values_list("lesson_id", flat=True)
         return (
             Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED)
             .exclude(id__in=finished_lessons)
