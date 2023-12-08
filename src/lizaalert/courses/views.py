@@ -133,7 +133,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer, 404: "Invalid course id."})
+    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """Subscribe user for given course."""
@@ -141,11 +141,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            error = {"error": "Invalid id."}
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
         check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
         if check_for_subscription:
-            serializer = ErrorSerializer({"error": "Subscription already exists."})
-            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
+            error = {"error": "Subscription already exists."}
+            return Response(error, status=status.HTTP_403_FORBIDDEN)
         Subscription.objects.create(user=user, course=course)
         current_lesson = course.current_lesson(user).first()
         if current_lesson:
@@ -155,7 +156,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = BreadcrumbLessonSerializer(initial_lesson)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(responses={204: "No content.", 404: "Invalid course id."})
+    @swagger_auto_schema(responses={204: "No content.", 404: ErrorSerializer})
     @action(
         detail=True,
         methods=["post"],
@@ -170,7 +171,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            error = {"error": "Invalid id."}
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
