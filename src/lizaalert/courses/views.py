@@ -56,6 +56,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             QuerySet: QuerySet для курсов.
 
         """
+
         user = self.request.user
         lesson_status = Lesson.LessonStatus.PUBLISHED
         base_annotations = {
@@ -249,6 +250,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         next_lesson_id - returns the int id of the next lesson in current course
         prev_lesson_id - returns the int id of the previous lesson in current course.
         """
+
         user = self.request.user
         lesson_id = self.kwargs.get("pk")
         lesson = get_object_or_404(Lesson, id=lesson_id)
