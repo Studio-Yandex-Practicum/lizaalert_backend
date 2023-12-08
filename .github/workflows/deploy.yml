@@ -4,7 +4,6 @@ on:
     workflows: ["Code Style Checks & Tests"]
     types:
       - completed
-  push:
     branches:
       - master
       - dev
@@ -13,6 +12,7 @@ jobs:
   deploy:
     name: Deploy to Remote Server
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v2

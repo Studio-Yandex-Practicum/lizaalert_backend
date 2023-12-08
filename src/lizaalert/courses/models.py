@@ -99,7 +99,7 @@ class Course(TimeStampedModel):
 
     def finish(self, user):
         """Закончить весь курс."""
-        CourseProgressStatus.objects.get_or_create(
+        CourseProgressStatus.objects.update_or_create(
             user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
 
@@ -162,7 +162,7 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
         В случае если, текущая глава является последним и остальные главы в курсе пройдены
         активируется метод finish() отмечающий прохождение курса этогй главы.
         """
-        ChapterProgressStatus.objects.get_or_create(
+        ChapterProgressStatus.objects.update_or_create(
             user=user, chapter=self, userchapterprogress=CourseProgressStatus.ProgressStatus.FINISHED
         )
         chapter_qs = Chapter.objects.filter(course=self.course).aggregate(total_chapters=Count("id"))
@@ -234,6 +234,15 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
+    def activate(self, user):
+        """Активировать текущий урок."""
+        progress, created = LessonProgressStatus.objects.update_or_create(
+            user=user, lesson=self, defaults={"userlessonprogress": LessonProgressStatus.ProgressStatus.ACTIVE}
+        )
+        if not created:
+            progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
+            progress.save()
+
     def finish(self, user):
         """
         Закончить текущий урок.
@@ -241,7 +250,7 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
         В случае если, текущий урок является последним и остальные уроки в главе пройдены
         активируется метод finish() отмечающий прохождение главы этого урока.
         """
-        progress, created = LessonProgressStatus.objects.get_or_create(
+        progress, created = LessonProgressStatus.objects.update_or_create(
             user=user, lesson=self, defaults={"userlessonprogress": LessonProgressStatus.ProgressStatus.FINISHED}
         )
         if not created:
