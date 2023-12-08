@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-LESSON_STEP = 10
-
 
 class CourseBreadcrumbSerializer(serializers.Serializer):
     id = serializers.IntegerField()

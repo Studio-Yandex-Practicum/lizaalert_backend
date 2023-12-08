@@ -20,7 +20,7 @@ from lizaalert.courses.models import (
     Subscription,
 )
 from lizaalert.courses.pagination import CourseSetPagination
-from lizaalert.courses.permissions import IsUserOrReadOnly
+from lizaalert.courses.permissions import CurrentLessonOrProhibited, IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
 from lizaalert.courses.utils import BreadcrumbLessonSerializer, ErrorSerializer
 from lizaalert.users.models import Level
@@ -57,6 +57,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         """
         user = self.request.user
+        course_id = self.kwargs.get("pk")
+        course = None
+        if course_id:
+            course = get_object_or_404(Course, id=course_id)
         lesson_status = Lesson.LessonStatus.PUBLISHED
         base_annotations = {
             "course_duration": Sum(
@@ -98,18 +102,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
-            # current lesson - текущий урок (первый урок после незаконченных уроков)
-            current_lesson = (
-                Lesson.objects.filter(
-                    chapter__course=OuterRef("id"),
-                    status=Lesson.LessonStatus.PUBLISHED,
+            if course:
+                current_lesson = course.current_lesson(user)
+            else:
+                current_lesson = (
+                    Lesson.objects.filter(chapter__course=course, status=Lesson.LessonStatus.PUBLISHED)
+                    .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                    .order_by("ordering")
                 )
-                .exclude(
-                    lesson_progress__userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED,
-                )
-                .annotate(ordering=F("chapter__order_number") + F("order_number"))
-                .order_by("ordering")
-            )
 
             users_annotations = {
                 "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
@@ -237,6 +237,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     permission_classes = [
         AllowAny,
+        CurrentLessonOrProhibited,
     ]
 
     def get_queryset(self):
@@ -330,7 +331,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Response(status=status.HTTP_201_CREATED)
 
 
-class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
+class FilterListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Класс представления для просмотра списка фильтров.
 

@@ -206,7 +206,7 @@ class TestCourse:
         assert response.json()["id"] == lesson.id
         assert response.json()["course_id"] == lesson.chapter.course_id
 
-    def test_lessons_pagination_works(self, user_client):
+    def test_lessons_pagination_works(self, user_client, user):
         """
         Тест, что работает переключение между уроками.
 
@@ -215,31 +215,30 @@ class TestCourse:
         должны выдавать None при отсутствии крайних уроков.
         """
         course = CourseWith2Chapters()
-        lesson = Lesson.objects.filter(chapter__course=course).first()
-        lessons = lesson.ordered
-        lesson_id = None
-        chapter_id = None
-        for lesson in lessons:
-            url = reverse("lessons-detail", kwargs={"pk": lesson.id})
-            response = user_client.get(url)
-            assert response.status_code == status.HTTP_200_OK
-            assert response.json()["prev_lesson"]["lesson_id"] == lesson_id
-            assert response.json()["prev_lesson"]["chapter_id"] == chapter_id
-            lesson_id = response.json()["id"]
-            chapter_id = response.json()["chapter_id"]
 
         lesson = Lesson.objects.filter(chapter__course=course).first()
-        lessons = lesson.ordered.order_by("-ordering")
-        lesson_id = None
-        chapter_id = None
-        for lesson in lessons:
+        lessons = lesson.ordered
+
+        for i, lesson in enumerate(lessons):
             url = reverse("lessons-detail", kwargs={"pk": lesson.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            assert response.json()["next_lesson"]["lesson_id"] == lesson_id
-            assert response.json()["next_lesson"]["chapter_id"] == chapter_id
-            lesson_id = response.json()["id"]
-            chapter_id = response.json()["chapter_id"]
+
+            json_data = response.json()
+            prev_lesson_id = json_data["prev_lesson"]["lesson_id"]
+            next_lesson_id = json_data["next_lesson"]["lesson_id"]
+
+            if i > 0:
+                assert prev_lesson_id == lessons[i - 1].id
+            else:
+                assert prev_lesson_id is None
+
+            if i < len(lessons) - 1:
+                assert next_lesson_id == lessons[i + 1].id
+            else:
+                assert next_lesson_id is None
+
+            lesson.finish(user)
 
     def test_breadcrumbs(self, user_client):
         """Тест, что breadcrumbs отображаются корректно."""
@@ -260,15 +259,17 @@ class TestCourse:
         После запроса POST на /complete/ проверяем статус пройденности урока.
         """
         lesson = LessonFactory()
-        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
-        response = user_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_lesson_progress"] != 2
+        url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course_id})
+
+        def response_assert(url, status_code, user_lesson_progress):
+            response = user_client.get(url)
+            assert response.status_code == status_code
+            assert response.json()["chapters"][0]["lessons"][0]["user_lesson_progress"] == user_lesson_progress
+
+        response_assert(url, status.HTTP_200_OK, 0)
         complete_url = reverse("lessons-complete", kwargs={"pk": lesson.id})
         user_client.post(complete_url)
-        response = user_client.get(url)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_lesson_progress"] == 2
+        response_assert(url, status.HTTP_200_OK, 2)
 
     def test_final_lesson_completion_triggers_chapter_and_course_completion(self, user_client):
         """
@@ -342,7 +343,12 @@ class TestCourse:
         assert len(response.json()["results"]) == 1
 
     def test_lesson_course_endpoints_for_unauth_users(self, anonymous_client):
-        """Тест, что эндпоинты урока и курсов доступны для незарегистрированных пользователей."""
+        """
+        Тест, для неавторизованных пользователей.
+
+        Курс доступен для неавторизованных пользователей.
+        Урок недоступен для неавторизованных пользователей.
+        """
         lesson = LessonFactory()
         course = CourseFactory()
         url_lesson = reverse("lessons-detail", kwargs={"pk": lesson.id})
@@ -351,42 +357,48 @@ class TestCourse:
         response_lesson = anonymous_client.get(url_lesson)
         response_course_detail = anonymous_client.get(url_course_detail)
         response_course_list = anonymous_client.get(url_course_list)
-        assert response_lesson.status_code == status.HTTP_200_OK
+        assert response_lesson.status_code == status.HTTP_401_UNAUTHORIZED
         assert response_course_detail.status_code == status.HTTP_200_OK
         assert response_course_list.status_code == status.HTTP_200_OK
 
     def test_current_lesson_and_chapter_in_course(self, user_client, user):
         """
-        Тест, что текущая глава и урок отображаются на странице курса.
+        Тест текущего урока для четырех ситуаций.
 
-        1. Проверяем, что авторизированный пользователь не начавший курс
-        получает первый урок первой главы курса
-        2. Проверям, что авторизированный пользователь начавший курс, получает
-        активный урок.
+        1. Наличие текущего урока в случе если пользователь не начал прохождение уроков.
+        2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
+        3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
+        4. При прохождении всех уроков current_lesson == Null.
         """
         course = CourseWith2Chapters()
-        subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
-        serializer_response = user_client.post(subscribe)
         url = reverse("courses-detail", kwargs={"pk": course.id})
-        response = user_client.get(url)
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
         second_lesson = lessons[1]
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["current_lesson"]["chapter_id"] == first_lesson.chapter.id
-        assert response.json()["current_lesson"]["lesson_id"] == first_lesson.id
 
-        # Проверяем, возвращается активный урок
+        def request_assert(user_client, url, expected_lesson_id, expected_chapter_id):
+            """Шаблон для проверки ответа."""
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["current_lesson"]["chapter_id"] == expected_chapter_id
+            assert response.json()["current_lesson"]["lesson_id"] == expected_lesson_id
+
+        # 1. Наличие текущего урока в случе если пользователь не начал прохождение уроков.
+        request_assert(user_client, url, first_lesson.id, first_lesson.chapter_id)
+
+        # 2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
         first_lesson.finish(user)
-        new_response = user_client.get(url)
-        assert new_response.status_code == status.HTTP_200_OK
-        if serializer_response := serializer_response.json():
-            assert serializer_response["chapter_id"] == first_lesson.chapter_id
-            assert serializer_response["lesson_id"] == first_lesson.id
+        request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
-        if current_lesson := new_response.json()["current_lesson"]:
-            assert current_lesson["chapter_id"] == second_lesson.chapter_id
-            assert current_lesson["lesson_id"] == second_lesson.id
+        # 3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
+        second_lesson.activate(user)
+        request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
+
+        # 4. При прохождении всех уроков current_lesson == Null.
+        lesson = LessonFactory()
+        lesson.finish(user)
+        url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course.id})
+        request_assert(user_client, url, None, None)
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""
@@ -478,9 +490,37 @@ class TestCourse:
          переходом по эндпоинту урока.
         """
         lesson = LessonFactory()
-        url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+        url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course_id})
         complete_url = reverse("lessons-complete", kwargs={"pk": lesson.id})
         user_client.post(complete_url)
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_lesson_progress"] == 2
+        assert response.json()["chapters"][0]["lessons"][0]["user_lesson_progress"] == 2
+
+    def test_permission_for_current_lesson_works(self, user_client, user):
+        """
+        Тест, что только текущий/пройденный урок доступен для пользователя.
+
+        1. Проверяем, что пользователю доступен текущий урок.
+        2. Проходим первый урок, проверяем, что пользователю доступен второй урок.
+        3. Проверяем, что пользователю недоступен иной урок.
+        4. Проверяем, что пользователю доступен пройденный урок.
+        """
+        chapter = ChapterWith3Lessons()
+        lesson = Lesson.objects.filter(chapter=chapter).first()
+        lessons = lesson.ordered
+        for i, lesson in enumerate(lessons):
+            url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+            response = user_client.get(url)
+            if i == 0:
+                assert response.status_code == status.HTTP_200_OK
+                lesson.finish(user)
+            elif i == 1:
+                assert response.status_code == status.HTTP_200_OK
+            else:
+                assert response.status_code == status.HTTP_403_FORBIDDEN
+
+        # Проверяем, что пользователю доступен пройденный урок
+        url = reverse("lessons-detail", kwargs={"pk": lessons[0].id})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
