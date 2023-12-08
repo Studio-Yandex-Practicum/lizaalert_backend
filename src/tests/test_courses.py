@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import Chapter, Course, Lesson, LessonProgressStatus
+from lizaalert.courses.models import Chapter, Course, Lesson
 from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -371,8 +371,6 @@ class TestCourse:
         4. При прохождении всех уроков current_lesson == Null.
         """
         course = CourseWith2Chapters()
-        subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
-        serializer_response = user_client.post(subscribe)
         url = reverse("courses-detail", kwargs={"pk": course.id})
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
@@ -393,8 +391,7 @@ class TestCourse:
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
-        # TODO после реализации функционала .activate() заменить
-        first_lesson.lesson_progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
+        second_lesson.activate(user)
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 4. При прохождении всех уроков current_lesson == Null.

@@ -108,6 +108,7 @@ class Course(TimeStampedModel):
         finished_lessons = LessonProgressStatus.objects.filter(
             user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
         ).values_list("lesson_id", flat=True)
+
         return (
             Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED)
             .exclude(id__in=finished_lessons)
