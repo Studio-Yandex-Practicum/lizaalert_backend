@@ -242,6 +242,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Response(status=status.HTTP_201_CREATED)
 
 
-class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
+class FilterListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = [Level]
     serializer_class = FilterSerializer
