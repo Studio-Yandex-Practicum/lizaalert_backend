@@ -23,3 +23,9 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
 
     chapter_id = serializers.IntegerField()
     lesson_id = serializers.IntegerField()
+
+
+class ErrorSerializer(serializers.Serializer):
+    """Schema error serializer for OpenAPI/Swagger."""
+
+    error = serializers.CharField()

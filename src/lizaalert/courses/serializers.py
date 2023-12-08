@@ -40,7 +40,7 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     lessons_count = serializers.IntegerField()
     course_duration = serializers.IntegerField()
     course_status = serializers.StringRelatedField(read_only=True)
-    user_status = serializers.StringRelatedField()
+    user_status = serializers.BooleanField(default=False)
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
 
@@ -108,7 +108,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    user_status = serializers.StringRelatedField(default=False)
+    user_status = serializers.BooleanField(default=False)
     user_course_progress = serializers.IntegerField(default=0)
     current_lesson = serializers.SerializerMethodField()
 
@@ -205,5 +205,6 @@ class FilterSerializer(serializers.Serializer):
     def get_slug(self, model):
         return model._meta.model_name
 
+    @swagger_serializer_method(serializer_or_field=OptionSerializer)
     def get_options(self, model):
         return OptionSerializer(model.objects.all(), many=True).data
