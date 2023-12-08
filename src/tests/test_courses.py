@@ -372,7 +372,6 @@ class TestCourse:
         """
         course = CourseWith2Chapters()
         subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
-        serializer_response = user_client.post(subscribe)
         url = reverse("courses-detail", kwargs={"pk": course.id})
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
