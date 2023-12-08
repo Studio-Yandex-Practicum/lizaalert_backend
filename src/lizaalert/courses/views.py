@@ -36,6 +36,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     дополнительные действия, такие как запись и отписка от курса.
 
     """
+
     permission_classes = [
         AllowAny,
     ]
@@ -233,6 +234,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     Примечание:
         Для выполнения дополнительных действий, таких как завершение урока, требуется аутентификация пользователя.
     """
+
     permission_classes = [
         AllowAny,
     ]
@@ -275,17 +277,13 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
 
     def get_serializer_class(self):
-        """
-        Возвращает класс сериализатора в зависимости от текущего действия.
-        """
+        """Возвращает класс сериализатора в зависимости от текущего действия."""
         if self.action == "complete":
             return None
         return LessonSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        """
-        Получает детали урока, активируя его для пользователя при необходимости.
-        """
+        """Получает детали урока, активируя его для пользователя при необходимости."""
         lesson = self.get_object()
         user = self.request.user
         if user.is_authenticated:
@@ -335,5 +333,6 @@ class FilterListViewSet(viewsets.ReadOnlyModelViewSet):
         - queryset: Коллекция уровней, используемая для формирования списка фильтров.
         - serializer_class: Сериализатор, преобразующий объекты уровней в формат данных, отправляемый клиенту.
     """
+
     queryset = [Level]
     serializer_class = FilterSerializer
