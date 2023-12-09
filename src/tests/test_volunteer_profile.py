@@ -11,10 +11,12 @@ class TestVolunteerProfile:
     url = reverse("profile")
 
     def test_get_volunteer_profile(self, user_client):
+        """Проверка, что получение профиля волонтера возвращает статус HTTP 200 OK."""
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
 
     def test_patch_volunteer_profile(self, user, user_client):
+        """Проверка изменения профиля волонтера через PATCH-запрос."""
         user_client.force_authenticate(user=user)
         data = {
             "call_sign": "Test Sign",
@@ -24,10 +26,11 @@ class TestVolunteerProfile:
         assert response.status_code == status.HTTP_200_OK
 
         user.refresh_from_db()
-        assert user.volunteer.call_sign == "Test Sign"
-        assert str(user.volunteer.birth_date) == "2000-01-01"
+        assert user.volunteer.call_sign == data["call_sign"]
+        assert str(user.volunteer.birth_date) == data["birth_date"]
 
     def test_patch_volunteer_profile_invalid_data(self, user_client, user):
+        """Проверка, что изменение профиля с недопустимыми данными возвращает код 400."""
         user_client.force_authenticate(user=user)
         invalid_data = {"call_sign": 1, "birth_date": "invalid_date"}
         response = user_client.patch(self.url, invalid_data)
