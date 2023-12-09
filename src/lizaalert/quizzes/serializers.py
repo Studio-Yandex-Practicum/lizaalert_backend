@@ -76,7 +76,7 @@ class UserAnswerSerializer(serializers.ModelSerializer):
         user_answer = UserAnswer(**validated_data)
         user_answer.save()
         return user_answer
-    
+
     def get_remaining_retries(self, instance):
         max_retries = instance.quiz.retries
         current_retries = instance.retry_count
