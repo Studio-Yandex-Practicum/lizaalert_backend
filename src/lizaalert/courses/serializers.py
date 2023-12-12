@@ -40,7 +40,7 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     lessons_count = serializers.IntegerField()
     course_duration = serializers.IntegerField()
     course_status = serializers.StringRelatedField(read_only=True)
-    user_status = serializers.CharField(default="notEnrolled")
+    user_status = serializers.CharField(default="NotEnrolled")
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
 
@@ -108,7 +108,7 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    user_status = serializers.CharField(default="notEnrolled")
+    user_status = serializers.CharField(default="NotEnrolled")
     user_course_progress = serializers.IntegerField(default=0)
     current_lesson = serializers.SerializerMethodField()
 
