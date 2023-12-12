@@ -103,7 +103,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             users_annotations = {
                 "user_status": Coalesce(
                     Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
-                    Value("NotEnrolled"),
+                    Value("not_enrolled"),
                 ),
                 "user_course_progress": Coalesce(
                     Cast(

@@ -442,8 +442,8 @@ class Subscription(TimeStampedModel):
     """
 
     class Status(models.TextChoices):
-        ENROLLED = "Enrolled", "Запись активна"
-        NOTENROLLED = "NotEnrolled", "Запись не активна"
+        ENROLLED = "enrolled", "Запись активна"
+        NOT_ENROLLED = "not_enrolled", "Запись не активна"
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")

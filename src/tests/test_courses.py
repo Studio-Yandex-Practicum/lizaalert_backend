@@ -168,7 +168,7 @@ class TestCourse:
         assert response_1.status_code == status.HTTP_200_OK
         assert subscription_response.status_code == status.HTTP_201_CREATED
         assert response_1.json()["user_status"] == Subscription.Status.ENROLLED
-        assert response_2.json()["user_status"] == Subscription.Status.NOTENROLLED
+        assert response_2.json()["user_status"] == Subscription.Status.NOT_ENROLLED
 
         # Повторная подписка невозможна
         subscription_response = user_client.post(subscribe)
@@ -187,7 +187,7 @@ class TestCourse:
         response = user_client.post(unsubscribe_url)
         response_1 = user_client.get(url)
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert response_1.json()["user_status"] == Subscription.Status.NOTENROLLED
+        assert response_1.json()["user_status"] == Subscription.Status.NOT_ENROLLED
 
     def test_another_user_unable_to_unsubscribe_from_course(self, user_client, user_2):
         """Тест, что иной пользователь не может отписаться не от своего курса."""
