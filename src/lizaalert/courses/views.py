@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db.models import Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -101,7 +101,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 )
 
             users_annotations = {
-                "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
+                "user_status": Coalesce(
+                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
+                    Value("not_enrolled"),
+                ),
                 "user_course_progress": Coalesce(
                     Cast(
                         Subquery(

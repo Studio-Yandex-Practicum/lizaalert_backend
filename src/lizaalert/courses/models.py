@@ -441,14 +441,14 @@ class Subscription(TimeStampedModel):
     enabled - признак активности записи на курс.
     """
 
-    class Flag(models.TextChoices):
-        ACTIVE = 1, "Запись активна"
-        INACTIVE = 0, "Запись не активна"
+    class Status(models.TextChoices):
+        ENROLLED = "enrolled", "Запись активна"
+        NOT_ENROLLED = "not_enrolled", "Запись не активна"
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
     enabled = models.CharField(
-        max_length=20, choices=Flag.choices, verbose_name="статус записи на курс", default=Flag.ACTIVE
+        max_length=20, choices=Status.choices, verbose_name="статус записи на курс", default=Status.ENROLLED
     )
 
     class Meta:

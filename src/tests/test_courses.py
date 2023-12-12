@@ -15,6 +15,7 @@ from tests.factories.courses import (
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     LessonFactory,
+    Subscription,
     SubscriptionFactory,
 )
 from tests.factories.users import LevelFactory
@@ -166,8 +167,8 @@ class TestCourse:
         response_2 = user_client.get(url_2)
         assert response_1.status_code == status.HTTP_200_OK
         assert subscription_response.status_code == status.HTTP_201_CREATED
-        assert response_1.json()["user_status"] is True
-        assert response_2.json()["user_status"] is False
+        assert response_1.json()["user_status"] == Subscription.Status.ENROLLED
+        assert response_2.json()["user_status"] == Subscription.Status.NOT_ENROLLED
 
         # Повторная подписка невозможна
         subscription_response = user_client.post(subscribe)
@@ -180,13 +181,13 @@ class TestCourse:
         url = reverse("courses-detail", kwargs={"pk": course_id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_status"] is True
+        assert response.json()["user_status"] == Subscription.Status.ENROLLED
 
         unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
         response = user_client.post(unsubscribe_url)
         response_1 = user_client.get(url)
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert response_1.json()["user_status"] is False
+        assert response_1.json()["user_status"] == Subscription.Status.NOT_ENROLLED
 
     def test_another_user_unable_to_unsubscribe_from_course(self, user_client, user_2):
         """Тест, что иной пользователь не может отписаться не от своего курса."""
