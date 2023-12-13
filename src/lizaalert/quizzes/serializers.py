@@ -78,7 +78,7 @@ class UserAnswerSerializer(serializers.ModelSerializer):
         return user_answer
 
     def get_remaining_retries(self, instance):
+        """Возвращает количество попыток при прохождении квизов."""
         max_retries = instance.quiz.retries
         current_retries = instance.retry_count
-        remaining_retries = max(0, max_retries - current_retries)
-        return remaining_retries
+        return max(0, max_retries - current_retries)
