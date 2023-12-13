@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
+from django.db.models import Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -101,7 +101,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 )
 
             users_annotations = {
-                "user_status": Exists(Subscription.objects.filter(user=user, enabled=1, course_id=OuterRef("id"))),
+                "user_status": Coalesce(
+                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
+                    Value("not_enrolled"),
+                ),
                 "user_course_progress": Coalesce(
                     Cast(
                         Subquery(
@@ -133,12 +136,16 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer})
+    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """Subscribe user for given course."""
         user = self.request.user
-        course = get_object_or_404(Course, **kwargs)
+        try:
+            course = get_object_or_404(Course, **kwargs)
+        except ValueError:
+            serializer = ErrorSerializer({"error": "Invalid id."})
+            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
         check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
         if check_for_subscription:
             serializer = ErrorSerializer({"error": "Subscription already exists."})
@@ -152,6 +159,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = BreadcrumbLessonSerializer(initial_lesson)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @swagger_auto_schema(responses={204: "Unsubscribed.", 404: ErrorSerializer})
     @action(
         detail=True,
         methods=["post"],
@@ -163,7 +171,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def unroll(self, request, **kwargs):
         """Unsubscribe user from given course."""
         user = self.request.user
-        course = get_object_or_404(Course, **kwargs)
+        try:
+            course = get_object_or_404(Course, **kwargs)
+        except ValueError:
+            serialzier = ErrorSerializer({"error": "Invalid id."})
+            return Response(serialzier.data, status=status.HTTP_404_NOT_FOUND)
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
