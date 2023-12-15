@@ -27,8 +27,6 @@ from lizaalert.users.models import Level
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
-    """Viewset for course."""
-
     permission_classes = [
         AllowAny,
     ]
@@ -37,14 +35,30 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ("level", "course_format")
     pagination_class = CourseSetPagination
 
-    def get_queryset(self):
-        """
-        Queryset getter.
+    @swagger_auto_schema(
+        operation_description="""
+        Получение QuerySet для курсов.
 
-        base_annotations - provide annotations for both authenticated and
-        unauthenticated users.
-        users_annotations - provide annotations only for auth user.
+        Этот метод извлекает QuerySet для курсов с аннотациями как для
+        аутентифицированных, так и для неаутентифицированных пользователей.
+
+        Возвращает:
+            QuerySet: QuerySet для курсов.
+
+        base_annotations содержит аннотации для запроса, которые не зависят от пользователя:
+
+        - course_duration - суммарная продолжительность всех уроков в курсе;
+        - lessons_count - количество уроков в курсе.
+
+        user_annotations содержит аннотации для запроса, которые зависят от пользователя:
+
+        - user_status - статус пользователя по отношению к курсу (записался на курс, проходит курс и т.д.);
+        - user_course_progress - прогресс пользователя в курсе;
+        - current_lesson - текущий урок пользователя;
+        - current_chapter - текущая глава пользователя.
         """
+    )
+    def get_queryset(self):
         user = self.request.user
         course_id = self.kwargs.get("pk")
         course = None
@@ -139,7 +153,21 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
-        """Subscribe user for given course."""
+        """
+        Подписать пользователя на участие в данном курсе.
+
+        Возвращает:
+
+                201: Ответ с сериализованными данными, указывающими результат подписки.
+
+        Исключения:
+
+                403 Forbidden: Если пользователь уже подписан на данный курс.
+
+        Примечание:
+            Это действие требует аутентификации пользователя.
+
+        """
         user = self.request.user
         try:
             course = get_object_or_404(Course, **kwargs)
@@ -159,7 +187,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = BreadcrumbLessonSerializer(initial_lesson)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(responses={204: "Unsubscribed.", 404: ErrorSerializer})
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_204_NO_CONTENT: "Пользователь успешно отписан от курса.",
+            status.HTTP_404_NOT_FOUND: ErrorSerializer,
+        }
+    )
     @action(
         detail=True,
         methods=["post"],
@@ -169,7 +202,13 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         ),
     )
     def unroll(self, request, **kwargs):
-        """Unsubscribe user from given course."""
+        """
+        Отписать пользователя от участия в данном курсе.
+
+        Примечание:
+            Это действие требует аутентификации пользователя и соответствующих прав.
+
+        """
         user = self.request.user
         try:
             course = get_object_or_404(Course, **kwargs)
@@ -182,6 +221,26 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    Класс представления для работы с уроками.
+
+    Предоставляет операции чтения и дополнительные действия.
+
+    Атрибуты:
+        - permission_classes: Список классов разрешений, разрешающий доступ всем пользователям.
+
+    Методы:
+        - get_queryset: Формирует пользовательский запрос для уроков, включая информацию о прогрессе пользователя.
+
+        - get_serializer_class: Возвращает класс сериализатора в зависимости от текущего действия.
+
+        - retrieve: Получает детали урока, активируя его для пользователя при необходимости.
+
+        - complete: Завершает урок для пользователя.
+
+    Примечание:
+        Для выполнения дополнительных действий, таких как завершение урока, требуется аутентификация пользователя.
+    """
 
     permission_classes = [
         AllowAny,
@@ -226,11 +285,26 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Lesson.objects.select_related("chapter", "chapter__course").annotate(**base_annotations)
 
     def get_serializer_class(self):
+        """Возвращает класс сериализатора в зависимости от текущего действия."""
         if self.action == "complete":
             return None
         return LessonSerializer
 
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: "Успешный ответ",
+            status.HTTP_404_NOT_FOUND: "Урок не найден",
+        }
+    )
     def retrieve(self, request, *args, **kwargs):
+        """
+        Получает детали урока, активируя его для пользователя при необходимости.
+
+        Возвращает:
+
+                200: Успешный ответ
+                404: Урок не найден
+        """
         lesson = self.get_object()
         user = self.request.user
         if user.is_authenticated:
@@ -248,7 +322,24 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             IsUserOrReadOnly,
         ),
     )
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_201_CREATED: "Урок успешно завершен",
+            status.HTTP_404_NOT_FOUND: "Урок не найден",
+        }
+    )
     def complete(self, request, **kwargs):
+        """
+        Действие для завершения урока для конкретного пользователя.
+
+        Возвращает:
+            - Response: Ответ, указывающий на успешное завершение урока (HTTP 201 Created).
+
+        Примечание:
+            Для выполнения данного действия требуется аутентификация пользователя.
+            Урок завершается с использованием метода `finish`, который выполняет
+            необходимые действия по завершению урока для конкретного пользователя.
+        """
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
         lesson.finish(user)
@@ -256,5 +347,14 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 
 class FilterListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    Класс представления для просмотра списка фильтров.
+
+    Предоставляет возможность только для чтения (ReadOnly).
+
+    Атрибуты:
+        - queryset: Коллекция уровней, используемая для формирования списка фильтров.
+    """
+
     queryset = [Level]
     serializer_class = FilterSerializer
