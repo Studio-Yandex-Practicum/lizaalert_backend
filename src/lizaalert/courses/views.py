@@ -27,16 +27,6 @@ from lizaalert.users.models import Level
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet для управления курсами.
-
-    Этот viewset предоставляет операции только для чтения для курсов, включая
-
-    получение списка курсов, подробную информацию о конкретном курсе, а также
-
-    дополнительные действия, такие как запись и отписка от курса.
-
-    """
-
     permission_classes = [
         AllowAny,
     ]
@@ -45,8 +35,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ("level", "course_format")
     pagination_class = CourseSetPagination
 
-    def get_queryset(self):
-        """
+    @swagger_auto_schema(
+        operation_description="""
         Получение QuerySet для курсов.
 
         Этот метод извлекает QuerySet для курсов с аннотациями как для
@@ -55,7 +45,20 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         Возвращает:
             QuerySet: QuerySet для курсов.
 
+        base_annotations содержит аннотации для запроса, которые не зависят от пользователя:
+
+        - course_duration - суммарная продолжительность всех уроков в курсе;
+        - lessons_count - количество уроков в курсе.
+
+        user_annotations содержит аннотации для запроса, которые зависят от пользователя:
+
+        - user_status - статус пользователя по отношению к курсу (записался на курс, проходит курс и т.д.);
+        - user_course_progress - прогресс пользователя в курсе;
+        - current_lesson - текущий урок пользователя;
+        - current_chapter - текущая глава пользователя.
         """
+    )
+    def get_queryset(self):
         user = self.request.user
         course_id = self.kwargs.get("pk")
         course = None
@@ -153,10 +156,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Подписать пользователя на участие в данном курсе.
 
-        Параметры:
-            - request: Объект HTTP-запроса.
-            - kwargs: Ключевые аргументы, содержащие детали о курсе.
-
         Возвращает:
 
                 201: Ответ с сериализованными данными, указывающими результат подписки.
@@ -188,7 +187,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = BreadcrumbLessonSerializer(initial_lesson)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(responses={204: "Unsubscribed.", 404: ErrorSerializer})
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_204_NO_CONTENT: "Пользователь успешно отписан от курса.",
+            status.HTTP_404_NOT_FOUND: ErrorSerializer,
+        }
+    )
     @action(
         detail=True,
         methods=["post"],
@@ -200,15 +204,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def unroll(self, request, **kwargs):
         """
         Отписать пользователя от участия в данном курсе.
-
-        Параметры:
-            - request: Объект HTTP-запроса.
-            - kwargs: Ключевые аргументы, содержащие детали о курсе.
-
-        Возвращает:
-
-                204: description: Пользователь успешно отписан от курса.
-                404: description: Подписка на курс не найдена.
 
         Примечание:
             Это действие требует аутентификации пользователя и соответствующих прав.
@@ -295,6 +290,12 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             return None
         return LessonSerializer
 
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: "Успешный ответ",
+            status.HTTP_404_NOT_FOUND: "Урок не найден",
+        }
+    )
     def retrieve(self, request, *args, **kwargs):
         """
         Получает детали урока, активируя его для пользователя при необходимости.
@@ -321,13 +322,15 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             IsUserOrReadOnly,
         ),
     )
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_201_CREATED: "Урок успешно завершен",
+            status.HTTP_404_NOT_FOUND: "Урок не найден",
+        }
+    )
     def complete(self, request, **kwargs):
         """
         Действие для завершения урока для конкретного пользователя.
-
-        Параметры:
-            - request: Объект HTTP-запроса.
-            - kwargs: Ключевые аргументы, содержащие детали о конкретном уроке.
 
         Возвращает:
             - Response: Ответ, указывающий на успешное завершение урока (HTTP 201 Created).
@@ -351,7 +354,6 @@ class FilterListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     Атрибуты:
         - queryset: Коллекция уровней, используемая для формирования списка фильтров.
-        - serializer_class: Сериализатор, преобразующий объекты уровней в формат данных, отправляемый клиенту.
     """
 
     queryset = [Level]
