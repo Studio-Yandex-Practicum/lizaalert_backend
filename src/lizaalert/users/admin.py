@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -34,7 +35,33 @@ class LevelAdmin(admin.ModelAdmin):
     inlines = [VolunteerLevelInline]
 
 
+class BadgeAdminForm(forms.ModelForm):
+    class Meta:
+        model = Badge
+        fields = "__all__"
+
+    def clean(self):
+        """
+        Переопределение метода clean для выполнения пользовательской валидации полей формы.
+
+        Выполняет проверку, что поля `threshold_courses` и `threshold_course` не заполнены одновременно.
+        В случае обнаружения одновременного заполнения, добавляет сообщение об ошибке к соответствующим полям.
+        """
+        cleaned_data = super().clean()
+        threshold_courses = cleaned_data.get("threshold_courses")
+        threshold_course = cleaned_data.get("threshold_course")
+
+        if threshold_courses is not None and threshold_course is not None:
+            self.add_error(
+                "threshold_courses", "Эти поля не могут быть записаны одновременно, нужно выбрать только одно."
+            )
+            self.add_error(
+                "threshold_course", "Эти поля не могут быть записаны одновременно, нужно выбрать только одно."
+            )
+
+
 class BadgeAdmin(admin.ModelAdmin):
+    form = BadgeAdminForm
     inlines = [VolunteerBadgeInline]
 
 
