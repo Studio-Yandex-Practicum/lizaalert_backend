@@ -71,14 +71,14 @@ class VolunteerBadgeAdminForm(forms.ModelForm):
         fields = "__all__"
 
     def clean(self):
-        """Проверка на уникальность ачивок для волонтеров."""
+        """Проверка на уникальность значков для волонтеров."""
         cleaned_data = super().clean()
         volunteer = cleaned_data.get("volunteer")
         badge = cleaned_data.get("badge")
 
         if volunteer and badge:
             if VolunteerBadge.objects.filter(volunteer=volunteer, badge=badge).exclude(id=self.instance.id).exists():
-                self.add_error(None, "Эта ачивка уже была выдана данному волонтеру.")
+                self.add_error(None, "Этот значок уже был выдан данному волонтеру.")
 
 
 class VolunteerAdmin(admin.ModelAdmin):
