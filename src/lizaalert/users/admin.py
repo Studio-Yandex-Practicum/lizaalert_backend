@@ -51,7 +51,7 @@ class BadgeAdminForm(forms.ModelForm):
         threshold_courses = cleaned_data.get("threshold_courses")
         threshold_course = cleaned_data.get("threshold_course")
 
-        if threshold_courses is not None and threshold_course is not None:
+        if threshold_courses and threshold_course:
             self.add_error(
                 "threshold_courses", "Эти поля не могут быть записаны одновременно, нужно выбрать только одно."
             )
@@ -63,6 +63,22 @@ class BadgeAdminForm(forms.ModelForm):
 class BadgeAdmin(admin.ModelAdmin):
     form = BadgeAdminForm
     inlines = [VolunteerBadgeInline]
+
+
+class VolunteerBadgeAdminForm(forms.ModelForm):
+    class Meta:
+        model = VolunteerBadge
+        fields = "__all__"
+
+    def clean(self):
+        """Проверка на уникальность ачивок для волонтеров."""
+        cleaned_data = super().clean()
+        volunteer = cleaned_data.get("volunteer")
+        badge = cleaned_data.get("badge")
+
+        if volunteer and badge:
+            if VolunteerBadge.objects.filter(volunteer=volunteer, badge=badge).exclude(id=self.instance.id).exists():
+                self.add_error(None, "Эта ачивка уже была выдана данному волонтеру.")
 
 
 class VolunteerAdmin(admin.ModelAdmin):
