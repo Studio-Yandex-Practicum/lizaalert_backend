@@ -166,10 +166,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @swagger_auto_schema(responses={200: CourseDetailSerializer, 403: ErrorSerializer})
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
     @swagger_auto_schema(responses={201: UserStatusBreadcrumbSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
