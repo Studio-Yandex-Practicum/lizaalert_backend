@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Count, F
+from django.utils import timezone
 
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
 from lizaalert.quizzes.models import Quiz
@@ -347,7 +348,7 @@ class ChapterProgressStatus(TimeStampedModel):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
         NOTSTARTED = 0, "Не начата"
-        INPROGRESS = 1, "Начата"
+        ACTIVE = 1, "Начата"
         FINISHED = 2, "Пройдена"
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT, related_name="chapter_progress")
@@ -387,7 +388,7 @@ class CourseProgressStatus(TimeStampedModel):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
         NOTSTARTED = 0, "Не начат"
-        INPROGRESS = 1, "Начат"
+        ACTIVE = 1, "Начат"
         FINISHED = 2, "Пройден"
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course_progress")
@@ -438,16 +439,19 @@ class Subscription(TimeStampedModel):
 
     user - ForeignKey на модель user
     course - ForeignKey на модель course.
-    enabled - признак активности записи на курс.
+    status - признак активности записи на курс.
     """
 
     class Status(models.TextChoices):
-        ENROLLED = "enrolled", "Запись активна"
+        ENROLLED = "enrolled", "Записан на курс"
         NOT_ENROLLED = "not_enrolled", "Запись не активна"
+        IN_PROGRESS = "in_progress", "Курс проходится"
+        AVAILABLE = "available", "Курс доступен"
+        COMPLETED = "completed", "Курс пройден"
 
-    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
-    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
-    enabled = models.CharField(
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="subscriptions")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="subscription")
+    status = models.CharField(
         max_length=20, choices=Status.choices, verbose_name="статус записи на курс", default=Status.ENROLLED
     )
 
@@ -464,3 +468,32 @@ class Subscription(TimeStampedModel):
 
     def __str__(self):
         return f"<Subscription: {self.id}, user: {self.user_id}, course: {self.course_id}>"
+
+    def save(self, *args, **kwargs):
+        """Проверить текущую дату и установить статус записи на курс при создании подписки."""
+        if not self.id:
+            if timezone.now().date() < self.course.start_date:
+                self.status = self.Status.ENROLLED
+            else:
+                self.status = self.Status.AVAILABLE
+        super().save(*args, **kwargs)
+
+    def _get_status(self):
+        """Получить статус записи на курс."""
+        course_progress_status = CourseProgressStatus.objects.filter(course=self.course, user=self.user).first()
+        if course_progress_status:
+            if course_progress_status.usercourseprogress == CourseProgressStatus.ProgressStatus.FINISHED:
+                return self.Status.COMPLETED
+            if course_progress_status.usercourseprogress == CourseProgressStatus.ProgressStatus.ACTIVE:
+                return self.Status.IN_PROGRESS
+
+        if self.course.start_date <= timezone.now().date():
+            return self.Status.AVAILABLE
+
+        return self.Status.ENROLLED
+
+    def update_status(self):
+        """Обновить статус записи на курс если курс не завершен."""
+        if self.status != self.Status.COMPLETED:
+            self.status = self._get_status()
+            self.save()

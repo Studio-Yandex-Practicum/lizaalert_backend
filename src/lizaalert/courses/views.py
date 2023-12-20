@@ -20,13 +20,27 @@ from lizaalert.courses.models import (
     Subscription,
 )
 from lizaalert.courses.pagination import CourseSetPagination
-from lizaalert.courses.permissions import CurrentLessonOrProhibited, IsUserOrReadOnly
+from lizaalert.courses.permissions import CurrentLessonOrProhibited, EnrolledAndCourseHasStarted, IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import BreadcrumbLessonSerializer, ErrorSerializer
+from lizaalert.courses.utils import (
+    ErrorSerializer,
+    UserStatusBreadcrumbSerializer,
+    update_one_subscription,
+    update_subscriptions,
+)
 from lizaalert.users.models import Level
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint для работы с курсами.
+
+    Предоставляет операции чтения и дополнительные действия.
+    Responses:
+        200: Ответ с сериализованными данными курса.
+        201: Ответ с сериализованными данными, указывающими характеристики подписки.
+    """
+
     permission_classes = [
         AllowAny,
     ]
@@ -107,16 +121,18 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             )
             if course:
                 current_lesson = course.current_lesson(user)
+                update_one_subscription(user, course)  # Обновляем подписку только этого курса
             else:
                 current_lesson = (
                     Lesson.objects.filter(chapter__course=course, status=Lesson.LessonStatus.PUBLISHED)
                     .annotate(ordering=F("chapter__order_number") + F("order_number"))
                     .order_by("ordering")
                 )
+                update_subscriptions(user)  # Обновляем все подписки пользователя
 
             users_annotations = {
                 "user_status": Coalesce(
-                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
+                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("status")),
                     Value("not_enrolled"),
                 ),
                 "user_course_progress": Coalesce(
@@ -150,7 +166,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
+    @swagger_auto_schema(responses={200: CourseDetailSerializer, 403: ErrorSerializer})
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(responses={201: UserStatusBreadcrumbSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """
@@ -172,19 +192,30 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            serializer = ErrorSerializer({"error": "Invalid id."})
+            serializer = ErrorSerializer({"detail": "Invalid id."})
             return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
-        check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
-        if check_for_subscription:
-            serializer = ErrorSerializer({"error": "Subscription already exists."})
+
+        subscription, created = Subscription.objects.get_or_create(user=user, course=course)
+        if not created:
+            serializer = ErrorSerializer({"detail": "Subscription already exists."})
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
-        Subscription.objects.create(user=user, course=course)
+
         current_lesson = course.current_lesson(user).first()
+        user_status = subscription.status
         if current_lesson:
-            initial_lesson = {"chapter_id": current_lesson.chapter_id, "lesson_id": current_lesson.id}
+            initial_lesson_and_status = {
+                "chapter_id": current_lesson.chapter_id,
+                "lesson_id": current_lesson.id,
+                "user_status": user_status,
+            }
         else:
-            initial_lesson = {"chapter_id": None, "lesson_id": None}
-        serializer = BreadcrumbLessonSerializer(initial_lesson)
+            initial_lesson_and_status = {
+                "chapter_id": None,
+                "lesson_id": None,
+                "user_status": user_status,
+            }
+
+        serializer = UserStatusBreadcrumbSerializer(initial_lesson_and_status)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
@@ -213,7 +244,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            serialzier = ErrorSerializer({"error": "Invalid id."})
+            serialzier = ErrorSerializer({"detail": "Invalid id."})
             return Response(serialzier.data, status=status.HTTP_404_NOT_FOUND)
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
@@ -240,11 +271,17 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     Примечание:
         Для выполнения дополнительных действий, таких как завершение урока, требуется аутентификация пользователя.
+
+    Responses:
+        200: Ответ с сериализованными данными урока.
+        201: Ответ с сериализованными данными, указывающими на успешное завершение урока.
+        403: Ответ с сериализованными данными, указывающими на ошибку доступа.
     """
 
     permission_classes = [
         AllowAny,
         CurrentLessonOrProhibited,
+        EnrolledAndCourseHasStarted,
     ]
 
     def get_queryset(self):

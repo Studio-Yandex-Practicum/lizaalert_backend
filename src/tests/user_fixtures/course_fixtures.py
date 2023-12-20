@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -63,3 +64,10 @@ def create_chapter(user, create_lesson, create_course):
     ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[0], order_number=1)
     ChapterLesson.objects.create(chapter=chapter, lesson=create_lesson[1], order_number=2)
     return chapter
+
+
+@pytest.fixture
+def mock_enrollment_permission():
+    """Мок для доступа к урокам курса, если пользователь на него не подписан."""
+    with patch("lizaalert.courses.permissions.EnrolledAndCourseHasStarted.has_object_permission", return_value=True):
+        yield

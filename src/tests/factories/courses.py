@@ -150,7 +150,6 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
-    enabled = Subscription.Status.ENROLLED
 
 
 class ChapterWith3Lessons(ChapterFactory):

@@ -1,9 +1,11 @@
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.courses.models import Chapter, Course, CourseProgressStatus, Lesson
+from lizaalert.courses.utils import update_subscriptions
 from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -30,7 +32,7 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_lessons_appear_in_chapters(self, user_client):
+    def test_lessons_appear_in_chapters(self, user_client, mock_enrollment_permission):
         """
         Tests Course -> Chapter -> Lesson relation.
 
@@ -153,22 +155,31 @@ class TestCourse:
         assert results["knowledge"][0]["description"] == knowledge.description
 
     def test_user_subscription_to_course(self, user_client, user, user_2):
-        """Тест, что пользователь может подписаться на курс."""
-        course = CourseFactory()
-        subscription_1 = SubscriptionFactory(user=user)
-        subscription_2 = SubscriptionFactory(user=user_2)
-        subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
-        subscription_response = user_client.post(subscribe)
-        course_id_1 = subscription_1.course.id
-        course_id_2 = subscription_2.course.id
-        url_1 = reverse("courses-detail", kwargs={"pk": course_id_1})
-        url_2 = reverse("courses-detail", kwargs={"pk": course_id_2})
-        response_1 = user_client.get(url_1)
-        response_2 = user_client.get(url_2)
-        assert response_1.status_code == status.HTTP_200_OK
-        assert subscription_response.status_code == status.HTTP_201_CREATED
-        assert response_1.json()["user_status"] == Subscription.Status.ENROLLED
-        assert response_2.json()["user_status"] == Subscription.Status.NOT_ENROLLED
+        """
+        Тест, что пользователь может подписаться на курс.
+
+        В переменной courses создается кортеж из двух курсов.
+        Первый курс начнется через неделю и при подписке на него ожидаем статус ENROLLED.
+        Второй курс уже идет и при подписке на него ожидаем статус AVAILABLE.
+        """
+        courses = (
+            (
+                CourseFactory(start_date=timezone.now().date() + timezone.timedelta(days=7)),
+                Subscription.Status.ENROLLED,
+            ),
+            (
+                CourseFactory(start_date=timezone.now().date() - timezone.timedelta(days=7)),
+                Subscription.Status.AVAILABLE,
+            ),
+        )
+        for course, expected_status in courses:
+            subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
+            subscription_response = user_client.post(subscribe)
+            url = reverse("courses-detail", kwargs={"pk": course.id})
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert subscription_response.status_code == status.HTTP_201_CREATED
+            assert response.json()["user_status"] == expected_status
 
         # Повторная подписка невозможна
         subscription_response = user_client.post(subscribe)
@@ -197,7 +208,7 @@ class TestCourse:
         response = user_client.post(unsubscribe_url)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_lessons_appear_on_endpoint(self, user_client):
+    def test_lessons_appear_on_endpoint(self, user_client, mock_enrollment_permission):
         """Тест, что уроки и аннотация курса корректно отображаются по эндпоинту."""
         _ = ChapterWith3Lessons()
         lesson = LessonFactory()
@@ -207,7 +218,7 @@ class TestCourse:
         assert response.json()["id"] == lesson.id
         assert response.json()["course_id"] == lesson.chapter.course_id
 
-    def test_lessons_pagination_works(self, user_client, user):
+    def test_lessons_pagination_works(self, user_client, user, mock_enrollment_permission):
         """
         Тест, что работает переключение между уроками.
 
@@ -241,7 +252,7 @@ class TestCourse:
 
             lesson.finish(user)
 
-    def test_breadcrumbs(self, user_client):
+    def test_breadcrumbs(self, user_client, mock_enrollment_permission):
         """Тест, что breadcrumbs отображаются корректно."""
         lesson = LessonFactory()
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
@@ -252,7 +263,7 @@ class TestCourse:
         assert response.json()["breadcrumbs"]["chapter"]["id"] == lesson.chapter.id
         assert response.json()["breadcrumbs"]["chapter"]["title"] == lesson.chapter.title
 
-    def test_lesson_completion(self, user_client):
+    def test_lesson_completion(self, user_client, mock_enrollment_permission):
         """
         Тест, что работает завершение урока.
 
@@ -272,7 +283,9 @@ class TestCourse:
         user_client.post(complete_url)
         response_assert(url, status.HTTP_200_OK, 2)
 
-    def test_final_lesson_completion_triggers_chapter_and_course_completion(self, user_client):
+    def test_final_lesson_completion_triggers_chapter_and_course_completion(
+        self, user_client, mock_enrollment_permission
+    ):
         """
         Тест, что завершение последнего урока в главе завершает главу.
 
@@ -471,7 +484,7 @@ class TestCourse:
         mixin.set_ordering(new_lesson, queryset, LESSON_STEP)
         assert new_lesson.order_number == 40
 
-    def test_lesson_activation(self, user_client):
+    def test_lesson_activation(self, user_client, mock_enrollment_permission):
         """
         Тест активации урока.
 
@@ -483,7 +496,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == 1
 
-    def test_lesson_activation_changes(self, user_client):
+    def test_lesson_activation_changes(self, user_client, mock_enrollment_permission):
         """
         Тест активации урока.
 
@@ -498,7 +511,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["lessons"][0]["user_lesson_progress"] == 2
 
-    def test_permission_for_current_lesson_works(self, user_client, user):
+    def test_permission_for_current_lesson_works(self, user_client, user, mock_enrollment_permission):
         """
         Тест, что только текущий/пройденный урок доступен для пользователя.
 
@@ -525,3 +538,61 @@ class TestCourse:
         url = reverse("lessons-detail", kwargs={"pk": lessons[0].id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
+
+    def test_update_subsctiptions_status(self, user):
+        """
+        Тест функции update_subscriptions.
+
+        Функция обновляет статусы подписки пользователя в зависимости от статуса
+         прохождения курса, либо даты начала курса.
+        """
+        start_in_future = timezone.now().date() + timezone.timedelta(days=7)
+        already_started = timezone.now().date() - timezone.timedelta(days=7)
+
+        def assert_subscription_status(user, date, expected_status, finish_course=False, course_in_progress=False):
+            course = CourseFactory(start_date=date)
+            if finish_course:
+                course.finish(user)
+            if course_in_progress:
+                CourseProgressStatus.objects.update_or_create(
+                    user=user, course=course, usercourseprogress=CourseProgressStatus.ProgressStatus.ACTIVE
+                )
+            subscription = SubscriptionFactory(user=user, course=course)
+            update_subscriptions(user)
+            subscription.refresh_from_db()
+            assert subscription.status == expected_status
+
+        # Тестируем статус при старте курса в будущем
+        assert_subscription_status(user, start_in_future, Subscription.Status.ENROLLED)
+
+        # Тестируем статус при уже стартовавшем курсе
+        assert_subscription_status(user, already_started, Subscription.Status.AVAILABLE)
+
+        # Тестируем статус про прохождении курса
+        assert_subscription_status(user, already_started, Subscription.Status.IN_PROGRESS, course_in_progress=True)
+
+        # Тестируем статус при завершенном курсе
+        assert_subscription_status(user, already_started, Subscription.Status.COMPLETED, finish_course=True)
+
+    def test_enrollment_permission_for_lessons(self, user_client, user):
+        """Тест, что доступ к урокам возможен только для подписанных пользователей и на начавшийся курс."""
+        start_in_future = timezone.now().date() + timezone.timedelta(days=7)
+        already_started = timezone.now().date() - timezone.timedelta(days=7)
+
+        def assert_permision(expected_status, date, subscribed=False):
+            course = CourseWith2Chapters(start_date=date)
+            if subscribed:
+                _ = SubscriptionFactory(user=user, course=course)
+            lesson = Lesson.objects.filter(chapter__course=course).first()
+            url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+            response = user_client.get(url)
+            assert response.status_code == expected_status
+
+        # Тестируем доступ при отсутствии подсписки
+        assert_permision(status.HTTP_403_FORBIDDEN, already_started)
+
+        # Тестриуем доступ при подписке и стартовавшем курсе
+        assert_permision(status.HTTP_200_OK, already_started, subscribed=True)
+
+        # Тестируем доступ при подписке и не стартовавшем курсе
+        assert_permision(status.HTTP_403_FORBIDDEN, start_in_future, subscribed=True)

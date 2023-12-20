@@ -25,7 +25,32 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
     lesson_id = serializers.IntegerField()
 
 
+class UserStatusBreadcrumbSerializer(BreadcrumbLessonSerializer):
+    """Schema serializer for OpenAPI/Swagger."""
+
+    user_status = serializers.CharField()
+
+
 class ErrorSerializer(serializers.Serializer):
     """Schema error serializer for OpenAPI/Swagger."""
 
-    error = serializers.CharField()
+    detail = serializers.CharField()
+
+
+def update_subscriptions(user):
+    """Обновить статусы подписок пользователя."""
+    try:
+        subscriptions = user.subscriptions.all()
+        for subscription in subscriptions:
+            subscription.update_status()
+    except Exception:
+        pass
+
+
+def update_one_subscription(user, course):
+    """Обновить статус одной подписки пользователя."""
+    try:
+        subscription = user.subscriptions.get(course=course)
+        subscription.update_status()
+    except Exception:
+        pass
