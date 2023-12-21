@@ -92,4 +92,6 @@ class BadgesListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Volunteer
-        fields = ["badges"]
+        fields = [
+            'badges'
+        ]
