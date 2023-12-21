@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from lizaalert.courses.models import CourseProgressStatus
 from lizaalert.users.models import Level, User, UserRole, Volunteer
-from lizaalert.users.serializers import LevelSerializer, UserRoleSerializer, VolunteerSerializer
+from lizaalert.users.serializers import BadgesListSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
 
 class VolunteerAPIview(APIView):
@@ -84,3 +84,15 @@ class UserRoleViewSet(
             current_user.is_superuser = False
             current_user.is_staff = False
             current_user.save()
+
+
+class VolunteerBadgeList(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        volunteer = get_object_or_404(Volunteer, user=request.user)
+        queryset = Volunteer.objects.filter(pk=volunteer.pk)
+        serializer = BadgesListSerializer(queryset, context={"request": request}, many=True)
+        if queryset:
+            return Response(serializer.data[0])
+        return Response(status=status.HTTP_204_NO_CONTENT)
