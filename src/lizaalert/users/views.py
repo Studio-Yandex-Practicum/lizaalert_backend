@@ -1,5 +1,6 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -89,7 +90,15 @@ class UserRoleViewSet(
 class VolunteerBadgeList(views.APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            200: BadgesListSerializer(),
+            204: "No Content",
+            400: "Bad Request",
+        }
+    )
     def get(self, request):
+        """Получение списка ачивок пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.filter(pk=volunteer.pk)
         serializer = BadgesListSerializer(queryset, context={"request": request}, many=True)
