@@ -47,6 +47,7 @@ class ChapterInline(admin.TabularInline):
     min_num = 1
     extra = 0
 
+
 class CohortInline(admin.TabularInline):
     model = Cohort
     extra = 1
