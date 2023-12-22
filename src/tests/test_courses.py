@@ -6,7 +6,7 @@ from rest_framework import status
 from lizaalert.courses.mixins import order_number_mixin
 from lizaalert.courses.models import Chapter, Course, CourseProgressStatus, Lesson
 from lizaalert.courses.utils import update_subscriptions
-from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
+from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
     ChapterWith3Lessons,

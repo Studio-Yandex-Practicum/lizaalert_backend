@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from lizaalert.courses.models import Subscription
+
 
 class CourseBreadcrumbSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -43,7 +45,7 @@ def update_subscriptions(user):
         subscriptions = user.subscriptions.all()
         for subscription in subscriptions:
             subscription.update_status()
-    except Exception:
+    except Subscription.DoesNotExist:
         pass
 
 
@@ -52,5 +54,5 @@ def update_one_subscription(user, course):
     try:
         subscription = user.subscriptions.get(course=course)
         subscription.update_status()
-    except Exception:
+    except Subscription.DoesNotExist:
         pass

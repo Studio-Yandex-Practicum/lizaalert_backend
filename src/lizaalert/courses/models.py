@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
 from lizaalert.quizzes.models import Quiz
-from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
+from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
 User = get_user_model()
 

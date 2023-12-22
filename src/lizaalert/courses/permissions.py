@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
-from lizaalert.courses.models import Subscription
 from lizaalert.courses.utils import update_one_subscription
+from lizaalert.settings.constants import get_access_statuses
 
 
 class IsUserOrReadOnly(permissions.BasePermission):
@@ -41,15 +41,10 @@ class EnrolledAndCourseHasStarted(permissions.BasePermission):
         user = request.user
         course = obj.chapter.course
         update_one_subscription(user, course)
-        access_statuses = [
-            Subscription.Status.AVAILABLE,
-            Subscription.Status.IN_PROGRESS,
-            Subscription.Status.COMPLETED,
-        ]
+        access_statuses = get_access_statuses()
         if user.is_authenticated:
             try:
-                status = user.subscriptions.get(course=course)
-                return status.status in access_statuses
+                return user.subscriptions.filter(course=course, status__in=access_statuses).exists()
             except Exception:
                 return False
         return False
