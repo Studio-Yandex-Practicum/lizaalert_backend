@@ -4,6 +4,7 @@ from lizaalert.courses.models import (
     FAQ,
     Chapter,
     ChapterProgressStatus,
+    Cohort,
     Course,
     CourseFaq,
     CourseKnowledge,
@@ -12,7 +13,6 @@ from lizaalert.courses.models import (
     Lesson,
     LessonProgressStatus,
     Subscription,
-    Cohort,
 )
 
 
