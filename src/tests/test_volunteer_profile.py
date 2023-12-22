@@ -31,6 +31,7 @@ class TestVolunteerProfile:
         response = user_client.patch(self.url, invalid_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+
 @pytest.mark.django_db
 class TestVolunteerBadgeList:
 
