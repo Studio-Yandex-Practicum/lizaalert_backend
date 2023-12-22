@@ -430,6 +430,7 @@ class CourseKnowledge(models.Model):
     class Meta:
         ordering = ("knowledge",)
 
+
 class Cohort(TimeStampedModel):
     """
     Модель для представления группы курса.
@@ -449,6 +450,7 @@ class Cohort(TimeStampedModel):
 
     def __str__(self):
         return f"{self.course.title} - Группа {self.cohort_number}"
+
 
 class Subscription(TimeStampedModel):
     """
