@@ -109,12 +109,19 @@ class Course(TimeStampedModel):
             user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
         ).values_list("lesson_id", flat=True)
 
-        return (
+        current_lesson = (
             Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED)
             .exclude(id__in=finished_lessons)
             .annotate(ordering=F("chapter__order_number") + F("order_number"))
             .order_by("ordering")
         )
+        if not current_lesson:
+            return (
+                Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED)
+                .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                .order_by("-ordering")
+            )
+        return current_lesson
 
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
