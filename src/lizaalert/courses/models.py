@@ -468,8 +468,9 @@ class Subscription(TimeStampedModel):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
-    cohort = models.ForeignKey(Cohort, on_delete=models.PROTECT, related_name="cohort", null=True, blank=True,
-                               verbose_name="Группа")
+    cohort = models.ForeignKey(
+        Cohort, on_delete=models.PROTECT, related_name="cohort", null=True, blank=True, verbose_name="Группа"
+    )
     enabled = models.CharField(
         max_length=20, choices=Status.choices, verbose_name="статус записи на курс", default=Status.ENROLLED
     )

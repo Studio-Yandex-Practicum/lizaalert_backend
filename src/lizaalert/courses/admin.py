@@ -51,12 +51,13 @@ class ChapterInline(admin.TabularInline):
 class CohortInline(admin.TabularInline):
     model = Cohort
     extra = 1
-    readonly_fields = ['cohort_number_display']
+    readonly_fields = ["cohort_number_display"]
 
     def cohort_number_display(self, instance):
         return f"{instance.course.title} - Группа {instance.cohort_number}"
-    cohort_number_display.short_description = 'Группа'
-    cohort_number_display.admin_order_field = 'cohort_number'
+
+    cohort_number_display.short_description = "Группа"
+    cohort_number_display.admin_order_field = "cohort_number"
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -96,13 +97,11 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
-
     raw_id_fields = ("user",)
 
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
-
     raw_id_fields = ("user",)
 
 
