@@ -12,6 +12,7 @@ from lizaalert.courses.models import (
     Lesson,
     LessonProgressStatus,
     Subscription,
+    Cohort,
 )
 
 
@@ -46,6 +47,15 @@ class ChapterInline(admin.TabularInline):
     min_num = 1
     extra = 0
 
+class CohortInline(admin.TabularInline):
+    model = Cohort
+    extra = 1
+    readonly_fields = ['cohort_number_display']
+
+    def cohort_number_display(self, instance):
+        return f"{instance.course.title} - Группа {instance.cohort_number}"
+    cohort_number_display.short_description = 'Группа'
+    cohort_number_display.admin_order_field = 'cohort_number'
 
 class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
@@ -121,3 +131,4 @@ class LessonAdmin(admin.ModelAdmin):
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Subscription)
+admin.site.register(Cohort)

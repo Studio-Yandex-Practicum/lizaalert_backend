@@ -36,7 +36,6 @@ class FAQ(TimeStampedModel):
 class Knowledge(TimeStampedModel):
     """
     Класс для хранения списка умений получаемых на курсе.
-
     title - название умения (уникальное значение)
     description - развернутое описание умения
     created_at - дата создания умения
@@ -431,6 +430,25 @@ class CourseKnowledge(models.Model):
     class Meta:
         ordering = ("knowledge",)
 
+class Cohort(TimeStampedModel):
+    """
+    Модель для представления группы курса.
+
+    Поля модели:
+    - course: ForeignKey к модели Course
+    - cohort_number: уникальный номер группы в рамках курса
+    """
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="cohorts", verbose_name="Курс")
+    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", unique=True)
+
+    class Meta:
+        ordering = ("cohort_number",)
+        verbose_name = "Группа курса"
+        verbose_name_plural = "Группы курса"
+
+    def __str__(self):
+        return f"{self.course.title} - Группа {self.cohort_number}"
 
 class Subscription(TimeStampedModel):
     """
@@ -447,6 +465,8 @@ class Subscription(TimeStampedModel):
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
+    cohort = models.ForeignKey(Cohort, on_delete=models.PROTECT, related_name="cohort", null=True, blank=True,
+                               verbose_name="Группа")
     enabled = models.CharField(
         max_length=20, choices=Status.choices, verbose_name="статус записи на курс", default=Status.ENROLLED
     )
