@@ -36,6 +36,7 @@ class FAQ(TimeStampedModel):
 class Knowledge(TimeStampedModel):
     """
     Класс для хранения списка умений получаемых на курсе.
+
     title - название умения (уникальное значение)
     description - развернутое описание умения
     created_at - дата создания умения
