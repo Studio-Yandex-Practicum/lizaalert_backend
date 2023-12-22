@@ -57,6 +57,7 @@ class CohortInline(admin.TabularInline):
     cohort_number_display.short_description = 'Группа'
     cohort_number_display.admin_order_field = 'cohort_number'
 
+
 class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
 
