@@ -30,3 +30,12 @@ class TestVolunteerProfile:
         invalid_data = {"call_sign": 1, "birth_date": "invalid_date"}
         response = user_client.patch(self.url, invalid_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+@pytest.mark.django_db
+class TestVolunteerBadgeList:
+
+    url = reverse("badgeslist")
+
+    def test_get_volunteer_badge_list(self, user_client):
+        response = user_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
