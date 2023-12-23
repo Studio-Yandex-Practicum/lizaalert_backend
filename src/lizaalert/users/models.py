@@ -181,12 +181,16 @@ class VolunteerBadge(models.Model):
         verbose_name="Значок",
     )
     created_at = models.DateTimeField("Дата создания записи", auto_now_add=True)
-    is_issued = models.BooleanField("Выдан или нет", default=True)
 
     class Meta:
         db_table = "volunteers_badges"
         verbose_name = "Значок волонтера"
         verbose_name_plural = "Значки волонтеров"
+
+
+class VolunteerCourseCompetion(models.Model):
+    volunteer = models.OneToOneField("Volunteer", on_delete=models.CASCADE, related_name="course_completion")
+    completed_courses_count = models.PositiveIntegerField(default=0)
 
 
 class VolunteerCourse(models.Model):
