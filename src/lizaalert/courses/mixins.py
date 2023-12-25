@@ -128,6 +128,7 @@ class ProgressMixin(models.Model):
 
 
 def update_or_create_progress_status(model, user, instance, field, status, lookup_field):
+    """Обновление статуса прохождения урока, главы, курса, а также статуса подписки."""
     progress_status, created = model.objects.get_or_create(
         user=user, **{lookup_field: instance}, defaults={field: status}
     )
