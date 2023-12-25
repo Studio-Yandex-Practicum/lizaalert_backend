@@ -22,12 +22,7 @@ from lizaalert.courses.models import (
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import CurrentLessonOrProhibited, EnrolledAndCourseHasStarted, IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import (
-    ErrorSerializer,
-    UserStatusBreadcrumbSerializer,
-    update_one_subscription,
-    update_subscriptions,
-)
+from lizaalert.courses.utils import ErrorSerializer, UserStatusBreadcrumbSerializer
 from lizaalert.users.models import Level
 
 
@@ -121,14 +116,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             )
             if course:
                 current_lesson = course.current_lesson(user)
-                update_one_subscription(user, course)  # Обновляем подписку только этого курса
             else:
                 current_lesson = (
                     Lesson.objects.filter(chapter__course=course, status=Lesson.LessonStatus.PUBLISHED)
                     .annotate(ordering=F("chapter__order_number") + F("order_number"))
                     .order_by("ordering")
                 )
-                update_subscriptions(user)  # Обновляем все подписки пользователя
 
             users_annotations = {
                 "user_status": Coalesce(
@@ -197,18 +190,17 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
 
         current_lesson = course.current_lesson(user).first()
-        user_status = subscription.status
         if current_lesson:
             initial_lesson_and_status = {
                 "chapter_id": current_lesson.chapter_id,
                 "lesson_id": current_lesson.id,
-                "user_status": user_status,
+                "user_status": subscription,
             }
         else:
             initial_lesson_and_status = {
                 "chapter_id": None,
                 "lesson_id": None,
-                "user_status": user_status,
+                "user_status": subscription,
             }
 
         serializer = UserStatusBreadcrumbSerializer(initial_lesson_and_status)
@@ -323,12 +315,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             return None
         return LessonSerializer
 
-    @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: "Успешный ответ",
-            status.HTTP_404_NOT_FOUND: "Урок не найден",
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         """
         Получает детали урока, активируя его для пользователя при необходимости.
@@ -340,10 +326,14 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         lesson = self.get_object()
         user = self.request.user
+        course = lesson.chapter.course
         if user.is_authenticated:
             any_progress = LessonProgressStatus.objects.filter(user=user, lesson=lesson).exists()
             if not any_progress:
                 lesson.activate(user)
+        subscription = Subscription.objects.filter(user=user, course=course).first()
+        if subscription and subscription.status == Subscription.Status.ENROLLED:
+            course.activate(user)  # Активируем начало прохождения курса, если были записаны на курс
         return super().retrieve(request, *args, **kwargs)
 
     @transaction.atomic

@@ -4,8 +4,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import Chapter, Course, CourseProgressStatus, Lesson
-from lizaalert.courses.utils import update_subscriptions
+from lizaalert.courses.models import Chapter, Course, Lesson
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -175,6 +174,7 @@ class TestCourse:
         for course, expected_status in courses:
             subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
             subscription_response = user_client.post(subscribe)
+            print(subscription_response)
             url = reverse("courses-detail", kwargs={"pk": course.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
@@ -539,9 +539,9 @@ class TestCourse:
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
 
-    def test_update_subsctiptions_status(self, user):
+    def test_update_subsctiptions_status(self, user, user_client):
         """
-        Тест функции update_subscriptions.
+        Тест изменения статуса подписки на курс.
 
         Функция обновляет статусы подписки пользователя в зависимости от статуса
          прохождения курса, либо даты начала курса.
@@ -550,17 +550,19 @@ class TestCourse:
         already_started = timezone.now().date() - timezone.timedelta(days=7)
 
         def assert_subscription_status(user, date, expected_status, finish_course=False, course_in_progress=False):
-            course = CourseFactory(start_date=date)
+            course = CourseWith2Chapters(start_date=date)
+            _ = SubscriptionFactory(user=user, course=course)
+            course_url = reverse("courses-detail", kwargs={"pk": course.id})
             if finish_course:
                 course.finish(user)
             if course_in_progress:
-                CourseProgressStatus.objects.update_or_create(
-                    user=user, course=course, usercourseprogress=CourseProgressStatus.ProgressStatus.ACTIVE
-                )
-            subscription = SubscriptionFactory(user=user, course=course)
-            update_subscriptions(user)
-            subscription.refresh_from_db()
-            assert subscription.status == expected_status
+                lesson = Lesson.objects.filter(chapter__course=course).first()
+                url = reverse("lessons-detail", kwargs={"pk": lesson.id})
+                user_client.get(url)
+
+            response = user_client.get(course_url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["user_status"] == expected_status
 
         # Тестируем статус при старте курса в будущем
         assert_subscription_status(user, start_in_future, Subscription.Status.ENROLLED)
@@ -568,7 +570,7 @@ class TestCourse:
         # Тестируем статус при уже стартовавшем курсе
         assert_subscription_status(user, already_started, Subscription.Status.AVAILABLE)
 
-        # Тестируем статус про прохождении курса
+        # Тестируем статус при прохождении курса
         assert_subscription_status(user, already_started, Subscription.Status.IN_PROGRESS, course_in_progress=True)
 
         # Тестируем статус при завершенном курсе

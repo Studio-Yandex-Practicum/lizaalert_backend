@@ -1,8 +1,8 @@
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson
-from lizaalert.courses.utils import BreadcrumbLessonSerializer, BreadcrumbSchema
+from lizaalert.courses.models import FAQ, Chapter, Course, Knowledge, Lesson, Subscription
+from lizaalert.courses.utils import BreadcrumbLessonSerializer, BreadcrumbSchema, check_course_available
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -40,9 +40,17 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     lessons_count = serializers.IntegerField()
     course_duration = serializers.IntegerField()
     course_status = serializers.StringRelatedField(read_only=True)
-    user_status = serializers.CharField(default="not_enrolled")
+    user_status = serializers.SerializerMethodField()
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
+
+    def get_user_status(self, obj):
+        user = self.context.get("request").user
+        if user.is_authenticated:
+            if obj.user_status == Subscription.Status.ENROLLED and check_course_available(obj):
+                return Subscription.Status.AVAILABLE
+            return obj.user_status
+        return Subscription.Status.NOT_ENROLLED
 
 
 class CourseSerializer(CourseCommonFieldsMixin):
@@ -108,7 +116,6 @@ class ChapterInlineSerializer(serializers.ModelSerializer):
 
 class CourseDetailSerializer(CourseCommonFieldsMixin):
     chapters = ChapterInlineSerializer(many=True)
-    user_status = serializers.CharField(default="not_enrolled")
     user_course_progress = serializers.IntegerField(default=0)
     current_lesson = serializers.SerializerMethodField()
 

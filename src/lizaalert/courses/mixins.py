@@ -111,3 +111,26 @@ def order_number_mixin(step, parent_field):
             super().save(*args, **kwargs)
 
     return SaveOrderingMixin
+
+
+class ProgressMixin(models.Model):
+    """Progress mixin."""
+
+    class ProgressStatus(models.IntegerChoices):
+        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
+
+        NOTSTARTED = 0, "Не начат"
+        ACTIVE = 1, "Начат"
+        FINISHED = 2, "Пройден"
+
+    class Meta:
+        abstract = True
+
+
+def update_or_create_progress_status(model, user, instance, field, status, lookup_field):
+    progress_status, created = model.objects.get_or_create(
+        user=user, **{lookup_field: instance}, defaults={field: status}
+    )
+    if not created:
+        setattr(progress_status, field, status)
+        progress_status.save()
