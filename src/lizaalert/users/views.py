@@ -94,12 +94,12 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
     Методы:
     - GET: Возвращает список ачивок пользователя.
     """
+    
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         responses={
             200: BadgesListSerializer(),
-            204: "No Content",
             400: "Bad Request",
         }
     )
@@ -108,4 +108,4 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = BadgesListSerializer(queryset, context={"request": request}, many=True)
         if queryset:
             return Response(serializer.data[0])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(list())
