@@ -3,12 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Count, F
 
-from lizaalert.courses.mixins import (
-    ProgressMixin,
-    TimeStampedModel,
-    order_number_mixin,
-    update_or_create_progress_status,
-)
+from lizaalert.courses.mixins import ProgressMixin, TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.quizzes.models import Quiz
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
@@ -62,7 +57,10 @@ class Knowledge(TimeStampedModel):
         return self.title
 
 
-class Course(TimeStampedModel):
+class Course(
+    TimeStampedModel,
+    status_update_mixin(),
+):
     class CourseStatus(models.IntegerChoices):
         """Класс для выбора статуса курса."""
 
@@ -102,25 +100,6 @@ class Course(TimeStampedModel):
     def __str__(self):
         return f"Course {self.title}"
 
-    def finish(self, user):
-        """Закончить весь курс и изменить статус подписки."""
-        update_or_create_progress_status(
-            CourseProgressStatus,
-            user,
-            self,
-            "usercourseprogress",
-            CourseProgressStatus.ProgressStatus.FINISHED,
-            "course",
-        )
-        update_or_create_progress_status(Subscription, user, self, "status", Subscription.Status.COMPLETED, "course")
-
-    def activate(self, user):
-        """Активировать курс и изменить статус подписки."""
-        update_or_create_progress_status(
-            CourseProgressStatus, user, self, "usercourseprogress", CourseProgressStatus.ProgressStatus.ACTIVE, "course"
-        )
-        update_or_create_progress_status(Subscription, user, self, "status", Subscription.Status.IN_PROGRESS, "course")
-
     def current_lesson(self, user):
         """Вернуть queryset текущего урока."""
         finished_lessons = LessonProgressStatus.objects.filter(
@@ -135,7 +114,7 @@ class Course(TimeStampedModel):
         )
 
 
-class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
+class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin()):
     """
     Модель главы.
 
@@ -180,14 +159,7 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
         В случае если, текущая глава является последним и остальные главы в курсе пройдены
         активируется метод finish() отмечающий прохождение курса этогй главы.
         """
-        update_or_create_progress_status(
-            ChapterProgressStatus,
-            user,
-            self,
-            "userchapterprogress",
-            ChapterProgressStatus.ProgressStatus.FINISHED,
-            "chapter",
-        )
+        super().finish(user)
         chapter_qs = Chapter.objects.filter(course=self.course).aggregate(total_chapters=Count("id"))
         progress_qs = ChapterProgressStatus.objects.filter(
             chapter__course=self.course, user=user, userchapterprogress=ChapterProgressStatus.ProgressStatus.FINISHED
@@ -196,7 +168,7 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
             self.course.finish(user)
 
 
-class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
+class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter"), status_update_mixin()):
     """
     Модель урока.
 
@@ -257,12 +229,6 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
-    def activate(self, user):
-        """Активировать текущий урок."""
-        update_or_create_progress_status(
-            LessonProgressStatus, user, self, "userlessonprogress", LessonProgressStatus.ProgressStatus.ACTIVE, "lesson"
-        )
-
     def finish(self, user):
         """
         Закончить текущий урок.
@@ -270,14 +236,7 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
         В случае если, текущий урок является последним и остальные уроки в главе пройдены
         активируется метод finish() отмечающий прохождение главы этого урока.
         """
-        update_or_create_progress_status(
-            LessonProgressStatus,
-            user,
-            self,
-            "userlessonprogress",
-            LessonProgressStatus.ProgressStatus.FINISHED,
-            "lesson",
-        )
+        super().finish(user)
         lesson_qs = Lesson.objects.filter(chapter=self.chapter, status=self.LessonStatus.PUBLISHED).aggregate(
             total_lessons=Count("id")
         )
