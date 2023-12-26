@@ -87,7 +87,13 @@ class UserRoleViewSet(
             current_user.save()
 
 
-class VolunteerBadgeList(views.APIView):
+class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Отображение списка ачивок пользователя.
+
+    Методы:
+    - GET: Возвращает список ачивок пользователя.
+    """
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -97,10 +103,8 @@ class VolunteerBadgeList(views.APIView):
             400: "Bad Request",
         }
     )
-    def get(self, request):
-        """Получение списка ачивок пользователя."""
-        volunteer = get_object_or_404(Volunteer, user=request.user)
-        queryset = Volunteer.objects.filter(pk=volunteer.pk)
+    def list(self, request):
+        queryset = Volunteer.objects.filter(user=request.user)
         serializer = BadgesListSerializer(queryset, context={"request": request}, many=True)
         if queryset:
             return Response(serializer.data[0])
