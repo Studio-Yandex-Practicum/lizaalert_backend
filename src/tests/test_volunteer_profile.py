@@ -1,13 +1,13 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
+
 from lizaalert.users.models import VolunteerBadge
 from tests.factories.users import BadgeFactory, UserFactory
 
 
 @pytest.mark.django_db
 class TestVolunteerProfile:
-
     url = reverse("profile")
 
     def test_get_volunteer_profile(self, user_client):
@@ -36,7 +36,6 @@ class TestVolunteerProfile:
 
 @pytest.mark.django_db
 class TestVolunteerBadgeList:
-
     url = reverse("badgeslist")
 
     def test_get_volunteer_badge_list(self, user_client):
