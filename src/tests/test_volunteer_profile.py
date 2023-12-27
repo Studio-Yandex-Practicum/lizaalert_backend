@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
+
 from lizaalert.users.models import VolunteerBadge
 from tests.factories.users import BadgeFactory, UserFactory
 
