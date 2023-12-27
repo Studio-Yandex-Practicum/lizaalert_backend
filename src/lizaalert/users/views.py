@@ -20,7 +20,7 @@ class VolunteerAPIview(APIView):
                 CourseProgressStatus.objects.filter(
                     course__course_volunteers__volunteer=OuterRef("pk"),
                     user=request.user,
-                    usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED,
+                    progress=CourseProgressStatus.ProgressStatus.FINISHED,
                 )
                 .values("course__course_volunteers__volunteer")
                 .annotate(count_pass_course=Count("pk"))

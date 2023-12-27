@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-
+from django.apps import apps
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Max
@@ -115,126 +114,44 @@ def order_number_mixin(step, parent_field):
     return SaveOrderingMixin
 
 
-class ProgressMixin(models.Model):
-    """Progress mixin."""
-
-    class ProgressStatus(models.IntegerChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
-
-        NOT_STARTED = 0, "Не начат"
-        ACTIVE = 1, "Начат"
-        FINISHED = 2, "Пройден"
-
-    class Meta:
-        abstract = True
-
-
-@dataclass
-class StatusConfig:
-    model: any
-    model_field: str
-    finish_status: int
-    active_status: int
-    lookup_field: str
-    subscription_model: any = None
-    subscription_field: str = None
-    subscription_active_status: any = None
-    subscription_finish_status: any = None
-
-
 def status_update_mixin():
     """Добавить методы finish и activate для обновления статусов модели. При необходимости обновить подписку."""
-
-    def _get_config(model):
-        if model == "course":
-            from lizaalert.courses.models import CourseProgressStatus, Subscription
-
-            return StatusConfig(
-                CourseProgressStatus,
-                "usercourseprogress",
-                CourseProgressStatus.ProgressStatus.FINISHED,
-                CourseProgressStatus.ProgressStatus.ACTIVE,
-                "course",
-                Subscription,
-                "status",
-                Subscription.Status.IN_PROGRESS,
-                Subscription.Status.COMPLETED,
-            )
-        if model == "chapter":
-            from lizaalert.courses.models import ChapterProgressStatus, Subscription
-
-            return StatusConfig(
-                ChapterProgressStatus,
-                "userchapterprogress",
-                ChapterProgressStatus.ProgressStatus.FINISHED,
-                ChapterProgressStatus.ProgressStatus.ACTIVE,
-                "chapter",
-            )
-        if model == "lesson":
-            from lizaalert.courses.models import LessonProgressStatus, Subscription
-
-            return StatusConfig(
-                LessonProgressStatus,
-                "userlessonprogress",
-                LessonProgressStatus.ProgressStatus.FINISHED,
-                LessonProgressStatus.ProgressStatus.ACTIVE,
-                "lesson",
-            )
-        raise ValueError(f"Unknown model {model}")
+    from lizaalert.courses.models import BaseProgress
 
     class FinishActivateMixin(models.Model):
         class Meta:
             abstract = True
 
-        def _update_or_create_progress_status(self, model, user, instance, field, status, lookup_field):
+        def _get_progress_model(self):
+            """Получить модель прогресса путем конканектации имени модели и ProgressStatus."""
+            model_name = f"{self.__class__.__name__}ProgressStatus"
+            return apps.get_model("courses", model_name)
+
+        def _update_or_create_progress_status(self, user, instance, status):
             """Обновление статуса прохождения урока, главы, курса, а также статуса подписки."""
+            lookup_field = self.__class__.__name__.lower()
+            model = self._get_progress_model()
             progress_status, created = model.objects.get_or_create(
-                user=user, **{lookup_field: instance}, defaults={field: status}
+                user=user, **{lookup_field: instance}, defaults={"progress": status}
             )
             if not created:
-                setattr(progress_status, field, status)
+                setattr(progress_status, "progress", status)
                 progress_status.save()
 
         def finish(self, user):
             """Присвоить статус завершения."""
-            status_config = _get_config(self.__class__.__name__.lower())
             self._update_or_create_progress_status(
-                status_config.model,
                 user,
                 self,
-                status_config.model_field,
-                status_config.finish_status,
-                status_config.lookup_field,
+                BaseProgress.ProgressStatus.FINISHED,
             )
-            if status_config.subscription_model:
-                self._update_or_create_progress_status(
-                    status_config.subscription_model,
-                    user,
-                    self,
-                    status_config.subscription_field,
-                    status_config.subscription_finish_status,
-                    status_config.lookup_field,
-                )
 
         def activate(self, user):
             """Присвоить статус активировать."""
-            status_config = _get_config(self.__class__.__name__.lower())
             self._update_or_create_progress_status(
-                status_config.model,
                 user,
                 self,
-                status_config.model_field,
-                status_config.active_status,
-                status_config.lookup_field,
+                BaseProgress.ProgressStatus.ACTIVE,
             )
-            if status_config.subscription_model:
-                self._update_or_create_progress_status(
-                    status_config.subscription_model,
-                    user,
-                    self,
-                    status_config.subscription_field,
-                    status_config.subscription_active_status,
-                    status_config.lookup_field,
-                )
 
     return FinishActivateMixin

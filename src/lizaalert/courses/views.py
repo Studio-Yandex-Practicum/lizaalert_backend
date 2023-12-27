@@ -94,7 +94,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Subquery(
                             ChapterProgressStatus.objects.filter(chapter=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("userchapterprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -108,7 +108,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Subquery(
                             LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("userlessonprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -134,7 +134,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Subquery(
                             CourseProgressStatus.objects.filter(course=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("usercourseprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -297,7 +297,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                         Subquery(
                             LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("userlessonprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -343,7 +343,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         permission_classes=(
             IsAuthenticated,
             IsUserOrReadOnly,
-            EnrolledAndCourseHasStarted,
         ),
     )
     @swagger_auto_schema(
