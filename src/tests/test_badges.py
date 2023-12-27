@@ -1,7 +1,7 @@
 import pytest
 
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
-from lizaalert.users.models import Badge, VolunteerBadge
+from lizaalert.users.models import Badge, Volunteer, VolunteerBadge, VolunteerCourseCompetion
 from tests.factories.courses import CourseFactory
 from tests.factories.users import BadgeFactory, UserFactory
 
@@ -104,3 +104,23 @@ class TestVolunteerBadgeModel:
         assert form.is_valid() is False
         assert "__all__" in form.errors
         assert "Этот значок уже был выдан данному волонтеру." in form.errors["__all__"]
+
+    def test_volunteer_courses_completion(self):
+        """Тестирование подсчета пройденных волонтером курсов."""
+        created_user = UserFactory()
+
+        volunteer = created_user.volunteer
+        course_completion = VolunteerCourseCompetion.objects.create(volunteer=volunteer)
+        volunteer.refresh_from_db()
+        assert volunteer.course_completion.completed_courses_count == 0
+
+        course_completion.completed_courses_count += 1
+        course_completion.save()
+        volunteer.refresh_from_db()
+        assert volunteer.course_completion.completed_courses_count == 1
+
+        course_completion.completed_courses_count += 1
+        course_completion.save()
+        volunteer.refresh_from_db()
+        assert volunteer.course_completion.completed_courses_count == 2
+        assert Volunteer.objects.get(id=volunteer.id).course_completion.completed_courses_count == 2
