@@ -163,7 +163,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: UserStatusBreadcrumbSerializer,
-            status.HTTP_400_BAD_REQUEST: BadRequestException,
         }
     )
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
@@ -210,7 +209,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     @swagger_auto_schema(
         responses={
             status.HTTP_204_NO_CONTENT: "Пользователь успешно отписан от курса.",
-            status.HTTP_400_BAD_REQUEST: BadRequestException,
         }
     )
     @action(
@@ -343,6 +341,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         permission_classes=(
             IsAuthenticated,
             IsUserOrReadOnly,
+            EnrolledAndCourseHasStarted,
         ),
     )
     @swagger_auto_schema(
