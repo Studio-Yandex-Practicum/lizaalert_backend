@@ -485,13 +485,14 @@ class TestCourse:
         mixin.set_ordering(new_lesson, queryset, LESSON_STEP)
         assert new_lesson.order_number == 40
 
-    def test_lesson_activation(self, user_client, mock_enrollment_permission):
+    def test_lesson_activation(self, user_client, user):
         """
         Тест активации урока.
 
         Проверяем активацию урока.
         """
         lesson = LessonFactory()
+        _ = SubscriptionFactory(course=lesson.chapter.course, user=user)
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
