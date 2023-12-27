@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from lizaalert.courses.exceptions import BadRequestException
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
     Chapter,
@@ -22,7 +23,7 @@ from lizaalert.courses.models import (
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import CurrentLessonOrProhibited, EnrolledAndCourseHasStarted, IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import ErrorSerializer, UserStatusBreadcrumbSerializer
+from lizaalert.courses.utils import UserStatusBreadcrumbSerializer
 from lizaalert.users.models import Level
 
 
@@ -159,7 +160,12 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @swagger_auto_schema(responses={201: UserStatusBreadcrumbSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: UserStatusBreadcrumbSerializer,
+            status.HTTP_400_BAD_REQUEST: BadRequestException,
+        }
+    )
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """
@@ -181,14 +187,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            serializer = ErrorSerializer({"detail": "Invalid id."})
-            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+            raise BadRequestException({"detail": "Invalid id."})
 
-        subscription, created = Subscription.objects.get_or_create(user=user, course=course)
-        if not created:
-            serializer = ErrorSerializer({"detail": "Subscription already exists."})
-            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
-
+        subscription = course.subscribe(user)
         current_lesson = course.current_lesson(user).first()
         if current_lesson:
             initial_lesson_and_status = {
@@ -209,7 +210,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     @swagger_auto_schema(
         responses={
             status.HTTP_204_NO_CONTENT: "Пользователь успешно отписан от курса.",
-            status.HTTP_404_NOT_FOUND: ErrorSerializer,
+            status.HTTP_400_BAD_REQUEST: BadRequestException,
         }
     )
     @action(
@@ -232,8 +233,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            serialzier = ErrorSerializer({"detail": "Invalid id."})
-            return Response(serialzier.data, status=status.HTTP_404_NOT_FOUND)
+            raise BadRequestException({"detail": "Invalid id."})
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -343,6 +343,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         permission_classes=(
             IsAuthenticated,
             IsUserOrReadOnly,
+            EnrolledAndCourseHasStarted,
         ),
     )
     @swagger_auto_schema(

@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import serializers
 
 from lizaalert.courses.models import Subscription
@@ -34,19 +33,6 @@ class UserStatusBreadcrumbSerializer(BreadcrumbLessonSerializer):
     user_status = serializers.SerializerMethodField()
 
     def get_user_status(self, obj):
-        if obj["user_status"].status == Subscription.Status.ENROLLED and check_course_available(
-            obj["user_status"].course
-        ):
+        if obj["user_status"].status == Subscription.Status.ENROLLED and obj["user_status"].course.is_available:
             return Subscription.Status.AVAILABLE
         return obj["user_status"].status
-
-
-class ErrorSerializer(serializers.Serializer):
-    """Schema error serializer for OpenAPI/Swagger."""
-
-    detail = serializers.CharField()
-
-
-def check_course_available(course):
-    """Проверить доступность курса."""
-    return timezone.now().date() >= course.start_date

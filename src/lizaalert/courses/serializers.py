@@ -2,7 +2,7 @@ from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from lizaalert.courses.models import FAQ, Chapter, Course, CourseProgressStatus, Knowledge, Lesson, Subscription
-from lizaalert.courses.utils import BreadcrumbLessonSerializer, BreadcrumbSchema, check_course_available
+from lizaalert.courses.utils import BreadcrumbLessonSerializer, BreadcrumbSchema
 
 
 class FaqInlineSerializer(serializers.ModelSerializer):
@@ -44,14 +44,14 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     faq = FaqInlineSerializer(many=True)
     knowledge = KnowledgeInlineSerializer(many=True)
     user_course_progress = serializers.ChoiceField(
-        default=CourseProgressStatus.ProgressStatus.NOTSTARTED, choices=CourseProgressStatus.ProgressStatus
+        default=CourseProgressStatus.ProgressStatus.NOT_STARTED, choices=CourseProgressStatus.ProgressStatus
     )
 
     @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
     def get_user_status(self, obj):
         user = self.context.get("request").user
         if user.is_authenticated:
-            if obj.user_status == Subscription.Status.ENROLLED and check_course_available(obj):
+            if obj.user_status == Subscription.Status.ENROLLED and obj.is_available:
                 return Subscription.Status.AVAILABLE
             return obj.user_status
         return Subscription.Status.NOT_ENROLLED

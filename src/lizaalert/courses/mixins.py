@@ -121,7 +121,7 @@ class ProgressMixin(models.Model):
     class ProgressStatus(models.IntegerChoices):
         """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
 
-        NOTSTARTED = 0, "Не начат"
+        NOT_STARTED = 0, "Не начат"
         ACTIVE = 1, "Начат"
         FINISHED = 2, "Пройден"
 

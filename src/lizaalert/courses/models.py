@@ -2,7 +2,9 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Count, F
+from django.utils import timezone
 
+from lizaalert.courses.exceptions import AlreadyExistsException
 from lizaalert.courses.mixins import ProgressMixin, TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.quizzes.models import Quiz
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
@@ -112,6 +114,18 @@ class Course(
             .annotate(ordering=F("chapter__order_number") + F("order_number"))
             .order_by("ordering")
         )
+
+    @property
+    def is_available(self):
+        """Проверить доступность курса."""
+        return timezone.now().date() >= self.start_date
+
+    def subscribe(self, user):
+        """Подписать пользователя на данный курс."""
+        subscription, created = Subscription.objects.get_or_create(user=user, course=self)
+        if not created:
+            raise AlreadyExistsException({"detail": "Already enrolled."})
+        return subscription
 
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin()):

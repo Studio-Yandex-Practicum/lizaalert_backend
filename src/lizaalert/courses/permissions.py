@@ -1,7 +1,5 @@
 from rest_framework import permissions
 
-from lizaalert.courses.utils import check_course_available
-
 
 class IsUserOrReadOnly(permissions.BasePermission):
     """Разрешение только автору выполнять определенное действие."""
@@ -41,7 +39,7 @@ class EnrolledAndCourseHasStarted(permissions.BasePermission):
         course = obj.chapter.course
         if user.is_authenticated:
             try:
-                return user.subscriptions.filter(course=course).exists() and check_course_available(course)
+                return user.subscriptions.filter(course=course).exists() and course.is_available
             except Exception:
                 return False
         return False

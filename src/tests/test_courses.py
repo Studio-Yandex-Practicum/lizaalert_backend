@@ -31,7 +31,7 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_lessons_appear_in_chapters(self, user_client, mock_enrollment_permission):
+    def test_lessons_appear_in_chapters(self, user_client):
         """
         Tests Course -> Chapter -> Lesson relation.
 
@@ -174,7 +174,6 @@ class TestCourse:
         for course, expected_status in courses:
             subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
             subscription_response = user_client.post(subscribe)
-            print(subscription_response)
             url = reverse("courses-detail", kwargs={"pk": course.id})
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
@@ -192,7 +191,7 @@ class TestCourse:
         url = reverse("courses-detail", kwargs={"pk": course_id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["user_status"] == Subscription.Status.ENROLLED
+        assert response.json()["user_status"] == Subscription.Status.AVAILABLE
 
         unsubscribe_url = reverse("courses-unroll", kwargs={"pk": course_id})
         response = user_client.post(unsubscribe_url)
@@ -208,17 +207,19 @@ class TestCourse:
         response = user_client.post(unsubscribe_url)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_lessons_appear_on_endpoint(self, user_client, mock_enrollment_permission):
+    def test_lessons_appear_on_endpoint(self, user_client, user):
         """Тест, что уроки и аннотация курса корректно отображаются по эндпоинту."""
         _ = ChapterWith3Lessons()
         lesson = LessonFactory()
+        _ = SubscriptionFactory(course=lesson.chapter.course, user=user)
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
+        print(response.json())
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["id"] == lesson.id
         assert response.json()["course_id"] == lesson.chapter.course_id
 
-    def test_lessons_pagination_works(self, user_client, user, mock_enrollment_permission):
+    def test_lessons_pagination_works(self, user_client, user):
         """
         Тест, что работает переключение между уроками.
 
@@ -227,7 +228,7 @@ class TestCourse:
         должны выдавать None при отсутствии крайних уроков.
         """
         course = CourseWith2Chapters()
-
+        _ = SubscriptionFactory(course=course, user=user)
         lesson = Lesson.objects.filter(chapter__course=course).first()
         lessons = lesson.ordered
 
@@ -252,9 +253,10 @@ class TestCourse:
 
             lesson.finish(user)
 
-    def test_breadcrumbs(self, user_client, mock_enrollment_permission):
+    def test_breadcrumbs(self, user_client, user):
         """Тест, что breadcrumbs отображаются корректно."""
         lesson = LessonFactory()
+        _ = SubscriptionFactory(course=lesson.chapter.course, user=user)
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -263,7 +265,7 @@ class TestCourse:
         assert response.json()["breadcrumbs"]["chapter"]["id"] == lesson.chapter.id
         assert response.json()["breadcrumbs"]["chapter"]["title"] == lesson.chapter.title
 
-    def test_lesson_completion(self, user_client, mock_enrollment_permission):
+    def test_lesson_completion(self, user_client, user):
         """
         Тест, что работает завершение урока.
 
@@ -271,6 +273,7 @@ class TestCourse:
         После запроса POST на /complete/ проверяем статус пройденности урока.
         """
         lesson = LessonFactory()
+        _ = SubscriptionFactory(course=lesson.chapter.course, user=user)
         url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course_id})
 
         def response_assert(url, status_code, user_lesson_progress):
@@ -283,9 +286,7 @@ class TestCourse:
         user_client.post(complete_url)
         response_assert(url, status.HTTP_200_OK, 2)
 
-    def test_final_lesson_completion_triggers_chapter_and_course_completion(
-        self, user_client, mock_enrollment_permission
-    ):
+    def test_final_lesson_completion_triggers_chapter_and_course_completion(self, user_client):
         """
         Тест, что завершение последнего урока в главе завершает главу.
 
@@ -496,7 +497,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == 1
 
-    def test_lesson_activation_changes(self, user_client, mock_enrollment_permission):
+    def test_lesson_activation_changes(self, user_client):
         """
         Тест активации урока.
 
@@ -511,7 +512,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["chapters"][0]["lessons"][0]["user_lesson_progress"] == 2
 
-    def test_permission_for_current_lesson_works(self, user_client, user, mock_enrollment_permission):
+    def test_permission_for_current_lesson_works(self, user_client, user):
         """
         Тест, что только текущий/пройденный урок доступен для пользователя.
 
@@ -521,6 +522,7 @@ class TestCourse:
         4. Проверяем, что пользователю доступен пройденный урок.
         """
         chapter = ChapterWith3Lessons()
+        _ = SubscriptionFactory(course=chapter.course, user=user)
         lesson = Lesson.objects.filter(chapter=chapter).first()
         lessons = lesson.ordered
         for i, lesson in enumerate(lessons):
