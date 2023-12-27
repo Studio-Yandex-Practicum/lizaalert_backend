@@ -94,7 +94,7 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
     Методы:
     - GET: Возвращает список ачивок пользователя.
     """
-    
+
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
