@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
 from lizaalert.courses.models import Subscription
@@ -32,6 +33,7 @@ class UserStatusBreadcrumbSerializer(BreadcrumbLessonSerializer):
 
     user_status = serializers.SerializerMethodField()
 
+    @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
     def get_user_status(self, obj):
         if obj["user_status"].status == Subscription.Status.ENROLLED and obj["user_status"].course.is_available:
             return Subscription.Status.AVAILABLE
