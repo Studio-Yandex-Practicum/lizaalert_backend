@@ -2,7 +2,7 @@ import factory
 from django.contrib.auth import get_user_model
 from factory import fuzzy
 
-from lizaalert.users.models import Badge, Level, Location, Volunteer
+from lizaalert.users.models import Badge, Level, Location, Volunteer, VolunteerBadge
 
 User = get_user_model()
 factory.Faker._DEFAULT_LOCALE = "en_US"
@@ -65,3 +65,18 @@ class BadgeFactory(factory.django.DjangoModelFactory):
     issued_for = factory.Faker("word")
     threshold_courses = None
     threshold_course = None
+
+
+class VolunteerBadgeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = VolunteerBadge
+
+    user = factory.SubFactory(UserFactory)
+    badge = factory.SubFactory(BadgeFactory)
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        volunteer = user.volunteer if user else None
+        kwargs["volunteer"] = volunteer
+        return super()._create(model_class, *args, **kwargs)
