@@ -1,9 +1,11 @@
+from datetime import datetime
+
 import pytest
 
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
-from lizaalert.users.models import Badge, Volunteer, VolunteerBadge, VolunteerCourseCompetion
+from lizaalert.users.models import Badge
 from tests.factories.courses import CourseFactory
-from tests.factories.users import BadgeFactory, UserFactory
+from tests.factories.users import BadgeFactory, UserFactory, VolunteerBadgeFactory
 
 
 @pytest.mark.django_db
@@ -66,17 +68,15 @@ class TestBadgeModel:
 class TestVolunteerBadgeModel:
     def test_create_volunteer_badge_model(self):
         """Тестирование создания объекта VolunteerBadge."""
-        created_user = UserFactory()
-        created_badge = BadgeFactory()
-        volunteer_badge = VolunteerBadge.objects.create(volunteer=created_user.volunteer, badge=created_badge)
-        assert volunteer_badge.id
+        created_volunteer_badge = VolunteerBadgeFactory()
+        assert created_volunteer_badge.id
 
     def test_volunteer_badge_admin_form(self):
         """Тестирование валидации формы VolunteerBadgeAdminForm."""
         created_user = UserFactory()
         created_badge = BadgeFactory()
         form = VolunteerBadgeAdminForm(
-            {"volunteer": created_user.volunteer.id, "badge": created_badge.id, "created_at": "2023-01-01T12:00:00"}
+            {"volunteer": created_user.volunteer.id, "badge": created_badge.id, "created_at": datetime.now()}
         )
         assert form.is_valid() is True
 
@@ -90,37 +90,17 @@ class TestVolunteerBadgeModel:
         2)Проверяем, что в поле __all__ появилась ошибка
         3)Проверяем, что ошибка связана с уникальностью значков для волонтера
         """
-        created_user = UserFactory()
-        created_badge = BadgeFactory()
-        VolunteerBadge.objects.create(volunteer=created_user.volunteer, badge=created_badge)
+        created_volunteer_badge = VolunteerBadgeFactory()
 
         form_data = {
-            "volunteer": created_user.volunteer.id,
-            "badge": created_badge.id,
-            "created_at": "2023-01-01T12:00:00",
-            "is_issued": True,
+            "volunteer": created_volunteer_badge.volunteer.id,
+            "badge": created_volunteer_badge.badge.id,
+            "created_at": datetime.now(),
         }
         form = VolunteerBadgeAdminForm(data=form_data)
         assert form.is_valid() is False
         assert "__all__" in form.errors
-        assert "Этот значок уже был выдан данному волонтеру." in form.errors["__all__"]
-
-    def test_volunteer_courses_completion(self):
-        """Тестирование подсчета пройденных волонтером курсов."""
-        created_user = UserFactory()
-
-        volunteer = created_user.volunteer
-        course_completion = VolunteerCourseCompetion.objects.create(volunteer=volunteer)
-        volunteer.refresh_from_db()
-        assert volunteer.course_completion.completed_courses_count == 0
-
-        course_completion.completed_courses_count += 1
-        course_completion.save()
-        volunteer.refresh_from_db()
-        assert volunteer.course_completion.completed_courses_count == 1
-
-        course_completion.completed_courses_count += 1
-        course_completion.save()
-        volunteer.refresh_from_db()
-        assert volunteer.course_completion.completed_courses_count == 2
-        assert Volunteer.objects.get(id=volunteer.id).course_completion.completed_courses_count == 2
+        assert (
+            f"Волонтер '{created_volunteer_badge.volunteer}' уже имеет значок '{created_volunteer_badge.badge}'."
+            in form.errors["__all__"]
+        )

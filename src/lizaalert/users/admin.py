@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.core.exceptions import ValidationError
 
 from lizaalert.users.models import (
     Badge,
@@ -38,7 +39,16 @@ class LevelAdmin(admin.ModelAdmin):
 class BadgeAdminForm(forms.ModelForm):
     class Meta:
         model = Badge
-        fields = "__all__"
+        fields = (
+            "name",
+            "description",
+            "image",
+            "badge_type",
+            "badge_category",
+            "issued_for",
+            "threshold_courses",
+            "threshold_course",
+        )
 
     def clean(self):
         """
@@ -68,7 +78,10 @@ class BadgeAdmin(admin.ModelAdmin):
 class VolunteerBadgeAdminForm(forms.ModelForm):
     class Meta:
         model = VolunteerBadge
-        fields = "__all__"
+        fields = (
+            "badge",
+            "volunteer",
+        )
 
     def clean(self):
         """Проверка на уникальность значков для волонтеров."""
@@ -77,8 +90,14 @@ class VolunteerBadgeAdminForm(forms.ModelForm):
         badge = cleaned_data.get("badge")
 
         if volunteer and badge:
-            if VolunteerBadge.objects.filter(volunteer=volunteer, badge=badge).exclude(id=self.instance.id).exists():
-                self.add_error(None, "Этот значок уже был выдан данному волонтеру.")
+            existing_badge = (
+                VolunteerBadge.objects.filter(volunteer=volunteer, badge=badge).exclude(id=self.instance.id).first()
+            )
+            if existing_badge:
+                msg = f"Волонтер '{volunteer}' уже имеет значок '{badge}'."
+                raise ValidationError(msg.format(volunteer=volunteer, badge=badge))
+
+        return cleaned_data
 
 
 class VolunteerAdmin(admin.ModelAdmin):

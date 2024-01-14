@@ -188,8 +188,8 @@ class VolunteerBadge(models.Model):
         verbose_name_plural = "Значки волонтеров"
 
 
-class VolunteerCourseCompetion(models.Model):
-    volunteer = models.OneToOneField("Volunteer", on_delete=models.CASCADE, related_name="course_completion")
+class VolunteerCourseCompletion(models.Model):
+    volunteer = models.ForeignKey("Volunteer", on_delete=models.CASCADE, related_name="course_completion")
     completed_courses_count = models.PositiveIntegerField(default=0)
 
 
