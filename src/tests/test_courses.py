@@ -409,11 +409,11 @@ class TestCourse:
         second_lesson.activate(user)
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
-        # 4. При прохождении всех уроков current_lesson == Null.
+        # 4. При прохождении всех уроков current_lesson == last_lesson.
         lesson = LessonFactory()
         lesson.finish(user)
         url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course.id})
-        request_assert(user_client, url, None, None)
+        request_assert(user_client, url, lesson.id, lesson.chapter_id)
 
     def test_ordering_working_properly(self, user_client):
         """Тест, что автоматическое назначение очередности работает корректно."""
