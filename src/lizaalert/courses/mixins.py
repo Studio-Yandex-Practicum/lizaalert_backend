@@ -147,27 +147,21 @@ def status_update_mixin(parent: str = None, publish_status=None):
             )
 
             if parent:
-                parent_attr = getattr(self, parent)
-                progress_model = self._get_progress_model()
-                filter_string = f"{self.__class__.__name__.lower()}__{parent}"
-                filter_kwargs = {filter_string: parent_attr}  # Фильтруем по родительскому объекту
-                # Находим количество завершенных уроков/глав
-                finished_queryset = progress_model.objects.filter(
-                    user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs
-                ).values(f"{self.__class__.__name__.lower()}_id")
-                if publish_status:  # Проверяем на дополнительные параметры фильтрации
-                    publish_status_attr = getattr(self, publish_status)
-                    items = (
-                        self.__class__.objects.filter(**{parent: parent_attr, "status": publish_status_attr.PUBLISHED})
-                        .exclude(id__in=finished_queryset)
-                        .count()
-                    )
-                else:
-                    items = (
-                        self.__class__.objects.filter(**{parent: parent_attr}).exclude(id__in=finished_queryset).count()
-                    )
+                filter_kwargs = {f"{self.__class__.__name__.lower()}__{parent}": getattr(self, parent)}
+                finished_queryset = (
+                    self._get_progress_model()
+                    .objects.filter(user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs)
+                    .values(f"{self.__class__.__name__.lower()}_id")
+                )
+
+                filter_args = {parent: getattr(self, parent)}
+                if publish_status:
+                    filter_args["status"] = getattr(self, publish_status).PUBLISHED
+
+                items = self.__class__.objects.filter(**filter_args).exclude(id__in=finished_queryset).count()
+
                 if items == 0:
-                    getattr(parent_attr, "finish")(user)
+                    getattr(getattr(self, parent), "finish")(user)
 
         def activate(self, user):
             """Присвоить статус активировать."""
