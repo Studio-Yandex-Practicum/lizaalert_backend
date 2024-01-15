@@ -1,7 +1,7 @@
 from django.apps import apps
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, Max
+from django.db.models import Max
 
 
 class TimeStampedModel(models.Model):
@@ -148,23 +148,25 @@ def status_update_mixin(parent: str = None, publish_status=None):
 
             if parent:
                 parent_attr = getattr(self, parent)
-                if publish_status:  # Проверяем на дополнительные параметры фильтрации
-                    publish_status_attr = getattr(self, publish_status)
-                    # Находим общее количество опубликованных уроков/глав
-                    total_queryset = self.__class__.objects.filter(
-                        **{parent: parent_attr, "status": publish_status_attr.PUBLISHED}
-                    ).aggregate(total=Count("id"))
-                else:
-                    total_queryset = self.__class__.objects.filter(**{parent: parent_attr}).aggregate(total=Count("id"))
                 progress_model = self._get_progress_model()
                 filter_string = f"{self.__class__.__name__.lower()}__{parent}"
                 filter_kwargs = {filter_string: parent_attr}  # Фильтруем по родительскому объекту
                 # Находим количество завершенных уроков/глав
                 finished_queryset = progress_model.objects.filter(
                     user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs
-                ).aggregate(finished=Count("id"))
-                if finished_queryset["finished"] == total_queryset["total"]:
-                    # Финишируем родительский объект, если пройдены все уроки/главы
+                ).values(f"{self.__class__.__name__.lower()}_id")
+                if publish_status:  # Проверяем на дополнительные параметры фильтрации
+                    publish_status_attr = getattr(self, publish_status)
+                    items = (
+                        self.__class__.objects.filter(**{parent: parent_attr, "status": publish_status_attr.PUBLISHED})
+                        .exclude(id__in=finished_queryset)
+                        .count()
+                    )
+                else:
+                    items = (
+                        self.__class__.objects.filter(**{parent: parent_attr}).exclude(id__in=finished_queryset).count()
+                    )
+                if items == 0:
                     getattr(parent_attr, "finish")(user)
 
         def activate(self, user):
