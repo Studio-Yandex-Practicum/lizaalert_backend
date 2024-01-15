@@ -148,8 +148,9 @@ def status_update_mixin(parent: str = None, publish_status=None):
 
             if parent:
                 parent_attr = getattr(self, parent)
-                if publish_status:
+                if publish_status:  # Проверяем на дополнительные параметры фильтрации
                     publish_status_attr = getattr(self, publish_status)
+                    # Находим общее количество опубликованных уроков/глав
                     total_queryset = self.__class__.objects.filter(
                         **{parent: parent_attr, "status": publish_status_attr.PUBLISHED}
                     ).aggregate(total=Count("id"))
@@ -157,7 +158,8 @@ def status_update_mixin(parent: str = None, publish_status=None):
                     total_queryset = self.__class__.objects.filter(**{parent: parent_attr}).aggregate(total=Count("id"))
                 progress_model = self._get_progress_model()
                 filter_string = f"{self.__class__.__name__.lower()}__{parent}"
-                filter_kwargs = {filter_string: parent_attr}
+                filter_kwargs = {filter_string: parent_attr}  # Фильтруем по родительскому объекту
+                # Находим количество завершенных уроков/глав
                 finished_queryset = progress_model.objects.filter(
                     user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs
                 ).aggregate(finished=Count("id"))
