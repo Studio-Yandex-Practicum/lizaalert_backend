@@ -123,17 +123,20 @@ class Course(
         return f"Course {self.title}"
 
     def current_lesson(self, user):
-        """Вернуть queryset текущего урока."""
+        """Return queryset of the current lesson."""
         finished_lessons = LessonProgressStatus.objects.filter(
             user=user, progress=LessonProgressStatus.ProgressStatus.FINISHED
         ).values_list("lesson_id", flat=True)
 
-        return (
-            Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED)
-            .exclude(id__in=finished_lessons)
-            .annotate(ordering=F("chapter__order_number") + F("order_number"))
-            .order_by("ordering")
+        lesson_queryset = Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED).annotate(
+            ordering=F("chapter__order_number") + F("order_number")
         )
+        current_lesson_queryset = lesson_queryset.exclude(id__in=finished_lessons).order_by("ordering")[:1]
+
+        if not current_lesson_queryset.exists():
+            return lesson_queryset.order_by("-ordering")[:1]
+
+        return current_lesson_queryset
 
     @property
     def is_available(self):
