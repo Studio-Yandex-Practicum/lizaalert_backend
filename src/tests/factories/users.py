@@ -76,7 +76,10 @@ class VolunteerBadgeFactory(factory.django.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        from tests.factories.courses import CourseFactory
+
         user = kwargs.pop("user", None)
         volunteer = user.volunteer if user else None
         kwargs["volunteer"] = volunteer
+        kwargs["course"] = CourseFactory()
         return super()._create(model_class, *args, **kwargs)

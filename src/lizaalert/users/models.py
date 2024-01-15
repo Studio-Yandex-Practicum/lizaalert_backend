@@ -180,6 +180,12 @@ class VolunteerBadge(models.Model):
         related_name="badge_volunteers",
         verbose_name="Значок",
     )
+    course = models.ForeignKey(
+        "courses.Course",
+        on_delete=models.CASCADE,
+        related_name="course_volunteer_badge",
+        verbose_name="Курс",
+    )
     created_at = models.DateTimeField("Дата создания записи", auto_now_add=True)
 
     class Meta:
