@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from lizaalert.courses.exceptions import BadRequestException
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
     Chapter,
@@ -20,13 +21,22 @@ from lizaalert.courses.models import (
     Subscription,
 )
 from lizaalert.courses.pagination import CourseSetPagination
-from lizaalert.courses.permissions import CurrentLessonOrProhibited, IsUserOrReadOnly
+from lizaalert.courses.permissions import CurrentLessonOrProhibited, EnrolledAndCourseHasStarted, IsUserOrReadOnly
 from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import BreadcrumbLessonSerializer, ErrorSerializer
+from lizaalert.courses.utils import UserStatusBreadcrumbSerializer
 from lizaalert.users.models import Level
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint для работы с курсами.
+
+    Предоставляет операции чтения и дополнительные действия.
+    Responses:
+        200: Ответ с сериализованными данными курса.
+        201: Ответ с сериализованными данными, указывающими характеристики подписки.
+    """
+
     permission_classes = [
         AllowAny,
     ]
@@ -84,7 +94,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Subquery(
                             ChapterProgressStatus.objects.filter(chapter=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("userchapterprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -98,7 +108,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Subquery(
                             LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("userlessonprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -116,7 +126,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
             users_annotations = {
                 "user_status": Coalesce(
-                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("enabled")),
+                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("status")),
                     Value("not_enrolled"),
                 ),
                 "user_course_progress": Coalesce(
@@ -124,7 +134,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                         Subquery(
                             CourseProgressStatus.objects.filter(course=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("usercourseprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -150,7 +160,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
-    @swagger_auto_schema(responses={201: BreadcrumbLessonSerializer, 403: ErrorSerializer, 404: ErrorSerializer})
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: UserStatusBreadcrumbSerializer,
+        }
+    )
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
     def enroll(self, request, **kwargs):
         """
@@ -172,25 +186,29 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            serializer = ErrorSerializer({"error": "Invalid id."})
-            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
-        check_for_subscription = Subscription.objects.filter(user=user, course=course).exists()
-        if check_for_subscription:
-            serializer = ErrorSerializer({"error": "Subscription already exists."})
-            return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
-        Subscription.objects.create(user=user, course=course)
+            raise BadRequestException({"detail": "Invalid id."})
+
+        subscription = course.subscribe(user)
         current_lesson = course.current_lesson(user).first()
         if current_lesson:
-            initial_lesson = {"chapter_id": current_lesson.chapter_id, "lesson_id": current_lesson.id}
+            initial_lesson_and_status = {
+                "chapter_id": current_lesson.chapter_id,
+                "lesson_id": current_lesson.id,
+                "user_status": subscription,
+            }
         else:
-            initial_lesson = {"chapter_id": None, "lesson_id": None}
-        serializer = BreadcrumbLessonSerializer(initial_lesson)
+            initial_lesson_and_status = {
+                "chapter_id": None,
+                "lesson_id": None,
+                "user_status": subscription,
+            }
+
+        serializer = UserStatusBreadcrumbSerializer(initial_lesson_and_status)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
         responses={
             status.HTTP_204_NO_CONTENT: "Пользователь успешно отписан от курса.",
-            status.HTTP_404_NOT_FOUND: ErrorSerializer,
         }
     )
     @action(
@@ -213,8 +231,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             course = get_object_or_404(Course, **kwargs)
         except ValueError:
-            serialzier = ErrorSerializer({"error": "Invalid id."})
-            return Response(serialzier.data, status=status.HTTP_404_NOT_FOUND)
+            raise BadRequestException({"detail": "Invalid id."})
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -240,11 +257,17 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     Примечание:
         Для выполнения дополнительных действий, таких как завершение урока, требуется аутентификация пользователя.
+
+    Responses:
+        200: Ответ с сериализованными данными урока.
+        201: Ответ с сериализованными данными, указывающими на успешное завершение урока.
+        403: Ответ с сериализованными данными, указывающими на ошибку доступа.
     """
 
     permission_classes = [
         AllowAny,
         CurrentLessonOrProhibited,
+        EnrolledAndCourseHasStarted,
     ]
 
     def get_queryset(self):
@@ -272,7 +295,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                         Subquery(
                             LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
                             .order_by("-updated_at")
-                            .values("userlessonprogress")[:1]
+                            .values("progress")[:1]
                         ),
                         IntegerField(),
                     ),
@@ -290,12 +313,6 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             return None
         return LessonSerializer
 
-    @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: "Успешный ответ",
-            status.HTTP_404_NOT_FOUND: "Урок не найден",
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         """
         Получает детали урока, активируя его для пользователя при необходимости.
@@ -307,10 +324,14 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         lesson = self.get_object()
         user = self.request.user
+        course = lesson.chapter.course
         if user.is_authenticated:
             any_progress = LessonProgressStatus.objects.filter(user=user, lesson=lesson).exists()
             if not any_progress:
                 lesson.activate(user)
+        subscription = Subscription.objects.filter(user=user, course=course).first()
+        if subscription and subscription.status == Subscription.Status.ENROLLED:
+            course.activate(user)  # Активируем начало прохождения курса, если были записаны на курс
         return super().retrieve(request, *args, **kwargs)
 
     @transaction.atomic
@@ -320,6 +341,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         permission_classes=(
             IsAuthenticated,
             IsUserOrReadOnly,
+            EnrolledAndCourseHasStarted,
         ),
     )
     @swagger_auto_schema(
