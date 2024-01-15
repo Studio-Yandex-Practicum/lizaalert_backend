@@ -1,14 +1,9 @@
-from rest_framework import status
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 
-class BadRequestException(APIException):
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Bad request."
-    default_code = "bad_request"
+class BadRequestException(ValidationError):
+    pass
 
 
-class AlreadyExistsException(APIException):
-    status_code = status.HTTP_403_FORBIDDEN
-    default_detail = "Forbidden."
-    default_code = "forbidden"
+class AlreadyExistsException(PermissionDenied):
+    pass

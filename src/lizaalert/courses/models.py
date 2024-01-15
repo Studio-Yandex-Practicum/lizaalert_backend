@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, F
+from django.db.models import F
 from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException
@@ -166,7 +166,7 @@ class Course(
             progress_status.save()
 
 
-class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin()):
+class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin(parent="course")):
     """
     Модель главы.
 
@@ -204,23 +204,12 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), stat
     def __str__(self):
         return f"Курс {self.course.title}: Глава {self.title}"
 
-    def finish(self, user):
-        """
-        Закончить главу.
 
-        В случае если, текущая глава является последним и остальные главы в курсе пройдены
-        активируется метод finish() отмечающий прохождение курса этогй главы.
-        """
-        super().finish(user)
-        chapter_qs = Chapter.objects.filter(course=self.course).aggregate(total_chapters=Count("id"))
-        progress_qs = ChapterProgressStatus.objects.filter(
-            chapter__course=self.course, user=user, progress=ChapterProgressStatus.ProgressStatus.FINISHED
-        ).aggregate(finished_chapters=Count("id"))
-        if chapter_qs["total_chapters"] == progress_qs["finished_chapters"]:
-            self.course.finish(user)
-
-
-class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter"), status_update_mixin()):
+class Lesson(
+    TimeStampedModel,
+    order_number_mixin(LESSON_STEP, "chapter"),
+    status_update_mixin(parent="chapter", publish_status="LessonStatus"),
+):
     """
     Модель урока.
 
@@ -280,23 +269,6 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter"), statu
 
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
-
-    def finish(self, user):
-        """
-        Закончить текущий урок.
-
-        В случае если, текущий урок является последним и остальные уроки в главе пройдены
-        активируется метод finish() отмечающий прохождение главы этого урока.
-        """
-        super().finish(user)
-        lesson_qs = Lesson.objects.filter(chapter=self.chapter, status=self.LessonStatus.PUBLISHED).aggregate(
-            total_lessons=Count("id")
-        )
-        progress_qs = LessonProgressStatus.objects.filter(
-            lesson__chapter=self.chapter, user=user, progress=LessonProgressStatus.ProgressStatus.FINISHED
-        ).aggregate(finished_lessons=Count("id"))
-        if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
-            self.chapter.finish(user)
 
     @property
     def ordered(self):

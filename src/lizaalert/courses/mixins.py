@@ -1,7 +1,7 @@
 from django.apps import apps
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Max
+from django.db.models import Count, Max
 
 
 class TimeStampedModel(models.Model):
@@ -114,7 +114,7 @@ def order_number_mixin(step, parent_field):
     return SaveOrderingMixin
 
 
-def status_update_mixin():
+def status_update_mixin(parent: str = None, publish_status=None):
     """Добавить методы finish и activate для обновления статусов модели. При необходимости обновить подписку."""
     from lizaalert.courses.models import BaseProgress
 
@@ -145,6 +145,24 @@ def status_update_mixin():
                 self,
                 BaseProgress.ProgressStatus.FINISHED,
             )
+
+            if parent:
+                parent_attr = getattr(self, parent)
+                if publish_status:
+                    publish_status_attr = getattr(self, publish_status)
+                    total_queryset = self.__class__.objects.filter(
+                        **{parent: parent_attr, "status": publish_status_attr.PUBLISHED}
+                    ).aggregate(total=Count("id"))
+                else:
+                    total_queryset = self.__class__.objects.filter(**{parent: parent_attr}).aggregate(total=Count("id"))
+                progress_model = self._get_progress_model()
+                filter_string = f"{self.__class__.__name__.lower()}__{parent}"
+                filter_kwargs = {filter_string: parent_attr}
+                finished_queryset = progress_model.objects.filter(
+                    user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs
+                ).aggregate(finished=Count("id"))
+                if finished_queryset["finished"] == total_queryset["total"]:
+                    getattr(parent_attr, "finish")(user)
 
         def activate(self, user):
             """Присвоить статус активировать."""
