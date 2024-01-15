@@ -164,6 +164,7 @@ def status_update_mixin(parent: str = None, publish_status=None):
                     user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs
                 ).aggregate(finished=Count("id"))
                 if finished_queryset["finished"] == total_queryset["total"]:
+                    # Финишируем родительский объект, если пройдены все уроки/главы
                     getattr(parent_attr, "finish")(user)
 
         def activate(self, user):
