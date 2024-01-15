@@ -1,13 +1,35 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, F
+from django.db.models import F
+from django.utils import timezone
 
-from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin
+from lizaalert.courses.exceptions import AlreadyExistsException
+from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.quizzes.models import Quiz
-from lizaalert.settings.base import CHAPTER_STEP, LESSON_STEP
+from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
 User = get_user_model()
+
+
+class BaseProgress(models.Model):
+    """Progress mixin."""
+
+    class ProgressStatus(models.IntegerChoices):
+        """Класс по определению статуса прохождения урока, главы, курса."""
+
+        NOT_STARTED = 0, "Не начат"
+        ACTIVE = 1, "Начат"
+        FINISHED = 2, "Пройден"
+
+    progress = models.IntegerField(
+        verbose_name="прогресс",
+        choices=ProgressStatus.choices,
+        default=0,
+    )
+
+    class Meta:
+        abstract = True
 
 
 class FAQ(TimeStampedModel):
@@ -57,7 +79,10 @@ class Knowledge(TimeStampedModel):
         return self.title
 
 
-class Course(TimeStampedModel):
+class Course(
+    TimeStampedModel,
+    status_update_mixin(),
+):
     class CourseStatus(models.IntegerChoices):
         """Класс для выбора статуса курса."""
 
@@ -97,22 +122,15 @@ class Course(TimeStampedModel):
     def __str__(self):
         return f"Course {self.title}"
 
-    def finish(self, user):
-        """Закончить весь курс."""
-        CourseProgressStatus.objects.update_or_create(
-            user=user, course=self, usercourseprogress=CourseProgressStatus.ProgressStatus.FINISHED
-        )
-
     def current_lesson(self, user):
         """Return queryset of the current lesson."""
         finished_lessons = LessonProgressStatus.objects.filter(
-            user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
+            user=user, progress=LessonProgressStatus.ProgressStatus.FINISHED
         ).values_list("lesson_id", flat=True)
 
         lesson_queryset = Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED).annotate(
             ordering=F("chapter__order_number") + F("order_number")
         )
-
         current_lesson_queryset = lesson_queryset.exclude(id__in=finished_lessons).order_by("ordering")[:1]
 
         if not current_lesson_queryset.exists():
@@ -120,8 +138,38 @@ class Course(TimeStampedModel):
 
         return current_lesson_queryset
 
+    @property
+    def is_available(self):
+        """Проверить доступность курса."""
+        return timezone.now().date() >= self.start_date
 
-class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
+    def subscribe(self, user):
+        """Подписать пользователя на данный курс."""
+        subscription, created = Subscription.objects.get_or_create(user=user, course=self)
+        if not created:
+            raise AlreadyExistsException({"detail": "Already enrolled."})
+        return subscription
+
+    def finish(self, user):
+        super().finish(user)
+        progress_status, created = Subscription.objects.get_or_create(
+            user=user, course=self, defaults={"status": Subscription.Status.COMPLETED}
+        )
+        if not created:
+            progress_status.status = Subscription.Status.COMPLETED
+            progress_status.save()
+
+    def activate(self, user):
+        super().activate(user)
+        progress_status, created = Subscription.objects.get_or_create(
+            user=user, course=self, defaults={"status": Subscription.Status.IN_PROGRESS}
+        )
+        if not created:
+            progress_status.status = Subscription.Status.IN_PROGRESS
+            progress_status.save()
+
+
+class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin(parent="course")):
     """
     Модель главы.
 
@@ -159,25 +207,12 @@ class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course")):
     def __str__(self):
         return f"Курс {self.course.title}: Глава {self.title}"
 
-    def finish(self, user):
-        """
-        Закончить главу.
 
-        В случае если, текущая глава является последним и остальные главы в курсе пройдены
-        активируется метод finish() отмечающий прохождение курса этогй главы.
-        """
-        ChapterProgressStatus.objects.update_or_create(
-            user=user, chapter=self, userchapterprogress=CourseProgressStatus.ProgressStatus.FINISHED
-        )
-        chapter_qs = Chapter.objects.filter(course=self.course).aggregate(total_chapters=Count("id"))
-        progress_qs = ChapterProgressStatus.objects.filter(
-            chapter__course=self.course, user=user, userchapterprogress=ChapterProgressStatus.ProgressStatus.FINISHED
-        ).aggregate(finished_chapters=Count("id"))
-        if chapter_qs["total_chapters"] == progress_qs["finished_chapters"]:
-            self.course.finish(user)
-
-
-class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
+class Lesson(
+    TimeStampedModel,
+    order_number_mixin(LESSON_STEP, "chapter"),
+    status_update_mixin(parent="chapter", publish_status="LessonStatus"),
+):
     """
     Модель урока.
 
@@ -238,37 +273,6 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
     def __str__(self):
         return f"Урок {self.id}: {self.title} (Глава {self.chapter_id})"
 
-    def activate(self, user):
-        """Активировать текущий урок."""
-        progress, created = LessonProgressStatus.objects.update_or_create(
-            user=user, lesson=self, defaults={"userlessonprogress": LessonProgressStatus.ProgressStatus.ACTIVE}
-        )
-        if not created:
-            progress.userlessonprogress = LessonProgressStatus.ProgressStatus.ACTIVE
-            progress.save()
-
-    def finish(self, user):
-        """
-        Закончить текущий урок.
-
-        В случае если, текущий урок является последним и остальные уроки в главе пройдены
-        активируется метод finish() отмечающий прохождение главы этого урока.
-        """
-        progress, created = LessonProgressStatus.objects.update_or_create(
-            user=user, lesson=self, defaults={"userlessonprogress": LessonProgressStatus.ProgressStatus.FINISHED}
-        )
-        if not created:
-            progress.userlessonprogress = LessonProgressStatus.ProgressStatus.FINISHED
-            progress.save()
-        lesson_qs = Lesson.objects.filter(chapter=self.chapter, status=self.LessonStatus.PUBLISHED).aggregate(
-            total_lessons=Count("id")
-        )
-        progress_qs = LessonProgressStatus.objects.filter(
-            lesson__chapter=self.chapter, user=user, userlessonprogress=LessonProgressStatus.ProgressStatus.FINISHED
-        ).aggregate(finished_lessons=Count("id"))
-        if lesson_qs["total_lessons"] == progress_qs["finished_lessons"]:
-            self.chapter.finish(user)
-
     @property
     def ordered(self):
         """Вернуть очередность всех уроков курса с полем ordering."""
@@ -291,7 +295,7 @@ class Lesson(TimeStampedModel, order_number_mixin(LESSON_STEP, "chapter")):
         return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering")[:1]
 
 
-class LessonProgressStatus(TimeStampedModel):
+class LessonProgressStatus(TimeStampedModel, BaseProgress):
     """
     Класс для хранения прогресса студента при прохождении уроков в главе и курсе. Наследуется от TimeStampedModel.
 
@@ -299,16 +303,9 @@ class LessonProgressStatus(TimeStampedModel):
 
     lesson - тип ForeignKey к модели  Lesson
     user - тип ForeignKey к модели User
-    usercourseprogress - статус прохождения урока
+    progress - статус прохождения урока
     version_number - номер версии урока(предусматриваем для будующего использования, значение по умолчанию 1)
     """
-
-    class ProgressStatus(models.TextChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
-
-        COMING = 0, "Не начат"
-        ACTIVE = 1, "Начат"
-        FINISHED = 2, "Пройден"
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
     user = models.ForeignKey(
@@ -317,18 +314,12 @@ class LessonProgressStatus(TimeStampedModel):
         related_name="user_lesson_status",
         verbose_name="user_lesson_status",
     )
-    userlessonprogress = models.CharField(
-        max_length=20,
-        verbose_name="прогресс урока",
-        choices=ProgressStatus.choices,
-        default=0,
-    )
     version_number = models.PositiveSmallIntegerField(
         "Номер версии урока", validators=[MinValueValidator(1)], default=1
     )
 
     def __str__(self):
-        return f"Lesson {self.lesson_id}: {self.user_id} Progress: {self.get_userlessonprogress_display()}"
+        return f"Lesson {self.lesson_id}: {self.user_id} Progress: {self.get_progress_display()}"
 
     class Meta:
         verbose_name = "Прогресс по уроку"
@@ -336,7 +327,7 @@ class LessonProgressStatus(TimeStampedModel):
         ordering = ("user",)
 
 
-class ChapterProgressStatus(TimeStampedModel):
+class ChapterProgressStatus(TimeStampedModel, BaseProgress):
     """
     Класс для хранения прогресса студента при прохождении главы. Наследуется от TimeStampedModel.
 
@@ -344,15 +335,8 @@ class ChapterProgressStatus(TimeStampedModel):
 
     глава - тип ForeignKey к модели Chapter
     user - тип ForeignKey к модели User
-    userchapterprogress - статус прохождения главы
+    progress - статус прохождения главы
     """
-
-    class ProgressStatus(models.TextChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
-
-        NOTSTARTED = 0, "Не начата"
-        INPROGRESS = 1, "Начата"
-        FINISHED = 2, "Пройдена"
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT, related_name="chapter_progress")
     user = models.ForeignKey(
@@ -360,11 +344,6 @@ class ChapterProgressStatus(TimeStampedModel):
         on_delete=models.PROTECT,
         related_name="user_chapter_status",
         verbose_name="user_chapter_status",
-    )
-    userchapterprogress = models.CharField(
-        max_length=20,
-        verbose_name="прогресс главы",
-        choices=ProgressStatus.choices,
     )
 
     def __str__(self):
@@ -376,7 +355,7 @@ class ChapterProgressStatus(TimeStampedModel):
         ordering = ("user",)
 
 
-class CourseProgressStatus(TimeStampedModel):
+class CourseProgressStatus(TimeStampedModel, BaseProgress):
     """
     Класс для хранения прогресса студента при прохождении курса. Наследуется от TimeStampedModel.
 
@@ -384,15 +363,8 @@ class CourseProgressStatus(TimeStampedModel):
 
     курс - тип ForeignKey к модели Course
     user - тип ForeignKey к модели User
-    usercourseprogress - статус прохождения курса
+    progress - статус прохождения курса
     """
-
-    class ProgressStatus(models.TextChoices):
-        """класс по определению статуса прохождения урока, главы, курса, возможно тестов."""
-
-        NOTSTARTED = 0, "Не начат"
-        INPROGRESS = 1, "Начат"
-        FINISHED = 2, "Пройден"
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course_progress")
     user = models.ForeignKey(
@@ -400,11 +372,6 @@ class CourseProgressStatus(TimeStampedModel):
         on_delete=models.PROTECT,
         related_name="user_course_status",
         verbose_name="course_status",
-    )
-    usercourseprogress = models.CharField(
-        max_length=20,
-        verbose_name="прогресс курса",
-        choices=ProgressStatus.choices,
     )
 
     def __str__(self):
@@ -442,16 +409,19 @@ class Subscription(TimeStampedModel):
 
     user - ForeignKey на модель user
     course - ForeignKey на модель course.
-    enabled - признак активности записи на курс.
+    status - признак активности записи на курс.
     """
 
     class Status(models.TextChoices):
-        ENROLLED = "enrolled", "Запись активна"
+        ENROLLED = "enrolled", "Записан на курс"
         NOT_ENROLLED = "not_enrolled", "Запись не активна"
+        IN_PROGRESS = "in_progress", "Курс проходится"
+        AVAILABLE = "available", "Курс доступен"
+        COMPLETED = "completed", "Курс пройден"
 
-    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="student")
-    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course")
-    enabled = models.CharField(
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="subscriptions")
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="+")
+    status = models.CharField(
         max_length=20, choices=Status.choices, verbose_name="статус записи на курс", default=Status.ENROLLED
     )
 

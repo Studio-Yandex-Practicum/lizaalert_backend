@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Max
@@ -111,3 +112,63 @@ def order_number_mixin(step, parent_field):
             super().save(*args, **kwargs)
 
     return SaveOrderingMixin
+
+
+def status_update_mixin(parent: str = None, publish_status=None):
+    """Добавить методы finish и activate для обновления статусов модели. При необходимости обновить подписку."""
+    from lizaalert.courses.models import BaseProgress
+
+    class FinishActivateMixin(models.Model):
+        class Meta:
+            abstract = True
+
+        def _get_progress_model(self):
+            """Получить модель прогресса путем конканектации имени модели и ProgressStatus."""
+            model_name = f"{self.__class__.__name__}ProgressStatus"
+            return apps.get_model("courses", model_name)
+
+        def _update_or_create_progress_status(self, user, instance, status):
+            """Обновление статуса прохождения урока, главы, курса, а также статуса подписки."""
+            lookup_field = self.__class__.__name__.lower()
+            model = self._get_progress_model()
+            progress_status, created = model.objects.get_or_create(
+                user=user, **{lookup_field: instance}, defaults={"progress": status}
+            )
+            if not created:
+                setattr(progress_status, "progress", status)
+                progress_status.save()
+
+        def finish(self, user):
+            """Присвоить статус завершения."""
+            self._update_or_create_progress_status(
+                user,
+                self,
+                BaseProgress.ProgressStatus.FINISHED,
+            )
+
+            if parent:
+                filter_kwargs = {f"{self.__class__.__name__.lower()}__{parent}": getattr(self, parent)}
+                finished_queryset = (
+                    self._get_progress_model()
+                    .objects.filter(user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs)
+                    .values(f"{self.__class__.__name__.lower()}_id")
+                )
+
+                filter_args = {parent: getattr(self, parent)}
+                if publish_status:
+                    filter_args["status"] = getattr(self, publish_status).PUBLISHED
+
+                items = self.__class__.objects.filter(**filter_args).exclude(id__in=finished_queryset).count()
+
+                if items == 0:
+                    getattr(getattr(self, parent), "finish")(user)
+
+        def activate(self, user):
+            """Присвоить статус активировать."""
+            self._update_or_create_progress_status(
+                user,
+                self,
+                BaseProgress.ProgressStatus.ACTIVE,
+            )
+
+    return FinishActivateMixin

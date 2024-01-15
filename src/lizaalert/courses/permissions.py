@@ -22,3 +22,24 @@ class CurrentLessonOrProhibited(permissions.BasePermission):
             if current_lesson.ordering >= obj.ordering:
                 return True
         return False
+
+
+class EnrolledAndCourseHasStarted(permissions.BasePermission):
+    """
+    Доступ к урокам курса только для записанных и на курс, который начался.
+
+    access_statuses - статусы пользователся, с которыми можно получить доступ к курсу.
+    update_subscriptions - обновляет статусы подписок пользователя.
+    """
+
+    message = "Доступ к урокам курса только для подписчиков и на курс, который начался."
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        course = obj.chapter.course
+        if user.is_authenticated:
+            try:
+                return user.subscriptions.filter(course=course).exists() and course.is_available
+            except Exception:
+                return False
+        return False
