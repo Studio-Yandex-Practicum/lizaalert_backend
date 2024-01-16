@@ -601,3 +601,18 @@ class TestCourse:
 
         # Тестируем доступ при подписке и не стартовавшем курсе
         assert_permision(status.HTTP_403_FORBIDDEN, start_in_future, subscribed=True)
+
+    def test_course_completion_endpoint(self, user_client, user):
+        """
+        Тест эндпоинта завершения курса.
+
+        Проверяем, что при завершении курса, пользователь получает статус COMPLETED.
+        """
+        course = CourseWith2Chapters()
+        _ = SubscriptionFactory(user=user, course=course)
+        url = reverse("courses-complete", kwargs={"pk": course.id})
+        url_course = reverse("courses-detail", kwargs={"pk": course.id})
+        response = user_client.post(url)
+        response_course = user_client.get(url_course)
+        assert response.status_code == status.HTTP_200_OK
+        assert response_course.json()["user_status"] == Subscription.Status.COMPLETED

@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from lizaalert.courses.events import course_completion_event
 from lizaalert.courses.exceptions import BadRequestException
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
@@ -235,6 +236,27 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: "Курс успешно завершен.",
+        }
+    )
+    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated, EnrolledAndCourseHasStarted))
+    def complete(self, request, **kwargs):
+        """
+        Завершить курс для пользователя.
+
+        Данное событие вызывает event завершения курса.
+        """
+        user = self.request.user
+        try:
+            course = get_object_or_404(Course, **kwargs)
+        except ValueError:
+            raise BadRequestException({"detail": "Invalid id."})
+        course.finish(user)
+        course_completion_event(course, user)
+        return Response(status=status.HTTP_200_OK)
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
