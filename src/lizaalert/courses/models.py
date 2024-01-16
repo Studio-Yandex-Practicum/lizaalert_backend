@@ -456,6 +456,7 @@ class Subscription(TimeStampedModel):
     cohort = models.ForeignKey(
         Cohort, on_delete=models.PROTECT, related_name="cohort", null=True, blank=True, verbose_name="Группа"
     )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
