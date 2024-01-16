@@ -51,6 +51,7 @@ class ChapterInline(admin.TabularInline):
 class CohortInline(admin.TabularInline):
     model = Cohort
     extra = 1
+    fields = ["start_date", "end_date", "students_count", "teacher", "cohort_number_display"]
     readonly_fields = ["cohort_number_display"]
 
     def cohort_number_display(self, instance):

@@ -410,13 +410,20 @@ class Cohort(TimeStampedModel):
     Поля модели:
     - course: ForeignKey к модели Course
     - cohort_number: уникальный номер группы в рамках курса
+    - start_date: дата начала обучения
+    - end_date: дата окончания обучения
+    - students_count: количество студентов в группе
+    - teacher: имя преподавателя группы
     """
 
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="cohorts", verbose_name="Курс")
-    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", unique=True)
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="cohorts", verbose_name="Курс")
+    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", unique=False)
+    start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
+    end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
+    students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
+    teacher = models.CharField(max_length=255, verbose_name="Преподаватель", null=True, blank=True)
 
     class Meta:
-        ordering = ("cohort_number",)
         verbose_name = "Группа курса"
         verbose_name_plural = "Группы курса"
 
