@@ -424,7 +424,7 @@ class Cohort(TimeStampedModel):
     teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
 
     class Meta:
-        unique_together = ['course', 'cohort_number']
+        unique_together = ["course", "cohort_number"]
         verbose_name = "Группа курса"
         verbose_name_plural = "Группы курса"
 
