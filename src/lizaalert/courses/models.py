@@ -417,13 +417,14 @@ class Cohort(TimeStampedModel):
     """
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="cohorts", verbose_name="Курс")
-    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", unique=False)
+    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", unique=True)
     start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
     end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
     students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
-    teacher = models.CharField(max_length=255, verbose_name="Преподаватель", null=True, blank=True)
+    teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
 
     class Meta:
+        unique_together = ['course', 'cohort_number']
         verbose_name = "Группа курса"
         verbose_name_plural = "Группы курса"
 
@@ -454,7 +455,7 @@ class Subscription(TimeStampedModel):
     )
 
     cohort = models.ForeignKey(
-        Cohort, on_delete=models.PROTECT, related_name="cohort", null=True, blank=True, verbose_name="Группа"
+        Cohort, on_delete=models.PROTECT, related_name="subscriptions", null=True, blank=True, verbose_name="Группа"
     )
 
     class Meta:
