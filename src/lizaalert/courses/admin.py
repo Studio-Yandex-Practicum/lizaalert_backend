@@ -75,23 +75,53 @@ class ChapterAdmin(admin.ModelAdmin):
         "user_modifier",
         "course",
     )
+    list_display = (
+        "__str__",
+        "title",
+        "user_created",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(LessonProgressStatus)
 class LessonProgressStatusAdmin(admin.ModelAdmin):
-    pass
+    ordering = ("-created_at",)
+    list_display = (
+        "__str__",
+        "progress",
+        "user",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
 
     raw_id_fields = ("user",)
+    ordering = ("-updated_at",)
+    list_display = (
+        "__str__",
+        "progress",
+        "user",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
 
     raw_id_fields = ("user",)
+    ordering = ("-updated_at",)
+    list_display = (
+        "__str__",
+        "progress",
+        "user",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(FAQ)
@@ -99,6 +129,13 @@ class FaqAdmin(admin.ModelAdmin):
     """Админка для FAQ."""
 
     inlines = (CourseFaqInline,)
+    ordering = ("-created_at",)
+    list_display = (
+        "__str__",
+        "author",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(Knowledge)
@@ -106,6 +143,13 @@ class KnowledgeAdmin(admin.ModelAdmin):
     """Aдминка для Knowledge."""
 
     inlines = (CourseKnowledgeInline,)
+    ordering = ("-created_at",)
+    list_display = (
+        "__str__",
+        "author",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(Lesson)
@@ -117,6 +161,16 @@ class LessonAdmin(admin.ModelAdmin):
         "user_modifier",
         "chapter",
     )
+    list_display = (
+        "__str__",
+        "title",
+        "lesson_type",
+        "user_created",
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = ("-created_at",)
 
 
 admin.site.register(Course, CourseAdmin)
