@@ -131,8 +131,30 @@ class Department(models.Model):
 
 
 class Badge(models.Model):
+    """Модель для создания значков."""
+
+    class BadgeType(models.TextChoices):
+        MANUAL = "manual", "Ручная"
+        ACHIEVEMENT = "achievement", "За прохождение"
+
+    class BadgeCategory(models.TextChoices):
+        ONE_TIME = "one_time", "Разовая"
+        PROGRESSIVE = "progressive", "За достижение"
+
     name = models.CharField("Наименование значка", max_length=40)
     description = models.TextField("Описание значка и условий его получения", blank=True, null=True)
+    image = ThumbnailerImageField("Изображение значка", upload_to="badges/", blank=True, null=True)
+    badge_type = models.CharField("Вид значка", choices=BadgeType.choices, max_length=20)
+    badge_category = models.CharField("Тип значка", choices=BadgeCategory.choices, max_length=20)
+    issued_for = models.CharField("За что", max_length=255)
+    threshold_courses = models.PositiveIntegerField("Количество курсов для получения", null=True, blank=True)
+    threshold_course = models.ForeignKey(
+        "courses.Course",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Курс для получения",
+    )
 
     class Meta:
         db_table = "badges"
@@ -144,6 +166,8 @@ class Badge(models.Model):
 
 
 class VolunteerBadge(models.Model):
+    """Модель для представления значков волонтерам."""
+
     volunteer = models.ForeignKey(
         "Volunteer",
         on_delete=models.CASCADE,
@@ -156,12 +180,23 @@ class VolunteerBadge(models.Model):
         related_name="badge_volunteers",
         verbose_name="Значок",
     )
+    course = models.ForeignKey(
+        "courses.Course",
+        on_delete=models.CASCADE,
+        related_name="course_volunteer_badge",
+        verbose_name="Курс",
+    )
     created_at = models.DateTimeField("Дата создания записи", auto_now_add=True)
 
     class Meta:
         db_table = "volunteers_badges"
         verbose_name = "Значок волонтера"
         verbose_name_plural = "Значки волонтеров"
+
+
+class VolunteerCourseCompletion(models.Model):
+    volunteer = models.ForeignKey("Volunteer", on_delete=models.CASCADE, related_name="course_completion")
+    completed_courses_count = models.PositiveIntegerField(default=0)
 
 
 class VolunteerCourse(models.Model):

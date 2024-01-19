@@ -75,7 +75,7 @@ class CourseAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    ordering = ("-created_at",)
+    ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
 
 
@@ -90,21 +90,51 @@ class ChapterAdmin(admin.ModelAdmin):
         "user_modifier",
         "course",
     )
+    list_display = (
+        "title",
+        "course",
+        "user_created",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(LessonProgressStatus)
 class LessonProgressStatusAdmin(admin.ModelAdmin):
-    pass
+    ordering = ("-updated_at",)
+    list_display = (
+        "lesson",
+        "progress",
+        "user",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
+    ordering = ("-updated_at",)
+    list_display = (
+        "chapter",
+        "progress",
+        "user",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
+    ordering = ("-updated_at",)
+    list_display = (
+        "course",
+        "progress",
+        "user",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(FAQ)
@@ -112,6 +142,13 @@ class FaqAdmin(admin.ModelAdmin):
     """Админка для FAQ."""
 
     inlines = (CourseFaqInline,)
+    ordering = ("-updated_at",)
+    list_display = (
+        "question",
+        "author",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(Knowledge)
@@ -119,6 +156,13 @@ class KnowledgeAdmin(admin.ModelAdmin):
     """Aдминка для Knowledge."""
 
     inlines = (CourseKnowledgeInline,)
+    ordering = ("-updated_at",)
+    list_display = (
+        "title",
+        "author",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(Lesson)
@@ -130,6 +174,16 @@ class LessonAdmin(admin.ModelAdmin):
         "user_modifier",
         "chapter",
     )
+    list_display = (
+        "title",
+        "chapter",
+        "lesson_type",
+        "user_created",
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = ("-updated_at",)
 
 
 admin.site.register(Course, CourseAdmin)

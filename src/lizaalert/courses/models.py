@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
+from lizaalert.courses.signals import course_finished
 from lizaalert.quizzes.models import Quiz
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
@@ -140,8 +141,14 @@ class Course(
 
     @property
     def is_available(self):
-        """Проверить доступность курса."""
-        return timezone.now().date() >= self.start_date
+        """
+        Проверить доступность курса.
+
+        Если дата начала курса не указана, то курс доступен всегда.
+        """
+        if self.start_date:
+            return timezone.now().date() >= self.start_date
+        return True
 
     def subscribe(self, user):
         """Подписать пользователя на данный курс."""
@@ -167,6 +174,14 @@ class Course(
         if not created:
             progress_status.status = Subscription.Status.IN_PROGRESS
             progress_status.save()
+
+    def get_achievements(self, course, user):
+        """
+        Отправляет сигнал о завершении курса для получения ачивок.
+
+        Передает course_id и user.
+        """
+        course_finished.send(sender=self.__class__, course=course, user=user)
 
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin(parent="course")):
@@ -312,7 +327,7 @@ class LessonProgressStatus(TimeStampedModel, BaseProgress):
         User,
         on_delete=models.PROTECT,
         related_name="user_lesson_status",
-        verbose_name="user_lesson_status",
+        verbose_name="Пользователь",
     )
     version_number = models.PositiveSmallIntegerField(
         "Номер версии урока", validators=[MinValueValidator(1)], default=1
@@ -343,7 +358,7 @@ class ChapterProgressStatus(TimeStampedModel, BaseProgress):
         User,
         on_delete=models.PROTECT,
         related_name="user_chapter_status",
-        verbose_name="user_chapter_status",
+        verbose_name="Пользователь",
     )
 
     def __str__(self):
@@ -371,7 +386,7 @@ class CourseProgressStatus(TimeStampedModel, BaseProgress):
         User,
         on_delete=models.PROTECT,
         related_name="user_course_status",
-        verbose_name="course_status",
+        verbose_name="Пользователь",
     )
 
     def __str__(self):
