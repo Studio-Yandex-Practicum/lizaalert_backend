@@ -145,9 +145,9 @@ class Course(
 
         Если дата начала курса не указана, то курс доступен всегда.
         """
-        if not self.start_date:
-            return True
-        return timezone.now().date() >= self.start_date
+        if self.start_date:
+            return timezone.now().date() >= self.start_date
+        return True
 
     def subscribe(self, user):
         """Подписать пользователя на данный курс."""
