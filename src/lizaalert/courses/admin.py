@@ -76,8 +76,8 @@ class ChapterAdmin(admin.ModelAdmin):
         "course",
     )
     list_display = (
-        "__str__",
         "title",
+        "course",
         "user_created",
         "created_at",
         "updated_at",
@@ -88,7 +88,7 @@ class ChapterAdmin(admin.ModelAdmin):
 class LessonProgressStatusAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     list_display = (
-        "__str__",
+        "lesson",
         "progress",
         "user",
         "created_at",
@@ -102,7 +102,7 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
     ordering = ("-updated_at",)
     list_display = (
-        "__str__",
+        "chapter",
         "progress",
         "user",
         "created_at",
@@ -116,7 +116,7 @@ class CourseProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
     ordering = ("-updated_at",)
     list_display = (
-        "__str__",
+        "course",
         "progress",
         "user",
         "created_at",
@@ -131,7 +131,7 @@ class FaqAdmin(admin.ModelAdmin):
     inlines = (CourseFaqInline,)
     ordering = ("-created_at",)
     list_display = (
-        "__str__",
+        "question",
         "author",
         "created_at",
         "updated_at",
@@ -145,7 +145,7 @@ class KnowledgeAdmin(admin.ModelAdmin):
     inlines = (CourseKnowledgeInline,)
     ordering = ("-created_at",)
     list_display = (
-        "__str__",
+        "title",
         "author",
         "created_at",
         "updated_at",
@@ -162,8 +162,8 @@ class LessonAdmin(admin.ModelAdmin):
         "chapter",
     )
     list_display = (
-        "__str__",
         "title",
+        "chapter",
         "lesson_type",
         "user_created",
         "created_at",
