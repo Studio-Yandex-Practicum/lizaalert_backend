@@ -482,8 +482,8 @@ class Subscription(TimeStampedModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "course"],
-                name="unique_user_course",
+                fields=["cohort", "course"],
+                name="unique_cohort_course",
             )
         ]
         ordering = ("user",)
