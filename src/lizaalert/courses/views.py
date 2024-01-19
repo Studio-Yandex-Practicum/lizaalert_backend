@@ -22,8 +22,14 @@ from lizaalert.courses.models import (
 )
 from lizaalert.courses.pagination import CourseSetPagination
 from lizaalert.courses.permissions import CurrentLessonOrProhibited, EnrolledAndCourseHasStarted, IsUserOrReadOnly
-from lizaalert.courses.serializers import CourseDetailSerializer, CourseSerializer, FilterSerializer, LessonSerializer
-from lizaalert.courses.utils import UserStatusBreadcrumbSerializer
+from lizaalert.courses.serializers import (
+    CourseDetailSerializer,
+    CourseSerializer,
+    CurrentLessonSerializer,
+    FilterSerializer,
+    LessonSerializer,
+    UserStatusEnrollmentSerializer,
+)
 from lizaalert.users.models import Level
 
 
@@ -160,9 +166,20 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             return CourseDetailSerializer
         return CourseSerializer
 
+    def _get_current_lesson(self, **kwargs):
+        """Вспомогательный метод для получения текущего урока и главы пользователя для курса."""
+        user = self.request.user
+        try:
+            course = get_object_or_404(Course, **kwargs)
+        except ValueError:
+            raise BadRequestException({"detail": "Invalid id."})
+
+        current_lesson = course.current_lesson(user).first()
+        return current_lesson, user, course
+
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: UserStatusBreadcrumbSerializer,
+            status.HTTP_200_OK: UserStatusEnrollmentSerializer,
         }
     )
     @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated,))
@@ -182,28 +199,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             Это действие требует аутентификации пользователя.
 
         """
-        user = self.request.user
-        try:
-            course = get_object_or_404(Course, **kwargs)
-        except ValueError:
-            raise BadRequestException({"detail": "Invalid id."})
+        current_lesson, user, course = self._get_current_lesson(**kwargs)
 
         subscription = course.subscribe(user)
-        current_lesson = course.current_lesson(user).first()
-        if current_lesson:
-            initial_lesson_and_status = {
-                "chapter_id": current_lesson.chapter_id,
-                "lesson_id": current_lesson.id,
-                "user_status": subscription,
-            }
-        else:
-            initial_lesson_and_status = {
-                "chapter_id": None,
-                "lesson_id": None,
-                "user_status": subscription,
-            }
-
-        serializer = UserStatusBreadcrumbSerializer(initial_lesson_and_status)
+        serializer = UserStatusEnrollmentSerializer(current_lesson, context={"subscription": subscription})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
@@ -235,6 +234,25 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: CurrentLessonSerializer,
+        }
+    )
+    @action(detail=True, methods=["get"], permission_classes=(IsAuthenticated,))
+    def current_lesson(self, request, **kwargs):
+        """
+        Получить текущий урок пользователя для курса.
+
+        Возвращает:
+                    200: Ответ с сериализованными данными текущего урока пользователя.
+                    403: Ответ с сериализованными данными, указывающими на ошибку доступа.
+        """
+        current_lesson, _, _ = self._get_current_lesson(**kwargs)
+
+        serializer = CurrentLessonSerializer(current_lesson)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):

@@ -217,3 +217,37 @@ class FilterSerializer(serializers.Serializer):
     @swagger_serializer_method(serializer_or_field=OptionSerializer)
     def get_options(self, model):
         return OptionSerializer(model.objects.all(), many=True).data
+
+
+class CurrentLessonSerializer(serializers.ModelSerializer):
+    """Сериалайзер класс для текущего урока."""
+
+    lesson_id = serializers.IntegerField(source="id")
+
+    class Meta:
+        model = Lesson
+        fields = (
+            "lesson_id",
+            "chapter_id",
+        )
+
+
+class UserStatusEnrollmentSerializer(CurrentLessonSerializer):
+    """Сериалайзер для получения статуса записи пользователя на курс."""
+
+    user_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lesson
+        fields = (
+            "lesson_id",
+            "chapter_id",
+            "user_status",
+        )
+
+    @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
+    def get_user_status(self, obj):
+        subscription = self.context["subscription"]
+        if subscription.status == Subscription.Status.ENROLLED and subscription.course.is_available:
+            return Subscription.Status.AVAILABLE
+        return subscription.status

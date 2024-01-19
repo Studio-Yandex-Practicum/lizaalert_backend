@@ -601,3 +601,18 @@ class TestCourse:
 
         # Тестируем доступ при подписке и не стартовавшем курсе
         assert_permision(status.HTTP_403_FORBIDDEN, start_in_future, subscribed=True)
+
+    def test_current_lesson_endpoint(self, user_client, user):
+        """
+        Тест эндпоинта для получения текущего урока.
+
+        Проверяем, что возвращается текущий урок и глава.
+        """
+        course = CourseWith2Chapters()
+        _ = SubscriptionFactory(course=course, user=user)
+        url = reverse("courses-current-lesson", kwargs={"pk": course.id})
+        response = user_client.get(url)
+        lesson = Lesson.objects.filter(chapter__course=course).first()
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["lesson_id"] == lesson.id
+        assert response.json()["chapter_id"] == lesson.chapter_id
