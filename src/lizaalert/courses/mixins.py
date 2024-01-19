@@ -14,7 +14,7 @@ class TimeStampedModel(models.Model):
     текущего времени.
     """
 
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 

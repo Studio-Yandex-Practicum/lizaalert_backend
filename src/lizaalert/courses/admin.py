@@ -60,7 +60,7 @@ class CourseAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    ordering = ("-created_at",)
+    ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
 
 
@@ -86,7 +86,7 @@ class ChapterAdmin(admin.ModelAdmin):
 
 @admin.register(LessonProgressStatus)
 class LessonProgressStatusAdmin(admin.ModelAdmin):
-    ordering = ("-created_at",)
+    ordering = ("-updated_at",)
     list_display = (
         "lesson",
         "progress",
@@ -129,7 +129,7 @@ class FaqAdmin(admin.ModelAdmin):
     """Админка для FAQ."""
 
     inlines = (CourseFaqInline,)
-    ordering = ("-created_at",)
+    ordering = ("-updated_at",)
     list_display = (
         "question",
         "author",
@@ -143,7 +143,7 @@ class KnowledgeAdmin(admin.ModelAdmin):
     """Aдминка для Knowledge."""
 
     inlines = (CourseKnowledgeInline,)
-    ordering = ("-created_at",)
+    ordering = ("-updated_at",)
     list_display = (
         "title",
         "author",
@@ -170,7 +170,7 @@ class LessonAdmin(admin.ModelAdmin):
         "updated_at",
     )
 
-    ordering = ("-created_at",)
+    ordering = ("-updated_at",)
 
 
 admin.site.register(Course, CourseAdmin)
