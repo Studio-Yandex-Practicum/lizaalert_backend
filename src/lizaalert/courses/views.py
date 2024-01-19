@@ -9,7 +9,6 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from lizaalert.courses.events import course_completion_event
 from lizaalert.courses.exceptions import BadRequestException
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
@@ -255,7 +254,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         except ValueError:
             raise BadRequestException({"detail": "Invalid id."})
         course.finish(user)
-        course_completion_event(course, user)
+        # Отправить сигнал для получения ачивок
+        course.get_achievements(course, user)
         return Response(status=status.HTTP_200_OK)
 
 
