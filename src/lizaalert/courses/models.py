@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
+from lizaalert.courses.signals import course_finished
 from lizaalert.quizzes.models import Quiz
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
@@ -173,6 +174,14 @@ class Course(
         if not created:
             progress_status.status = Subscription.Status.IN_PROGRESS
             progress_status.save()
+
+    def get_achievements(self, course, user):
+        """
+        Отправляет сигнал о завершении курса для получения ачивок.
+
+        Передает course_id и user.
+        """
+        course_finished.send(sender=self.__class__, course=course, user=user)
 
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin(parent="course")):

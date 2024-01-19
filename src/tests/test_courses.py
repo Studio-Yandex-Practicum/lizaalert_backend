@@ -1,10 +1,14 @@
+from unittest.mock import Mock
+
 import pytest
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
 from lizaalert.courses.mixins import order_number_mixin
 from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.courses.signals import course_finished
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -601,6 +605,35 @@ class TestCourse:
 
         # Тестируем доступ при подписке и не стартовавшем курсе
         assert_permision(status.HTTP_403_FORBIDDEN, start_in_future, subscribed=True)
+
+    def test_course_completion_endpoint(self, user_client, user):
+        """
+        Тест эндпоинта завершения курса.
+
+        Проверяем, что при завершении курса, пользователь получает статус COMPLETED.
+        """
+        course = CourseWith2Chapters()
+        _ = SubscriptionFactory(user=user, course=course)
+        url = reverse("courses-complete", kwargs={"pk": course.id})
+        url_course = reverse("courses-detail", kwargs={"pk": course.id})
+        response = user_client.post(url)
+        response_course = user_client.get(url_course)
+        assert response.status_code == status.HTTP_200_OK
+        assert response_course.json()["user_status"] == Subscription.Status.COMPLETED
+
+    def test_signal_sent_after_complete_course(self, user):
+        """Тест, что отправляется сигнал для получения ачивок после завершения курса."""
+        course = CourseWith2Chapters()
+        mock_receiver = Mock()
+
+        @receiver(course_finished)
+        def check_signal(sender, signal, **kwargs):
+            assert kwargs["course"] == course
+            assert kwargs["user"] == user
+            return mock_receiver(sender, signal, **kwargs)
+
+        course.get_achievements(course, user)
+        mock_receiver.assert_called_once_with(course.__class__, course_finished, course=course, user=user)
 
     def test_current_lesson_endpoint(self, user_client, user):
         """

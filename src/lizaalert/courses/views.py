@@ -254,6 +254,28 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = CurrentLessonSerializer(current_lesson)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: "Курс успешно завершен.",
+        }
+    )
+    @action(detail=True, methods=["post"], permission_classes=(IsAuthenticated, EnrolledAndCourseHasStarted))
+    def complete(self, request, **kwargs):
+        """
+        Завершить курс для пользователя.
+
+        Данное событие вызывает сигнал завершения курса.
+        """
+        user = self.request.user
+        try:
+            course = get_object_or_404(Course, **kwargs)
+        except ValueError:
+            raise BadRequestException({"detail": "Invalid id."})
+        course.finish(user)
+        # Отправить сигнал для получения ачивок
+        course.get_achievements(course, user)
+        return Response(status=status.HTTP_200_OK)
+
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
