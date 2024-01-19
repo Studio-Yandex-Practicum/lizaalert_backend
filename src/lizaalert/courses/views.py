@@ -263,6 +263,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def complete(self, request, **kwargs):
         """
         Завершить курс для пользователя.
+
         Данное событие вызывает сигнал завершения курса.
         """
         user = self.request.user
