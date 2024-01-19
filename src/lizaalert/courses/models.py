@@ -140,8 +140,14 @@ class Course(
 
     @property
     def is_available(self):
-        """Проверить доступность курса."""
-        return timezone.now().date() >= self.start_date
+        """
+        Проверить доступность курса.
+
+        Если дата начала курса не указана, то курс доступен всегда.
+        """
+        if self.start_date:
+            return timezone.now().date() >= self.start_date
+        return True
 
     def subscribe(self, user):
         """Подписать пользователя на данный курс."""
