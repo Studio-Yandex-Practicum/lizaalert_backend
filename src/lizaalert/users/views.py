@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from lizaalert.courses.models import CourseProgressStatus
-from lizaalert.users.models import Level, User, UserRole, Volunteer
-from lizaalert.users.serializers import BadgesListSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
+from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
+from lizaalert.users.serializers import BadgeSerializer, BadgesListSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
 
 class VolunteerAPIview(APIView):
@@ -99,13 +99,12 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
 
     @swagger_auto_schema(
         responses={
-            200: BadgesListSerializer(),
+            200: BadgeSerializer(),
             400: "Bad Request",
         }
     )
     def list(self, request):
-        queryset = Volunteer.objects.filter(user=request.user)
-        serializer = BadgesListSerializer(queryset, context={"request": request}, many=True)
-        if queryset:
-            return Response(serializer.data[0])
-        return Response(list())
+        volunteer = get_object_or_404(Volunteer, user=request.user)
+        queryset = Badge.objects.filter(id__in=VolunteerBadge.objects.filter(volunteer=volunteer.id).values('badge_id'))
+        serializer = BadgeSerializer(queryset, many=True)
+        return Response(serializer.data)

@@ -85,11 +85,3 @@ class UserRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRole
         fields = ["id", "role", "user"]
-
-
-class BadgesListSerializer(serializers.ModelSerializer):
-    badges = BadgeSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = Volunteer
-        fields = ["badges"]
