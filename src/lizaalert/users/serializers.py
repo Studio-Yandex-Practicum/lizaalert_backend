@@ -14,11 +14,7 @@ class BadgeSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "image",
-            "badge_type",
-            "badge_category",
             "issued_for",
-            "threshold_courses",
-            "threshold_course",
         ]
 
 
