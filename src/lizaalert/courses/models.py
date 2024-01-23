@@ -451,12 +451,10 @@ class Cohort(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            # Находим последний номер когорты для данного курса
             max_cohort_number = Cohort.objects.filter(course=self.course).aggregate(Max("cohort_number"))[
                 "cohort_number__max"
             ]
 
-            # Вычисляем новый номер когорты
             self.cohort_number = max_cohort_number + 1 if max_cohort_number is not None else 1
 
         with transaction.atomic():
