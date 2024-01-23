@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import F
+from django.db.models import F, Max
 from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException
@@ -432,23 +432,11 @@ class Cohort(TimeStampedModel):
     """
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="cohorts", verbose_name="Курс")
-    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы")
+    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", editable=False)
     start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
     end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
     students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            last_cohort = Cohort.objects.filter(course=self.course).order_by("-cohort_number").first()
-
-            if last_cohort:
-                self.cohort_number = last_cohort.cohort_number + 1
-            else:
-                self.cohort_number = 1
-
-        with transaction.atomic():
-            super().save(*args, **kwargs)
 
     class Meta:
 
@@ -460,6 +448,19 @@ class Cohort(TimeStampedModel):
         ]
         verbose_name = "Группа курса"
         verbose_name_plural = "Группы курса"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            # Находим последний номер когорты для данного курса
+            max_cohort_number = Cohort.objects.filter(course=self.course).aggregate(Max("cohort_number"))[
+                "cohort_number__max"
+            ]
+
+            # Вычисляем новый номер когорты
+            self.cohort_number = max_cohort_number + 1 if max_cohort_number is not None else 1
+
+        with transaction.atomic():
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.course.title} - Группа {self.cohort_number}"
