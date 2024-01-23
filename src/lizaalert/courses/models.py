@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
 from django.utils import timezone
 
@@ -438,6 +438,18 @@ class Cohort(TimeStampedModel):
     students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
 
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            last_cohort = Cohort.objects.filter(course=self.course).order_by("-cohort_number").first()
+
+            if last_cohort:
+                self.cohort_number = last_cohort.cohort_number + 1
+            else:
+                self.cohort_number = 1
+
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+
     class Meta:
 
         constraints = [
@@ -484,8 +496,13 @@ class Subscription(TimeStampedModel):
             models.UniqueConstraint(
                 fields=["cohort", "course"],
                 name="unique_cohort_course",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["user", "course"],
+                name="unique_user_course",
+            ),
         ]
+
         ordering = ("user",)
         verbose_name = "Подписка на курс"
         verbose_name_plural = "Подписки на курс"
