@@ -432,7 +432,9 @@ class Cohort(TimeStampedModel):
     """
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="cohorts", verbose_name="Курс")
-    cohort_number = models.PositiveIntegerField(verbose_name="Номер группы", editable=False)
+    cohort_number = models.PositiveIntegerField(
+        verbose_name="Номер группы", help_text="Данное поле будет рассчитано автоматически при сохранении."
+    )
     start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
     end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
     students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)

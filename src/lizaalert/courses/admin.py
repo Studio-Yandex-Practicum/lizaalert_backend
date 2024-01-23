@@ -48,18 +48,32 @@ class ChapterInline(admin.TabularInline):
     extra = 0
 
 
-class CohortInline(admin.TabularInline):
+@admin.register(Cohort)
+class CohortAdmin(admin.ModelAdmin):
+    """
+    Админка когорты.
+
+    При созданиии объекта исключается поле cohort_number.
+    """
+
     model = Cohort
     extra = 1
-    fields = ("start_date", "end_date", "students_count", "teacher", "cohort_number_display")
-    readonly_fields = ("cohort_number_display",)
-    ordering = ("cohort_number_display",)
+    list_display = (
+        "cohort_number",
+        "course",
+        "start_date",
+        "end_date",
+        "teacher",
+        "created_at",
+        "updated_at",
+    )
+    ordering = ("-updated_at",)
 
-    def cohort_number_display(self, instance):
-        return f"{instance.course.title} - Группа {instance.cohort_number}"
-
-    cohort_number_display.short_description = "Группа"
-    cohort_number_display.admin_order_field = "cohort_number"
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if not obj:
+            fields.remove("cohort_number")
+        return fields
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -188,4 +202,3 @@ class LessonAdmin(admin.ModelAdmin):
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Subscription)
-admin.site.register(Cohort)
