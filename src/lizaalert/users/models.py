@@ -187,7 +187,6 @@ class VolunteerBadge(models.Model):
         verbose_name="Курс",
     )
     created_at = models.DateTimeField("Дата создания записи", auto_now_add=True)
-    is_issued = models.BooleanField("Выдан или нет", default=True)
 
     class Meta:
         db_table = "volunteers_badges"

@@ -98,7 +98,6 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
-
     raw_id_fields = ("user",)
     ordering = ("-updated_at",)
     list_display = (
@@ -112,7 +111,6 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
-
     raw_id_fields = ("user",)
     ordering = ("-updated_at",)
     list_display = (
