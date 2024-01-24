@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from lizaalert.courses.models import Course, CourseProgressStatus
+from lizaalert.courses.models import CourseProgressStatus
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
 from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
@@ -93,9 +93,12 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
 
     Методы:
     - GET: Возвращает список ачивок пользователя.
+
     """
 
     permission_classes = [IsAuthenticated]
+    queryset = Badge.objects.all()
+    serializer_class = BadgeSerializer
 
     @swagger_auto_schema(
         responses={
@@ -103,18 +106,9 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
             400: "Bad Request",
         }
     )
-    def list(self, request):
-        filter_value = request.query_params.get("course", None)
-        volunteer = get_object_or_404(Volunteer, user=request.user)
-        if filter_value:
-            queryset = Badge.objects.filter(
-                id__in=VolunteerBadge.objects.filter(
-                    volunteer=volunteer.id, course__in=Course.objects.filter(title=filter_value).values("id")
-                ).values("badge_id")
-            )
-        else:
-            queryset = Badge.objects.filter(
-                id__in=VolunteerBadge.objects.filter(volunteer=volunteer.id).values("badge_id")
-            )
-        serializer = BadgeSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        volunteer_badge = VolunteerBadge.objects.filter(volunteer__user=self.request.user)
+        if course_id := self.request.query_params.get("course", None):
+            volunteer_badge = volunteer_badge.filter(course_id=course_id)
+        queryset = super().get_queryset().filter(id__in=volunteer_badge.values("badge_id"))
+        return queryset
