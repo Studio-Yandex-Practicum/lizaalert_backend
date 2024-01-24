@@ -183,13 +183,6 @@ class Course(
         """
         course_finished.send(sender=self.__class__, course=course, user=user)
 
-        current_lesson_queryset = lesson_queryset.exclude(id__in=finished_lessons).order_by("ordering")[:1]
-
-        if not current_lesson_queryset.exists():
-            return lesson_queryset.order_by("-ordering")[:1]
-
-        return current_lesson_queryset
-
 
 class Chapter(TimeStampedModel, order_number_mixin(CHAPTER_STEP, "course"), status_update_mixin(parent="course")):
     """

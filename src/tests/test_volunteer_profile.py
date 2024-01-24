@@ -2,9 +2,6 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from lizaalert.users.models import VolunteerBadge
-from tests.factories.users import BadgeFactory, UserFactory, VolunteerBadgeFactory
-
 
 @pytest.mark.django_db
 class TestVolunteerProfile:
@@ -39,8 +36,5 @@ class TestVolunteerBadgeList:
     url = reverse("badgeslist")
 
     def test_get_volunteer_badge_list(self, user_client):
-        created_user = UserFactory()
-        created_badge = BadgeFactory()
-        created_volunteerbadge = VolunteerBadgeFactory()
         response = user_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
