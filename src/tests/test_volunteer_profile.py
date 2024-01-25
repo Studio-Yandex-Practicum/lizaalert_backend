@@ -2,6 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from tests.factories.users import BadgeFactory, VolunteerBadgeFactory
+
 
 @pytest.mark.django_db
 class TestVolunteerProfile:
@@ -35,6 +37,11 @@ class TestVolunteerProfile:
 class TestVolunteerBadgeList:
     url = reverse("badgeslist")
 
-    def test_get_volunteer_badge_list(self, user_client):
-        response = user_client.get(self.url)
-        assert response.status_code == status.HTTP_200_OK
+    def test_get_volunteer_badge_list(self, user_client, user):
+        """Проверка соответствия выдачи по запросу ачивок пользователя."""
+        badge = BadgeFactory()
+        _ = VolunteerBadgeFactory(user=user, badge=badge)
+        response = user_client.get(self.url).json()
+        data_fields = ["name", "description", "image", "issued_for"]
+        for field in data_fields:
+            assert response[0][field] == getattr(badge, field)
