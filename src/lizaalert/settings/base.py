@@ -202,8 +202,10 @@ API_URL = env.str("API_URL", None)
 
 
 # Sentry logging and monitoring
-sentry_sdk.init(
-    dsn=env.str("SENTRY_KEY"),
-    traces_sample_rate=1.0,
-    profiles_sample_rate=1.0,
-)
+sentry_key = env.str("SENTRY_KEY", default=None)
+if sentry_key:
+    sentry_sdk.init(
+        dsn=env.str("SENTRY_KEY"),
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
