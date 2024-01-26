@@ -1,3 +1,4 @@
+from pprint import pprint
 from unittest.mock import Mock
 
 import pytest
@@ -35,7 +36,7 @@ class TestCourse:
         response = user_client.get(self.url)
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_lessons_appear_in_chapters(self, user_client):
+    def test_lessons_appear_in_chapters(self, user_client, user):
         """
         Tests Course -> Chapter -> Lesson relation.
 
@@ -51,6 +52,7 @@ class TestCourse:
         _ = LessonFactory()
         course = CourseFactory()
         course.chapters.add(chapter)
+        _ = SubscriptionFactory(course=course, user=user)
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
         number_of_lessons = len(response.json()["chapters"][0]["lessons"])
         assert response.status_code == status.HTTP_200_OK
@@ -58,7 +60,7 @@ class TestCourse:
         assert number_of_lessons == 3
         assert response.json()["chapters"][0]["lessons"][2]["order_number"] == number_of_lessons * LESSON_STEP
 
-    def test_course_annotation(self, user_client):
+    def test_course_annotation(self, user_client, user):
         """
         Tests course annotation functions.
 
@@ -74,6 +76,7 @@ class TestCourse:
         _ = LessonFactory()
         course = CourseFactory()
         course.chapters.add(chapter)
+        _ = SubscriptionFactory(course=course, user=user)
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
         assert response.json()["lessons_count"] == 3
         assert response.json()["course_duration"] == course_duration
@@ -232,7 +235,7 @@ class TestCourse:
         должны выдавать None при отсутствии крайних уроков.
         """
         course = CourseWith2Chapters()
-        _ = SubscriptionFactory(course=course, user=user)
+        subscription = SubscriptionFactory(course=course, user=user)
         lesson = Lesson.objects.filter(chapter__course=course).first()
         lessons = lesson.ordered
 
@@ -255,7 +258,7 @@ class TestCourse:
             else:
                 assert next_lesson_id is None
 
-            lesson.finish(user)
+            lesson.finish(user, subscription)
 
     def test_breadcrumbs(self, user_client, user):
         """Тест, что breadcrumbs отображаются корректно."""
@@ -332,6 +335,7 @@ class TestCourse:
         for lesson in lesson_bulk_1:
             user_client.post(reverse("lessons-complete", kwargs={"pk": lesson.id}))
         response_course = user_client.get(url_course)
+        pprint(response_course.json())
         assert response_course.json()["user_course_progress"] != 2
         assert response_course.json()["chapters"][0]["user_chapter_progress"] == 2
 
@@ -387,9 +391,10 @@ class TestCourse:
         1. Наличие текущего урока в случе если пользователь не начал прохождение уроков.
         2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
         3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
-        4. При прохождении всех уроков current_lesson == Null.
+        4. При прохождении всех уроков current_lesson == last_lesson.
         """
         course = CourseWith2Chapters()
+        subscription = SubscriptionFactory(course=course, user=user)
         url = reverse("courses-detail", kwargs={"pk": course.id})
         lessons = Lesson.objects.filter(chapter__course=course).order_by("id")
         first_lesson = lessons[0]
@@ -406,16 +411,16 @@ class TestCourse:
         request_assert(user_client, url, first_lesson.id, first_lesson.chapter_id)
 
         # 2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
-        first_lesson.finish(user)
+        first_lesson.finish(user, subscription)
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
-        second_lesson.activate(user)
+        second_lesson.activate(user, subscription)
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 4. При прохождении всех уроков current_lesson == last_lesson.
         lesson = LessonFactory()
-        lesson.finish(user)
+        lesson.finish(user, subscription)
         url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course.id})
         request_assert(user_client, url, lesson.id, lesson.chapter_id)
 
@@ -502,7 +507,7 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["user_lesson_progress"] == 1
 
-    def test_lesson_activation_changes(self, user_client):
+    def test_lesson_activation_changes(self, user_client, user):
         """
         Тест активации урока.
 
@@ -510,6 +515,7 @@ class TestCourse:
          переходом по эндпоинту урока.
         """
         lesson = LessonFactory()
+        _ = SubscriptionFactory(course=lesson.chapter.course, user=user)
         url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course_id})
         complete_url = reverse("lessons-complete", kwargs={"pk": lesson.id})
         user_client.post(complete_url)
@@ -527,7 +533,7 @@ class TestCourse:
         4. Проверяем, что пользователю доступен пройденный урок.
         """
         chapter = ChapterWith3Lessons()
-        _ = SubscriptionFactory(course=chapter.course, user=user)
+        subscription = SubscriptionFactory(course=chapter.course, user=user)
         lesson = Lesson.objects.filter(chapter=chapter).first()
         lessons = lesson.ordered
         for i, lesson in enumerate(lessons):
@@ -535,7 +541,7 @@ class TestCourse:
             response = user_client.get(url)
             if i == 0:
                 assert response.status_code == status.HTTP_200_OK
-                lesson.finish(user)
+                lesson.finish(user, subscription)
             elif i == 1:
                 assert response.status_code == status.HTTP_200_OK
             else:
@@ -558,10 +564,10 @@ class TestCourse:
 
         def assert_subscription_status(user, date, expected_status, finish_course=False, course_in_progress=False):
             course = CourseWith2Chapters(start_date=date)
-            _ = SubscriptionFactory(user=user, course=course)
+            subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
             if finish_course:
-                course.finish(user)
+                course.finish(user, subscription)
             if course_in_progress:
                 lesson = Lesson.objects.filter(chapter__course=course).first()
                 url = reverse("lessons-detail", kwargs={"pk": lesson.id})

@@ -127,21 +127,21 @@ def status_update_mixin(parent: str = None, publish_status=None):
             model_name = f"{self.__class__.__name__}ProgressStatus"
             return apps.get_model("courses", model_name)
 
-        def _update_or_create_progress_status(self, user, instance, status):
+        def _update_or_create_progress_status(self, subscription, instance, status):
             """Обновление статуса прохождения урока, главы, курса, а также статуса подписки."""
             lookup_field = self.__class__.__name__.lower()
             model = self._get_progress_model()
             progress_status, created = model.objects.get_or_create(
-                user=user, **{lookup_field: instance}, defaults={"progress": status}
+                subscription=subscription, **{lookup_field: instance}, defaults={"progress": status}
             )
             if not created:
                 setattr(progress_status, "progress", status)
                 progress_status.save()
 
-        def finish(self, user):
+        def finish(self, user, subscription):
             """Присвоить статус завершения."""
             self._update_or_create_progress_status(
-                user,
+                subscription,
                 self,
                 BaseProgress.ProgressStatus.FINISHED,
             )
@@ -150,7 +150,9 @@ def status_update_mixin(parent: str = None, publish_status=None):
                 filter_kwargs = {f"{self.__class__.__name__.lower()}__{parent}": getattr(self, parent)}
                 finished_queryset = (
                     self._get_progress_model()
-                    .objects.filter(user=user, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs)
+                    .objects.filter(
+                        subscription=subscription, progress=BaseProgress.ProgressStatus.FINISHED, **filter_kwargs
+                    )
                     .values(f"{self.__class__.__name__.lower()}_id")
                 )
 
@@ -161,12 +163,12 @@ def status_update_mixin(parent: str = None, publish_status=None):
                 items = self.__class__.objects.filter(**filter_args).exclude(id__in=finished_queryset).count()
 
                 if items == 0:
-                    getattr(getattr(self, parent), "finish")(user)
+                    getattr(getattr(self, parent), "finish")(user, subscription)
 
-        def activate(self, user):
+        def activate(self, user, subscription):
             """Присвоить статус активировать."""
             self._update_or_create_progress_status(
-                user,
+                subscription,
                 self,
                 BaseProgress.ProgressStatus.ACTIVE,
             )
