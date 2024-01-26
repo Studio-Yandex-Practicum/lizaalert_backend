@@ -35,13 +35,15 @@ class TestVolunteerProfile:
 
 @pytest.mark.django_db
 class TestVolunteerBadgeList:
+    
     url = reverse("badgeslist")
 
     def test_get_volunteer_badge_list(self, user_client, user):
         """Проверка соответствия выдачи по запросу ачивок пользователя."""
         badge = BadgeFactory()
         _ = VolunteerBadgeFactory(user=user, badge=badge)
-        response = user_client.get(self.url).json()
+        response = user_client.get(self.url)
         data_fields = ["name", "description", "image", "issued_for"]
+        assert response.status_code == status.HTTP_200_OK
         for field in data_fields:
-            assert response[0][field] == getattr(badge, field)
+            assert response.json()[0][field] == getattr(badge, field)
