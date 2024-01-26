@@ -37,7 +37,7 @@ class TestVolunteerProfile:
 @pytest.mark.django_db
 class TestVolunteerBadgeList:
 
-    url = reverse("badgeslist")
+    url = reverse("badgeslist-list")
 
     def test_get_volunteer_badge_list(self, user_client, user):
         """Проверка соответствия выдачи по запросу ачивок пользователя."""
