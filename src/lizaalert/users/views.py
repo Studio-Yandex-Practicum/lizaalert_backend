@@ -1,21 +1,15 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from lizaalert.courses.models import Subscription
+from lizaalert.courses.models import CourseProgressStatus
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
-from lizaalert.users.serializers import (
-    BadgeSerializer,
-    Error400Serializer,
-    Error404Serializer,
-    LevelSerializer,
-    UserRoleSerializer,
-    VolunteerSerializer,
-)
+from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
 
 class VolunteerAPIview(APIView):
