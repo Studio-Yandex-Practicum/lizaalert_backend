@@ -7,12 +7,14 @@ from lizaalert.users.models import Badge, Level, Location, UserRole, Volunteer
 User = get_user_model()
 
 
-class BageSerializer(serializers.ModelSerializer):
+class BadgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Badge
         fields = [
             "name",
             "description",
+            "image",
+            "issued_for",
         ]
 
 

@@ -2,6 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from tests.factories.users import BadgeFactory, VolunteerBadgeFactory
+
 
 @pytest.mark.django_db
 class TestVolunteerProfile:
@@ -30,3 +32,19 @@ class TestVolunteerProfile:
         invalid_data = {"call_sign": 1, "birth_date": "invalid_date"}
         response = user_client.patch(self.url, invalid_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestVolunteerBadgeList:
+
+    url = reverse("badgeslist-list")
+
+    def test_get_volunteer_badge_list(self, user_client, user):
+        """Проверка соответствия выдачи по запросу ачивок пользователя."""
+        badge = BadgeFactory()
+        _ = VolunteerBadgeFactory(user=user, badge=badge)
+        response = user_client.get(self.url)
+        data_fields = ["name", "description", "image", "issued_for"]
+        assert response.status_code == status.HTTP_200_OK
+        for field in data_fields:
+            assert response.json()[0][field] == getattr(badge, field)
