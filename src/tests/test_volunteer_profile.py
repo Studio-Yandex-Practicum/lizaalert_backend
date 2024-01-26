@@ -7,6 +7,7 @@ from tests.factories.users import BadgeFactory, VolunteerBadgeFactory
 
 @pytest.mark.django_db
 class TestVolunteerProfile:
+    
     url = reverse("profile")
 
     def test_get_volunteer_profile(self, user_client):
