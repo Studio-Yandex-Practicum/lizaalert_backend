@@ -86,7 +86,6 @@ class ChapterAdmin(admin.ModelAdmin):
 
 @admin.register(LessonProgressStatus)
 class LessonProgressStatusAdmin(admin.ModelAdmin):
-
     ordering = ("-updated_at",)
     list_display = (
         "lesson",
