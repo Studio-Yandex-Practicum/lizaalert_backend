@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import F
 
 from lizaalert.courses.models import (
     FAQ,
@@ -59,7 +60,7 @@ class CohortAdmin(admin.ModelAdmin):
     model = Cohort
     extra = 1
     list_display = (
-        "course",
+        "course_title",
         "start_date",
         "end_date",
         "teacher",
@@ -71,6 +72,19 @@ class CohortAdmin(admin.ModelAdmin):
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         return fields
+
+    def get_queryset(self, request):
+        """
+        Переопределение queryset для модели Cohort.
+        Добавляет поле course_title, которое содержит название курса.
+        """
+        qs = super().get_queryset(request).select_related("course").annotate(course_title=F("course__title"))
+        return qs
+
+    def course_title(self, obj):
+        return obj.course_title
+
+    course_title.short_description = "Курс"
 
 
 class CourseAdmin(admin.ModelAdmin):
