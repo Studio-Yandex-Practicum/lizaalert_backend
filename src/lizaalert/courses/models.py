@@ -433,7 +433,7 @@ class Cohort(TimeStampedModel):
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="cohorts", verbose_name="Курс")
     cohort_number = models.PositiveIntegerField(
-        verbose_name="Номер группы", help_text="Данное поле будет рассчитано автоматически при сохранении."
+        verbose_name="Номер группы", blank=True, help_text="Данное поле будет рассчитано автоматически при сохранении."
     )
     start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
     end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
@@ -459,11 +459,10 @@ class Cohort(TimeStampedModel):
 
             self.cohort_number = max_cohort_number + 1 if max_cohort_number is not None else 1
 
-        with transaction.atomic():
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.course.title} - Группа {self.cohort_number}"
+        return f"{self.course_id} - {self.cohort_number}"
 
 
 class Subscription(TimeStampedModel):

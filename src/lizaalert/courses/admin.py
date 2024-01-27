@@ -59,7 +59,6 @@ class CohortAdmin(admin.ModelAdmin):
     model = Cohort
     extra = 1
     list_display = (
-        "cohort_number",
         "course",
         "start_date",
         "end_date",
@@ -71,8 +70,6 @@ class CohortAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
-        if not obj:
-            fields.remove("cohort_number")
         return fields
 
 
