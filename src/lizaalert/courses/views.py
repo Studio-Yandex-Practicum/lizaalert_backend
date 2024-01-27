@@ -8,9 +8,8 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from lizaalert.courses.exceptions import SubscriptionDoesNotExist
 
-from lizaalert.courses.exceptions import BadRequestException
+from lizaalert.courses.exceptions import BadRequestException, SubscriptionDoesNotExist
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
     Chapter,

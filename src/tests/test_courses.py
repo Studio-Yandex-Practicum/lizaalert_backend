@@ -1,4 +1,3 @@
-from pprint import pprint
 from unittest.mock import Mock
 
 import pytest
@@ -293,7 +292,7 @@ class TestCourse:
         user_client.post(complete_url)
         response_assert(url, status.HTTP_200_OK, 2)
 
-    def test_final_lesson_completion_triggers_chapter_and_course_completion(self, user_client):
+    def test_final_lesson_completion_triggers_chapter_and_course_completion(self, user_client, user):
         """
         Тест, что завершение последнего урока в главе завершает главу.
 
@@ -318,28 +317,28 @@ class TestCourse:
         course = CourseFactory()
         course.chapters.add(chapter_1)
         course.chapters.add(chapter_2)
+        _ = SubscriptionFactory(course=course, user=user)
 
-        # Проверяем, что курс и главы не пройдены
+        # 1. Проверяем, что курс и главы не пройдены
         url_course = reverse("courses-detail", kwargs={"pk": course.id})
         response_course = user_client.get(url_course)
         assert response_course.status_code == status.HTTP_200_OK
         assert response_course.json()["user_course_progress"] != 2
         assert response_course.json()["chapters"][0]["user_chapter_progress"] != 2
 
-        # # Проверяем, что после прохождения одного урока, первая глава не пройдена
+        # 2. Проверяем, что после прохождения одного урока, первая глава не пройдена
         user_client.post(reverse("lessons-complete", kwargs={"pk": c1_lesson_1.id}))
         response_course = user_client.get(url_course)
         assert response_course.json()["chapters"][0]["user_chapter_progress"] != 2
 
-        # Проверяем, что после прохождения всех уроков, первая глава пройдена. а курс не пройден
+        # 3. Проверяем, что после прохождения всех уроков, первая глава пройдена. а курс не пройден
         for lesson in lesson_bulk_1:
             user_client.post(reverse("lessons-complete", kwargs={"pk": lesson.id}))
         response_course = user_client.get(url_course)
-        pprint(response_course.json())
         assert response_course.json()["user_course_progress"] != 2
         assert response_course.json()["chapters"][0]["user_chapter_progress"] == 2
 
-        # Проверяем, что после прохождения первого и последнего урока второй главы (минуя второй урок)
+        # 4. Проверяем, что после прохождения первого и последнего урока второй главы (минуя второй урок)
         # вторая глава будет не пройдена
         user_client.post(reverse("lessons-complete", kwargs={"pk": c2_lesson_1.id}))
         user_client.post(reverse("lessons-complete", kwargs={"pk": c2_lesson_3.id}))
@@ -347,7 +346,7 @@ class TestCourse:
         assert response_course.json()["user_course_progress"] != 2
         assert response_course.json()["chapters"][1]["user_chapter_progress"] != 2
 
-        # Проверяем, что после прохождения всех уроков второй главы, вторая глава и курс пройдены
+        # 5. Проверяем, что после прохождения всех уроков второй главы, вторая глава и курс пройдены
         for lesson in lesson_bulk_2:
             user_client.post(reverse("lessons-complete", kwargs={"pk": lesson.id}))
         response_course = user_client.get(url_course)
