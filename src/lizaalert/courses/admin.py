@@ -74,11 +74,6 @@ class CohortAdmin(admin.ModelAdmin):
         return fields
 
     def get_queryset(self, request):
-        """
-        Переопределение queryset для модели Cohort.
-        Добавляет поле course_title, которое содержит название курса.
-        """
-
         qs = super().get_queryset(request).select_related("course").annotate(course_title=F("course__title"))
         return qs
 
