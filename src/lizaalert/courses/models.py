@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from django.db import models, transaction
+from django.db import models
 from django.db.models import F, Max
 from django.utils import timezone
 
