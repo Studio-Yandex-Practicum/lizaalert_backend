@@ -5,7 +5,11 @@ from django.urls import reverse
 
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
 from lizaalert.users.models import Badge, Volunteer, VolunteerBadge, VolunteerCourseCompletion
-from lizaalert.users.utils import assign_achievements, increment_completed_courses_count
+from lizaalert.users.utils import (
+    assign_achievements_for_completion,
+    assign_achievements_for_course,
+    increment_completed_courses_count,
+)
 from tests.factories.courses import CourseFactory, CourseWith2Chapters, SubscriptionFactory
 from tests.factories.users import BadgeFactory, UserFactory, VolunteerBadgeFactory
 
@@ -122,16 +126,28 @@ class TestBadgeAssignments:
 
         assert count_after == count_before + 1
 
-    def test_assign_achievements(self):
-        """Тест функции присвоения ачивок."""
+    def test_assign_achievements_for_completion(self):
+        """Тест функции присвоения ачивок за завершенные курсы."""
+        user = UserFactory()
+        course = CourseFactory()
+        volunteer = Volunteer.objects.get(user=user)
+        _ = VolunteerCourseCompletion.objects.create(volunteer=volunteer)
+        BadgeFactory(threshold_courses=1)
+
+        increment_completed_courses_count(user)
+        assign_achievements_for_completion(user, course.id)
+
+        assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
+
+    def test_assign_achievements_for_course(self):
+        """Тест функции присвоения ачивок за конкретный курс."""
         user = UserFactory()
         course = CourseFactory()
         volunteer = Volunteer.objects.get(user=user)
         _ = VolunteerCourseCompletion.objects.create(volunteer=volunteer)
         BadgeFactory(threshold_course=course)
-        BadgeFactory(threshold_courses=1)
 
-        assign_achievements(user, course.id)
+        assign_achievements_for_course(user, course.id)
 
         assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
 
