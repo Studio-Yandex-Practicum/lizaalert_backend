@@ -220,7 +220,6 @@ class TestCourse:
         _ = SubscriptionFactory(course=lesson.chapter.course, user=user)
         url = reverse("lessons-detail", kwargs={"pk": lesson.id})
         response = user_client.get(url)
-        print(response.json())
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["id"] == lesson.id
         assert response.json()["course_id"] == lesson.chapter.course_id
