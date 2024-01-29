@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from lizaalert.courses.models import (
     FAQ,
@@ -54,6 +56,7 @@ class CourseAdmin(admin.ModelAdmin):
     model = Course
     list_display = (
         "title",
+        "get_chapters",
         "course_format",
         "short_description",
         "user_created",
@@ -62,6 +65,17 @@ class CourseAdmin(admin.ModelAdmin):
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
+
+    # Метод для отображения глав курса
+    def get_chapters(self, obj):
+        chapters = Chapter.objects.filter(course=obj)
+        chapters_links = [
+            '<a href="{}">{}</a>'.format(reverse("admin:courses_chapter_change", args=(chapter.id,)), chapter.title)
+            for chapter in chapters
+        ]
+        return format_html(", ".join(chapters_links))
+
+    get_chapters.short_description = "Глава(ы)"
 
 
 @admin.register(Chapter)
