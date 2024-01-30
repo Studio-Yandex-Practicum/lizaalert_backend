@@ -11,14 +11,14 @@ def populate_subscription(apps, schema_editor):
     ChapterProgressStatus = apps.get_model('courses', 'ChapterProgressStatus')
     Subscription = apps.get_model('courses', 'Subscription')
 
-    def get_course_for_course(course_progress):
-        return course_progress.course
+    def get_course_for_course(obj):
+        return obj.course
 
-    def get_course_for_lesson(lesson_progress):
-        return lesson_progress.lesson.chapter.course
+    def get_course_for_lesson(obj):
+        return obj.lesson.chapter.course
 
-    def get_course_for_chapter(chapter_progress):
-        return chapter_progress.chapter.course
+    def get_course_for_chapter(obj):
+        return obj.chapter.course
 
     for model, get_course_func in [
         (CourseProgressStatus, get_course_for_course),
