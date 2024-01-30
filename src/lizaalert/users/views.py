@@ -1,13 +1,14 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from lizaalert.courses.models import Subscription
-from lizaalert.users.models import Level, User, UserRole, Volunteer
-from lizaalert.users.serializers import LevelSerializer, UserRoleSerializer, VolunteerSerializer
+from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
+from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
 
 class VolunteerAPIview(APIView):
@@ -84,3 +85,30 @@ class UserRoleViewSet(
             current_user.is_superuser = False
             current_user.is_staff = False
             current_user.save()
+
+
+class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Отображение списка ачивок пользователя.
+
+    Методы:
+    - GET: Возвращает список ачивок пользователя.
+
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = Badge.objects.all()
+    serializer_class = BadgeSerializer
+
+    @swagger_auto_schema(
+        responses={
+            200: BadgeSerializer(),
+            400: "Bad Request",
+        }
+    )
+    def get_queryset(self):
+        volunteer_badge = VolunteerBadge.objects.filter(volunteer__user=self.request.user)
+        if course_id := self.request.query_params.get("course", None):
+            volunteer_badge = volunteer_badge.filter(course_id=course_id)
+        queryset = super().get_queryset().filter(id__in=volunteer_badge.values("badge_id"))
+        return queryset
