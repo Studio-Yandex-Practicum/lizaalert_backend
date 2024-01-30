@@ -256,7 +256,7 @@ class TestCourse:
             else:
                 assert next_lesson_id is None
 
-            lesson.finish(user, subscription)
+            lesson.finish(subscription)
 
     def test_breadcrumbs(self, user_client, user):
         """Тест, что breadcrumbs отображаются корректно."""
@@ -409,16 +409,16 @@ class TestCourse:
         request_assert(user_client, url, first_lesson.id, first_lesson.chapter_id)
 
         # 2. Наличие текущего урока в случае, если пользователь закончил урок, но не начал следующий.
-        first_lesson.finish(user, subscription)
+        first_lesson.finish(subscription)
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 3. Наличие текущего урока в случае, если пользователь закончил урок и начал следующий.
-        second_lesson.activate(user, subscription)
+        second_lesson.activate(subscription)
         request_assert(user_client, url, second_lesson.id, second_lesson.chapter_id)
 
         # 4. При прохождении всех уроков current_lesson == last_lesson.
         lesson = LessonFactory()
-        lesson.finish(user, subscription)
+        lesson.finish(subscription)
         url = reverse("courses-detail", kwargs={"pk": lesson.chapter.course.id})
         request_assert(user_client, url, lesson.id, lesson.chapter_id)
 
@@ -539,7 +539,7 @@ class TestCourse:
             response = user_client.get(url)
             if i == 0:
                 assert response.status_code == status.HTTP_200_OK
-                lesson.finish(user, subscription)
+                lesson.finish(subscription)
             elif i == 1:
                 assert response.status_code == status.HTTP_200_OK
             else:
@@ -565,7 +565,7 @@ class TestCourse:
             subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
             if finish_course:
-                course.finish(user, subscription)
+                course.finish(subscription)
             if course_in_progress:
                 lesson = Lesson.objects.filter(chapter__course=course).first()
                 url = reverse("lessons-detail", kwargs={"pk": lesson.id})

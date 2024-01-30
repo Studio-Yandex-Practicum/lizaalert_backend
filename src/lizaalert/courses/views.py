@@ -277,7 +277,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             subscription = get_object_or_404(Subscription, course=course, user=user)
         except ValueError:
             raise BadRequestException({"detail": "Invalid id."})
-        course.finish(user, subscription)
+        course.finish(subscription)
         # Отправить сигнал для получения ачивок
         course.get_achievements(course, user)
         return Response(status=status.HTTP_200_OK)
@@ -383,9 +383,9 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 raise SubscriptionDoesNotExist()
             any_progress = LessonProgressStatus.objects.filter(subscription=subscription, lesson=lesson).exists()
             if not any_progress:
-                lesson.activate(user, subscription)
+                lesson.activate(subscription)
         if subscription and subscription.status == Subscription.Status.ENROLLED:
-            course.activate(user, subscription)  # Активируем начало прохождения курса, если были записаны на курс
+            course.activate(subscription)  # Активируем начало прохождения курса, если были записаны на курс
         return super().retrieve(request, *args, **kwargs)
 
     @transaction.atomic
@@ -419,7 +419,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=lesson.chapter.course)
-        lesson.finish(user, subscription)
+        lesson.finish(subscription)
         return Response(status=status.HTTP_201_CREATED)
 
 

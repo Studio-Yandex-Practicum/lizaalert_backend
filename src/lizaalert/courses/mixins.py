@@ -138,7 +138,7 @@ def status_update_mixin(parent: str = None, publish_status=None):
                 setattr(progress_status, "progress", status)
                 progress_status.save()
 
-        def finish(self, user, subscription):
+        def finish(self, subscription):
             """Присвоить статус завершения."""
             self._update_or_create_progress_status(
                 subscription,
@@ -163,9 +163,9 @@ def status_update_mixin(parent: str = None, publish_status=None):
                 items = self.__class__.objects.filter(**filter_args).exclude(id__in=finished_queryset).count()
 
                 if items == 0:
-                    getattr(getattr(self, parent), "finish")(user, subscription)
+                    getattr(getattr(self, parent), "finish")(subscription)
 
-        def activate(self, user, subscription):
+        def activate(self, subscription):
             """Присвоить статус активировать."""
             self._update_or_create_progress_status(
                 subscription,

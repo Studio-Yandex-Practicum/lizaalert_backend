@@ -47,6 +47,7 @@ class ChapterInline(admin.TabularInline):
     extra = 0
 
 
+@admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
 
@@ -94,6 +95,11 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_display_links = [
+        "subscription",
+        "lesson",
+        "progress",
+    ]
 
 
 @admin.register(ChapterProgressStatus)
@@ -108,6 +114,11 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_display_links = [
+        "subscription",
+        "chapter",
+        "progress",
+    ]
 
 
 @admin.register(CourseProgressStatus)
@@ -122,6 +133,11 @@ class CourseProgressStatusAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_display_links = [
+        "subscription",
+        "course",
+        "progress",
+    ]
 
 
 @admin.register(FAQ)
@@ -173,5 +189,24 @@ class LessonAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
 
 
-admin.site.register(Course, CourseAdmin)
-admin.site.register(Subscription)
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    """Админка подписки."""
+
+    raw_id_fields = ("user", "course")
+    list_display = (
+        "__str__",
+        "user",
+        "course",
+        "status",
+        "created_at",
+        "updated_at",
+    )
+    list_display_links = [
+        "__str__",
+        "user",
+        "course",
+        "status",
+    ]
+
+    ordering = ("-updated_at",)

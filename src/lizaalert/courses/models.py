@@ -157,8 +157,9 @@ class Course(
             raise AlreadyExistsException({"detail": "Already enrolled."})
         return subscription
 
-    def finish(self, user, subscription):
-        super().finish(user, subscription)
+    def finish(self, subscription):
+        super().finish(subscription)
+        user = subscription.user
         progress_status, created = Subscription.objects.get_or_create(
             user=user, course=self, defaults={"status": Subscription.Status.COMPLETED}
         )
@@ -166,8 +167,9 @@ class Course(
             progress_status.status = Subscription.Status.COMPLETED
             progress_status.save()
 
-    def activate(self, user, subscription):
-        super().activate(user, subscription)
+    def activate(self, subscription):
+        super().activate(subscription)
+        user = subscription.user
         progress_status, created = Subscription.objects.get_or_create(
             user=user, course=self, defaults={"status": Subscription.Status.IN_PROGRESS}
         )
