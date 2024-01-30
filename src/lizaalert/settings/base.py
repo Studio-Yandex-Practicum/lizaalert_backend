@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import sentry_sdk
 from environs import Env
 
 env = Env()
@@ -198,3 +199,12 @@ ACCOUNT_EMAIL_REQUIRED = True
 USE_X_FORWARDED_HOST = True
 
 API_URL = env.str("API_URL", None)
+
+
+# Sentry logging and monitoring
+if sentry_key := env.str("SENTRY_KEY", default=None):
+    sentry_sdk.init(
+        dsn=env.str("SENTRY_KEY"),
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
