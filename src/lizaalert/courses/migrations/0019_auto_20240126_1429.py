@@ -86,19 +86,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='courseprogressstatus',
             name='subscription',
-            field=models.ForeignKey(default=2, on_delete=django.db.models.deletion.CASCADE, related_name='course_progress', to='courses.subscription', verbose_name='Подписка'),
+            field=models.ForeignKey(default=389, on_delete=django.db.models.deletion.CASCADE, related_name='course_progress', to='courses.subscription', verbose_name='Подписка'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='chapterprogressstatus',
             name='subscription',
-            field=models.ForeignKey(default=2, on_delete=django.db.models.deletion.CASCADE, related_name='chapter_progress', to='courses.subscription', verbose_name='Подписка'),
+            field=models.ForeignKey(default=389, on_delete=django.db.models.deletion.CASCADE, related_name='chapter_progress', to='courses.subscription', verbose_name='Подписка'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='lessonprogressstatus',
             name='subscription',
-            field=models.ForeignKey(default=2, on_delete=django.db.models.deletion.CASCADE, related_name='lesson_progress', to='courses.subscription', verbose_name='Подписка'),
+            field=models.ForeignKey(default=389, on_delete=django.db.models.deletion.CASCADE, related_name='lesson_progress', to='courses.subscription', verbose_name='Подписка'),
             preserve_default=False,
         ),
 
