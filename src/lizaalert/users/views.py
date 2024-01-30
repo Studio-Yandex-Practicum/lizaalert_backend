@@ -25,7 +25,7 @@ class VolunteerAPIview(APIView):
 
     @swagger_auto_schema(
         operation_description="Отображает профиль пользователя",
-        responses={200: VolunteerSerializer(), 204: "No Content", 404: "Not Found"},
+        responses={200: VolunteerSerializer(), 204: '""', 404: "Страница не найдена."},
     )
     def get(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
@@ -49,7 +49,7 @@ class VolunteerAPIview(APIView):
     @swagger_auto_schema(
         operation_description="Внесение изменений в профиль пользователя",
         request_body=VolunteerSerializer,
-        responses={200: VolunteerSerializer(), 400: "Bad Request", 404: "Not Found"},
+        responses={200: VolunteerSerializer(), 400: "Bad Request", 404: "Страница не найдена."},
     )
     def patch(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
