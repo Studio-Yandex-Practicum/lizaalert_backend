@@ -89,6 +89,7 @@ class ChapterAdmin(admin.ModelAdmin):
 class LessonProgressStatusAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
     list_display = (
+        "subscribed_user",
         "lesson",
         "progress",
         "subscription",
@@ -99,7 +100,14 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
         "subscription",
         "lesson",
         "progress",
+        "subscribed_user",
     ]
+
+    list_select_related = ["subscription__user"]
+
+    @admin.display(description="Студент")
+    def subscribed_user(self, obj):
+        return obj.subscription.user
 
 
 @admin.register(ChapterProgressStatus)
@@ -108,6 +116,7 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
     list_display = (
+        "subscribed_user",
         "chapter",
         "progress",
         "subscription",
@@ -118,7 +127,14 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
         "subscription",
         "chapter",
         "progress",
+        "subscribed_user",
     ]
+
+    list_select_related = ["subscription__user"]
+
+    @admin.display(description="Студент")
+    def subscribed_user(self, obj):
+        return obj.subscription.user
 
 
 @admin.register(CourseProgressStatus)
@@ -127,6 +143,7 @@ class CourseProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
     list_display = (
+        "subscribed_user",
         "course",
         "progress",
         "subscription",
@@ -137,7 +154,13 @@ class CourseProgressStatusAdmin(admin.ModelAdmin):
         "subscription",
         "course",
         "progress",
+        "subscribed_user",
     ]
+    list_select_related = ["subscription__user"]
+
+    @admin.display(description="Студент")
+    def subscribed_user(self, obj):
+        return obj.subscription.user
 
 
 @admin.register(FAQ)
