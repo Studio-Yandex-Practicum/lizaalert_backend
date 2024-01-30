@@ -611,15 +611,20 @@ class TestCourse:
         Тест эндпоинта завершения курса.
 
         Проверяем, что при завершении курса, пользователь получает статус COMPLETED.
+        Проверяем что курс можно завершить только с завершенными главами, в противном случае получаем 403.
         """
         course = CourseWith2Chapters()
-        _ = SubscriptionFactory(user=user, course=course)
+        user_completed_chapters = user.user_chapter_status.all().filter(progress=2, chapter__course=course.pk)
+        total_completed_chapters = course.chapters.all()
         url = reverse("courses-complete", kwargs={"pk": course.id})
         url_course = reverse("courses-detail", kwargs={"pk": course.id})
         response = user_client.post(url)
         response_course = user_client.get(url_course)
-        assert response.status_code == status.HTTP_200_OK
-        assert response_course.json()["user_status"] == Subscription.Status.COMPLETED
+        if len(user_completed_chapters) == len(total_completed_chapters):
+            assert response.status_code == status.HTTP_200_OK
+            assert response_course.json()["user_status"] == Subscription.Status.COMPLETED
+        else:
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_signal_sent_after_complete_course(self, user):
         """Тест, что отправляется сигнал для получения ачивок после завершения курса."""
