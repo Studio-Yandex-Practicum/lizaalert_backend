@@ -42,6 +42,7 @@ def populate_subscription(apps, schema_editor):
             course = get_course_func(obj)
             try:
                 subscription = Subscription.objects.get(user=STORAGE[model][obj.id], course=course)
+                obj.subscription_id = subscription.id
                 obj.subscription = subscription
                 obj.save()
             except Subscription.DoesNotExist as e:
@@ -55,6 +56,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(collect_users),
+
         migrations.AlterModelOptions(
             name='chapterprogressstatus',
             options={'ordering': ('subscription',), 'verbose_name': 'Прогресс по главе', 'verbose_name_plural': 'Прогресс по главам'},
@@ -79,22 +82,26 @@ class Migration(migrations.Migration):
             model_name='lessonprogressstatus',
             name='user',
         ),
-        migrations.AddField(
-            model_name='chapterprogressstatus',
-            name='subscription',
-            field=models.ForeignKey(default=58, on_delete=django.db.models.deletion.CASCADE, related_name='chapter_progress', to='courses.subscription', verbose_name='Подписка'),
-            preserve_default=False,
-        ),
+
         migrations.AddField(
             model_name='courseprogressstatus',
             name='subscription',
-            field=models.ForeignKey(default=58, on_delete=django.db.models.deletion.CASCADE, related_name='course_progress', to='courses.subscription', verbose_name='Подписка'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='course_progress', to='courses.subscription', verbose_name='Подписка'),
+            preserve_default=False,
+        ),
+        migrations.AddField(
+            model_name='chapterprogressstatus',
+            name='subscription',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='chapter_progress', to='courses.subscription', verbose_name='Подписка'),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='lessonprogressstatus',
             name='subscription',
-            field=models.ForeignKey(default=58, on_delete=django.db.models.deletion.CASCADE, related_name='lesson_progress', to='courses.subscription', verbose_name='Подписка'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lesson_progress', to='courses.subscription', verbose_name='Подписка'),
             preserve_default=False,
         ),
+
+        migrations.RunPython(populate_subscription),
+
     ]
