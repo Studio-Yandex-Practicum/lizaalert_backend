@@ -25,7 +25,14 @@ def populate_subscription(apps, schema_editor):
         (LessonProgressStatus, get_course_for_lesson),
         (ChapterProgressStatus, get_course_for_chapter)
     ]:
-        for obj in model.objects.all():
+        if model == CourseProgressStatus:
+            queryset = model.objects.select_related('course').all()
+        elif model == LessonProgressStatus:
+            queryset = model.objects.select_related('lesson__chapter__course').all()
+        elif model == ChapterProgressStatus:
+            queryset = model.objects.select_related('chapter__course').all()
+
+        for obj in queryset:
             course = get_course_func(obj)
             try:
                 subscription = Subscription.objects.get(user_id=obj.user.id, course=course)
