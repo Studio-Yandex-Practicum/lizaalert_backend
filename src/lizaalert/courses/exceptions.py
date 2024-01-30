@@ -10,7 +10,6 @@ class AlreadyExistsException(PermissionDenied):
 
 
 class SubscriptionDoesNotExist(PermissionDenied):
-    def __init__(self, detail=None):
-        if detail is None:
-            detail = "You do not have a subscription to this course."
-        super().__init__(detail=detail)
+    """Исключение для подписки для данного пользователя на данный курс."""
+
+    default_detail = "Subscription does not exist"
