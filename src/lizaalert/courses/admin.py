@@ -47,6 +47,23 @@ class ChapterInline(admin.TabularInline):
     model = Chapter
     min_num = 1
     extra = 0
+    readonly_fields = ("get_chapter_link",)
+    # Устанавливаем порядок отображения полей
+    fields = (
+        "get_chapter_link",
+        "deleted_at",
+        "order_number",
+        "title",
+        "user_created",
+        "user_modifier",
+    )
+
+    # Метод для отображения ссылки на главу курса
+    def get_chapter_link(self, obj):
+        url = reverse("admin:courses_chapter_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.title)
+
+    get_chapter_link.short_description = "Ссылка"
 
 
 class CourseAdmin(admin.ModelAdmin):
@@ -56,7 +73,6 @@ class CourseAdmin(admin.ModelAdmin):
     model = Course
     list_display = (
         "title",
-        "get_chapters",
         "course_format",
         "short_description",
         "user_created",
@@ -65,17 +81,6 @@ class CourseAdmin(admin.ModelAdmin):
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
-
-    # Метод для отображения глав курса
-    def get_chapters(self, obj):
-        chapters = Chapter.objects.filter(course=obj)
-        chapters_links = [
-            '<a href="{}">{}</a>'.format(reverse("admin:courses_chapter_change", args=(chapter.id,)), chapter.title)
-            for chapter in chapters
-        ]
-        return format_html(", ".join(chapters_links))
-
-    get_chapters.short_description = "Глава(ы)"
 
 
 @admin.register(Chapter)
