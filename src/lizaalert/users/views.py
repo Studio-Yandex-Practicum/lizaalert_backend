@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from lizaalert.courses.models import CourseProgressStatus
+from lizaalert.courses.models import Subscription
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
 from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
