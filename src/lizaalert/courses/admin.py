@@ -112,6 +112,7 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
+    """Админка для статуса прогресса главы."""
 
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
