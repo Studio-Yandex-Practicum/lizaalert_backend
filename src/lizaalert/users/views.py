@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from lizaalert.courses.models import CourseProgressStatus
+from lizaalert.courses.models import Subscription
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
 from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
 
@@ -20,10 +20,10 @@ class VolunteerAPIview(APIView):
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.annotate(
             count_pass_course=Subquery(
-                CourseProgressStatus.objects.filter(
+                Subscription.objects.filter(
                     course__course_volunteers__volunteer=OuterRef("pk"),
                     user=request.user,
-                    progress=CourseProgressStatus.ProgressStatus.FINISHED,
+                    status=Subscription.Status.COMPLETED,
                 )
                 .values("course__course_volunteers__volunteer")
                 .annotate(count_pass_course=Count("pk"))
