@@ -98,9 +98,6 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
     )
     list_display_links = [
         "subscription",
-        "lesson",
-        "progress",
-        "subscribed_user",
     ]
 
     list_select_related = ["subscription__user"]
@@ -125,9 +122,6 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
     )
     list_display_links = [
         "subscription",
-        "chapter",
-        "progress",
-        "subscribed_user",
     ]
 
     list_select_related = ["subscription__user"]
@@ -152,9 +146,6 @@ class CourseProgressStatusAdmin(admin.ModelAdmin):
     )
     list_display_links = [
         "subscription",
-        "course",
-        "progress",
-        "subscribed_user",
     ]
     list_select_related = ["subscription__user"]
 
@@ -227,9 +218,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
     )
     list_display_links = [
         "__str__",
-        "user",
-        "course",
-        "status",
     ]
 
     ordering = ("-updated_at",)
