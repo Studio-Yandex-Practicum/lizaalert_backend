@@ -11,10 +11,10 @@ from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, Volu
 from lizaalert.users.serializers import (
     BadgeSerializer,
     Error400Serializer,
+    Error404Serializer,
     LevelSerializer,
     UserRoleSerializer,
     VolunteerSerializer,
-    Error404Serializer,
 )
 
 
