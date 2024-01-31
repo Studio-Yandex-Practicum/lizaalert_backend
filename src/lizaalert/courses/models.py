@@ -126,7 +126,7 @@ class Course(
     def current_lesson(self, user):
         """Return queryset of the current lesson."""
         finished_lessons = LessonProgressStatus.objects.filter(
-            user=user, progress=LessonProgressStatus.ProgressStatus.FINISHED
+            subscription__user=user, progress=LessonProgressStatus.ProgressStatus.FINISHED
         ).values_list("lesson_id", flat=True)
 
         lesson_queryset = Lesson.objects.filter(chapter__course=self, status=Lesson.LessonStatus.PUBLISHED).annotate(
@@ -157,8 +157,9 @@ class Course(
             raise AlreadyExistsException({"detail": "Already enrolled."})
         return subscription
 
-    def finish(self, user):
-        super().finish(user)
+    def finish(self, subscription):
+        super().finish(subscription)
+        user = subscription.user
         progress_status, created = Subscription.objects.get_or_create(
             user=user, course=self, defaults={"status": Subscription.Status.COMPLETED}
         )
@@ -166,8 +167,9 @@ class Course(
             progress_status.status = Subscription.Status.COMPLETED
             progress_status.save()
 
-    def activate(self, user):
-        super().activate(user)
+    def activate(self, subscription):
+        super().activate(subscription)
+        user = subscription.user
         progress_status, created = Subscription.objects.get_or_create(
             user=user, course=self, defaults={"status": Subscription.Status.IN_PROGRESS}
         )
@@ -323,23 +325,23 @@ class LessonProgressStatus(TimeStampedModel, BaseProgress):
     """
 
     lesson = models.ForeignKey(Lesson, on_delete=models.PROTECT, related_name="lesson_progress")
-    user = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        related_name="user_lesson_status",
-        verbose_name="Пользователь",
-    )
     version_number = models.PositiveSmallIntegerField(
         "Номер версии урока", validators=[MinValueValidator(1)], default=1
     )
+    subscription = models.ForeignKey(
+        "Subscription",
+        on_delete=models.CASCADE,
+        verbose_name="Подписка",
+        related_name="lesson_progress",
+    )
 
     def __str__(self):
-        return f"Lesson {self.lesson_id}: {self.user_id} Progress: {self.get_progress_display()}"
+        return f"Lesson {self.lesson_id}: {self.subscription_id} Progress: {self.get_progress_display()}"
 
     class Meta:
         verbose_name = "Прогресс по уроку"
         verbose_name_plural = "Прогресс по урокам"
-        ordering = ("user",)
+        ordering = ("subscription",)
 
 
 class ChapterProgressStatus(TimeStampedModel, BaseProgress):
@@ -354,20 +356,20 @@ class ChapterProgressStatus(TimeStampedModel, BaseProgress):
     """
 
     chapter = models.ForeignKey(Chapter, on_delete=models.PROTECT, related_name="chapter_progress")
-    user = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        related_name="user_chapter_status",
-        verbose_name="Пользователь",
+    subscription = models.ForeignKey(
+        "Subscription",
+        on_delete=models.CASCADE,
+        verbose_name="Подписка",
+        related_name="chapter_progress",
     )
 
     def __str__(self):
-        return f"Chapter {self.chapter.title}: {self.user.username}"
+        return f"Chapter {self.chapter.title}: {self.subscription_id}"
 
     class Meta:
         verbose_name = "Прогресс по главе"
         verbose_name_plural = "Прогресс по главам"
-        ordering = ("user",)
+        ordering = ("subscription",)
 
 
 class CourseProgressStatus(TimeStampedModel, BaseProgress):
@@ -382,20 +384,20 @@ class CourseProgressStatus(TimeStampedModel, BaseProgress):
     """
 
     course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="course_progress")
-    user = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        related_name="user_course_status",
-        verbose_name="Пользователь",
+    subscription = models.ForeignKey(
+        "Subscription",
+        on_delete=models.CASCADE,
+        verbose_name="Подписка",
+        related_name="course_progress",
     )
 
     def __str__(self):
-        return f"Course {self.course.title}: {self.user.username}"
+        return f"Course {self.course.title}: {self.subscription_id}"
 
     class Meta:
         verbose_name = "Прогресс по курсу"
         verbose_name_plural = "Прогресс по курсам"
-        ordering = ("user",)
+        ordering = ("subscription",)
 
 
 class CourseFaq(models.Model):
