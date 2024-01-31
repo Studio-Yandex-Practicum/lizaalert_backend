@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from lizaalert.courses.exceptions import BadRequestException
+from lizaalert.courses.exceptions import BadRequestException, SubscriptionDoesNotExist
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
     Chapter,
@@ -93,12 +93,21 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         }
 
         if user.is_authenticated:
+            if course:
+                current_lesson = course.current_lesson(user)
+
+            else:
+                current_lesson = (
+                    Lesson.objects.filter(chapter__course=course, status=Lesson.LessonStatus.PUBLISHED)
+                    .annotate(ordering=F("chapter__order_number") + F("order_number"))
+                    .order_by("ordering")
+                )
             # Аннотируем прогресс пользователя по главе
             chapters_with_progress = Chapter.objects.annotate(
                 user_chapter_progress=Coalesce(
                     Cast(
                         Subquery(
-                            ChapterProgressStatus.objects.filter(chapter=OuterRef("id"), user=user)
+                            ChapterProgressStatus.objects.filter(chapter=OuterRef("id"), subscription__user=user)
                             .order_by("-updated_at")
                             .values("progress")[:1]
                         ),
@@ -112,7 +121,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 user_lesson_progress=Coalesce(
                     Cast(
                         Subquery(
-                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), subscription__user=user)
                             .order_by("-updated_at")
                             .values("progress")[:1]
                         ),
@@ -121,14 +130,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
-            if course:
-                current_lesson = course.current_lesson(user)
-            else:
-                current_lesson = (
-                    Lesson.objects.filter(chapter__course=course, status=Lesson.LessonStatus.PUBLISHED)
-                    .annotate(ordering=F("chapter__order_number") + F("order_number"))
-                    .order_by("ordering")
-                )
 
             users_annotations = {
                 "user_status": Coalesce(
@@ -138,7 +139,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 "user_course_progress": Coalesce(
                     Cast(
                         Subquery(
-                            CourseProgressStatus.objects.filter(course=OuterRef("id"), user=user)
+                            CourseProgressStatus.objects.filter(course=OuterRef("id"), subscription__user=user)
                             .order_by("-updated_at")
                             .values("progress")[:1]
                         ),
@@ -199,9 +200,13 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             Это действие требует аутентификации пользователя.
 
         """
-        current_lesson, user, course = self._get_current_lesson(**kwargs)
-
+        user = self.request.user
+        try:
+            course = get_object_or_404(Course, **kwargs)
+        except ValueError:
+            raise BadRequestException({"detail": "Invalid id."})
         subscription = course.subscribe(user)
+        current_lesson = course.current_lesson(user).first()
         serializer = UserStatusEnrollmentSerializer(current_lesson, context={"subscription": subscription})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -269,6 +274,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         try:
             course = get_object_or_404(Course, **kwargs)
+            subscription = get_object_or_404(Subscription, course=course, user=user)
         except ValueError:
             raise BadRequestException({"detail": "Invalid id."})
         user_completed_chapters = user.user_chapter_status.all().filter(progress=2, chapter__course=kwargs["pk"])
@@ -329,6 +335,11 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         lesson_id = self.kwargs.get("pk")
         lesson = get_object_or_404(Lesson, id=lesson_id)
         lesson_with_ordering = lesson.ordered.get(id=lesson_id)
+        if user.is_authenticated:
+            try:
+                subscription = Subscription.objects.get(course=lesson.chapter.course, user=user)
+            except Subscription.DoesNotExist:
+                raise SubscriptionDoesNotExist()
         base_annotations = {
             "next_lesson_id": lesson_with_ordering.next_lesson.values("id"),
             "prev_lesson_id": lesson_with_ordering.prev_lesson.values("id"),
@@ -340,7 +351,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
                 "user_lesson_progress": Coalesce(
                     Cast(
                         Subquery(
-                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), user=user)
+                            LessonProgressStatus.objects.filter(lesson=OuterRef("id"), subscription=subscription)
                             .order_by("-updated_at")
                             .values("progress")[:1]
                         ),
@@ -373,12 +384,15 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         user = self.request.user
         course = lesson.chapter.course
         if user.is_authenticated:
-            any_progress = LessonProgressStatus.objects.filter(user=user, lesson=lesson).exists()
+            try:
+                subscription = Subscription.objects.get(course=course, user=user)
+            except Subscription.DoesNotExist:
+                raise SubscriptionDoesNotExist()
+            any_progress = LessonProgressStatus.objects.filter(subscription=subscription, lesson=lesson).exists()
             if not any_progress:
-                lesson.activate(user)
-        subscription = Subscription.objects.filter(user=user, course=course).first()
+                lesson.activate(subscription)
         if subscription and subscription.status == Subscription.Status.ENROLLED:
-            course.activate(user)  # Активируем начало прохождения курса, если были записаны на курс
+            course.activate(subscription)  # Активируем начало прохождения курса, если были записаны на курс
         return super().retrieve(request, *args, **kwargs)
 
     @transaction.atomic
@@ -411,7 +425,8 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         user = self.request.user
         lesson = get_object_or_404(Lesson, **kwargs)
-        lesson.finish(user)
+        subscription = get_object_or_404(Subscription, user=user, course=lesson.chapter.course)
+        lesson.finish(subscription)
         return Response(status=status.HTTP_201_CREATED)
 
 
