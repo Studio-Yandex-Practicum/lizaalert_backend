@@ -81,3 +81,11 @@ class UserRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRole
         fields = ["id", "role", "user"]
+
+
+class Error404Serializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+
+class Error400Serializer(serializers.Serializer):
+    error_field = serializers.ListField()

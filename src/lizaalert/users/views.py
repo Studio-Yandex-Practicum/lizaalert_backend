@@ -1,14 +1,21 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, permissions, status, views, viewsets
+from rest_framework import mixins, permissions, status, views, viewsets, exceptions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from lizaalert.courses.models import CourseProgressStatus
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
-from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
+from lizaalert.users.serializers import (
+    BadgeSerializer,
+    Error400Serializer,
+    LevelSerializer,
+    UserRoleSerializer,
+    VolunteerSerializer,
+    Error404Serializer,
+)
 
 
 class VolunteerAPIview(APIView):
@@ -25,7 +32,7 @@ class VolunteerAPIview(APIView):
 
     @swagger_auto_schema(
         operation_description="Отображает профиль пользователя",
-        responses={200: VolunteerSerializer(), 204: '""', 404: "Страница не найдена."},
+        responses={200: VolunteerSerializer(), 204: "", 404: Error404Serializer()},
     )
     def get(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
@@ -49,7 +56,7 @@ class VolunteerAPIview(APIView):
     @swagger_auto_schema(
         operation_description="Внесение изменений в профиль пользователя",
         request_body=VolunteerSerializer,
-        responses={200: VolunteerSerializer(), 400: "Bad Request", 404: "Страница не найдена."},
+        responses={200: VolunteerSerializer(), 400: Error400Serializer(), 404: Error404Serializer()},
     )
     def patch(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
