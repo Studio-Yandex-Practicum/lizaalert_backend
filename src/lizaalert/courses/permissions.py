@@ -19,7 +19,7 @@ class CurrentLessonOrProhibited(permissions.BasePermission):
             course = obj.chapter.course
             current_lesson = course.current_lesson(user).first()
             obj = obj.ordered.get(id=obj.id)
-            if current_lesson.ordering >= obj.ordering:
+            if current_lesson and (current_lesson.ordering >= obj.ordering):
                 return True
         return False
 
