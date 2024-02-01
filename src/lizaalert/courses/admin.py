@@ -67,11 +67,8 @@ class CohortAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_select_related = ("course__title",)
     ordering = ("-updated_at",)
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        return fields
 
     def get_queryset(self, request):
         """
