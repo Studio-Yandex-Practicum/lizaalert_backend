@@ -321,4 +321,4 @@ def create_default_volunteer_level(sender, instance, created, **kwargs):
             existing_record = VolunteerLevel.objects.filter(volunteer=volunteer, level=beginner_level).exists()
 
             if not existing_record:
-                VolunteerLevel.objects.create(volunteer=volunteer, level=beginner_level, confirmed=True)
+                VolunteerLevel.objects.create(volunteer=volunteer, level=Level.LevelName.beginner, confirmed=True)
