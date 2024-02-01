@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
-from lizaalert.users.models import Badge, Volunteer, VolunteerBadge, VolunteerCourseCompletion
+from lizaalert.users.models import Badge, VolunteerBadge, VolunteerCourseCompletion
 from lizaalert.users.utils import (
     assign_achievements_for_completion,
     assign_achievements_for_course,
@@ -117,21 +117,19 @@ class TestBadgeAssignments:
     def test_increment_completed_courses_count(self):
         """Тест функции инкремента счетчика завершенных курсов."""
         user = UserFactory()
-        volunteer = Volunteer.objects.get(user=user)
+        volunteer = user.volunteer
         _ = VolunteerCourseCompletion.objects.create(volunteer=volunteer)
 
-        count_before = volunteer.course_completion.first().completed_courses_count
-        increment_completed_courses_count(user)
-        count_after = volunteer.course_completion.first().completed_courses_count
-
-        assert count_after == count_before + 1
+        for _ in range(5):
+            count_before = volunteer.course_completion.first().completed_courses_count
+            increment_completed_courses_count(user)
+            count_after = volunteer.course_completion.first().completed_courses_count
+            assert count_after == count_before + 1
 
     def test_assign_achievements_for_completion(self):
         """Тест функции присвоения ачивок за завершенные курсы."""
         user = UserFactory()
         course = CourseFactory()
-        volunteer = Volunteer.objects.get(user=user)
-        _ = VolunteerCourseCompletion.objects.create(volunteer=volunteer)
         BadgeFactory(threshold_courses=1)
 
         increment_completed_courses_count(user)
@@ -143,8 +141,6 @@ class TestBadgeAssignments:
         """Тест функции присвоения ачивок за конкретный курс."""
         user = UserFactory()
         course = CourseFactory()
-        volunteer = Volunteer.objects.get(user=user)
-        _ = VolunteerCourseCompletion.objects.create(volunteer=volunteer)
         BadgeFactory(threshold_course=course)
 
         assign_achievements_for_course(user, course.id)
@@ -155,7 +151,7 @@ class TestBadgeAssignments:
         """Проверяем, есть ли у пользователя соответствующие значки и увеличен ли счетчик завершенных курсов после вызова эндпоинта завершения курса."""
         user = UserFactory(username="course_completion_signal_user")
         user_client.force_authenticate(user=user)
-        volunteer = Volunteer.objects.get(user=user)
+        volunteer = user.volunteer
         course = CourseWith2Chapters()
         _ = SubscriptionFactory(user=user, course=course)
 

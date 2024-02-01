@@ -26,7 +26,11 @@ def assign_achievements_for_course(user, course_id):
 
 def assign_achievements_for_completion(user, course_id):
     """Присваивает пользователю ачивки в зависимости от количества завершенных курсов."""
-    completed_courses_count = VolunteerCourseCompletion.objects.get(volunteer__user=user).completed_courses_count
+    volunteer = Volunteer.objects.get(user=user)
+    volunteer_completion, _ = VolunteerCourseCompletion.objects.get_or_create(
+        volunteer=volunteer, defaults={"completed_courses_count": 1}
+    )
+    completed_courses_count = volunteer_completion.completed_courses_count
     badges_for_completion = Badge.objects.filter(
         Q(threshold_courses__isnull=False) & Q(threshold_courses__lte=completed_courses_count)
     )
