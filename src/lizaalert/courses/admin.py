@@ -48,14 +48,11 @@ class ChapterInline(admin.TabularInline):
     min_num = 1
     extra = 0
     readonly_fields = ("get_chapter_link",)
-    # Устанавливаем порядок отображения полей
     fields = (
         "get_chapter_link",
-        "deleted_at",
         "order_number",
         "title",
-        "user_created",
-        "user_modifier",
+        "deleted_at",
     )
 
     # Метод для отображения ссылки на главу курса
@@ -63,7 +60,7 @@ class ChapterInline(admin.TabularInline):
         url = reverse("admin:courses_chapter_change", args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj.title)
 
-    get_chapter_link.short_description = "Ссылка"
+    get_chapter_link.short_description = "Глава"
 
 
 class CourseAdmin(admin.ModelAdmin):
