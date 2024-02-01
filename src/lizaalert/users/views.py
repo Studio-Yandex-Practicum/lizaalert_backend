@@ -8,12 +8,32 @@ from rest_framework.views import APIView
 
 from lizaalert.courses.models import Subscription
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
-from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
+from lizaalert.users.serializers import (
+    BadgeSerializer,
+    Error400Serializer,
+    Error404Serializer,
+    LevelSerializer,
+    UserRoleSerializer,
+    VolunteerSerializer,
+)
 
 
 class VolunteerAPIview(APIView):
+    """
+    Endpoint для работы с профилем пользователя.
+
+    Методы:
+    - GET: Отображение профиля пользователя.
+    - PATCH: Внесение изменений в профиль пользователя.
+
+    """
+
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Отображает профиль пользователя",
+        responses={200: VolunteerSerializer(), 204: "", 404: Error404Serializer()},
+    )
     def get(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.annotate(
@@ -33,6 +53,11 @@ class VolunteerAPIview(APIView):
             return Response(serializer.data[0])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @swagger_auto_schema(
+        operation_description="Внесение изменений в профиль пользователя",
+        request_body=VolunteerSerializer,
+        responses={200: VolunteerSerializer(), 400: Error400Serializer(), 404: Error404Serializer()},
+    )
     def patch(self, request):
         volunteer = get_object_or_404(Volunteer, user=request.user)
         serializer = VolunteerSerializer(volunteer, data=request.data, partial=True)
