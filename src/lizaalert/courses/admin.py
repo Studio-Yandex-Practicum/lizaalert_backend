@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.db.models import F
-
+from django.urls import reverse
+from django.utils.html import format_html
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
@@ -47,6 +48,20 @@ class ChapterInline(admin.TabularInline):
     model = Chapter
     min_num = 1
     extra = 0
+    readonly_fields = ("get_chapter_link",)
+    fields = (
+        "get_chapter_link",
+        "order_number",
+        "title",
+        "deleted_at",
+    )
+
+    # Метод для отображения ссылки на главу курса
+    def get_chapter_link(self, obj):
+        url = reverse("admin:courses_chapter_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.title)
+
+    get_chapter_link.short_description = "Глава"
 
 
 @admin.register(Cohort)
@@ -85,6 +100,7 @@ class CohortAdmin(admin.ModelAdmin):
     course_title.short_description = "Курс"
 
 
+@admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
 
@@ -126,38 +142,80 @@ class ChapterAdmin(admin.ModelAdmin):
 class LessonProgressStatusAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
     list_display = (
+        "subscribed_user",
         "lesson",
         "progress",
-        "user",
+        "subscription",
         "created_at",
         "updated_at",
     )
+    list_display_links = [
+        "subscription",
+        "lesson",
+        "progress",
+        "subscribed_user",
+    ]
+
+    list_select_related = ["subscription__user"]
+
+    @admin.display(description="Студент")
+    def subscribed_user(self, obj):
+        return obj.subscription.user
 
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
+
+    raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
     list_display = (
+        "subscribed_user",
         "chapter",
         "progress",
-        "user",
+        "subscription",
         "created_at",
         "updated_at",
     )
+    list_display_links = [
+        "subscription",
+        "chapter",
+        "progress",
+        "subscribed_user",
+    ]
+
+    list_select_related = ["subscription__user"]
+
+    @admin.display(description="Студент")
+    def subscribed_user(self, obj):
+        return obj.subscription.user
 
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
+
+    raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
     list_display = (
+        "subscribed_user",
         "course",
         "progress",
-        "user",
+        "subscription",
         "created_at",
         "updated_at",
     )
+    list_display_links = [
+        "subscription",
+        "course",
+        "progress",
+        "subscribed_user",
+    ]
+    list_select_related = ["subscription__user"]
+
+    @admin.display(description="Студент")
+    def subscribed_user(self, obj):
+        return obj.subscription.user
 
 
 @admin.register(FAQ)
@@ -209,5 +267,24 @@ class LessonAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
 
 
-admin.site.register(Course, CourseAdmin)
-admin.site.register(Subscription)
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    """Админка подписки."""
+
+    raw_id_fields = ("user", "course")
+    list_display = (
+        "__str__",
+        "user",
+        "course",
+        "status",
+        "created_at",
+        "updated_at",
+    )
+    list_display_links = [
+        "__str__",
+        "user",
+        "course",
+        "status",
+    ]
+
+    ordering = ("-updated_at",)
