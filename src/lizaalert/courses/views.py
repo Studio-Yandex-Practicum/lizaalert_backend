@@ -277,17 +277,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             subscription = get_object_or_404(Subscription, course=course, user=user)
         except ValueError:
             raise BadRequestException({"detail": "Invalid id."})
-        user_completed_chapters = user.user_chapter_status.all().filter(progress=2, chapter__course=kwargs["pk"])
-        total_completed_chapters = course.chapters.all()
-        if len(user_completed_chapters) == len(total_completed_chapters):
-            course.finish(user)
-            # Отправить сигнал для получения ачивок
+        message, status_code = course.finish(subscription)
+        # Отправить сигнал для получения ачивок
+        if status_code == status.HTTP_200_OK:
             course.get_achievements(course, user)
-            return Response(status=status.HTTP_200_OK)
-        return Response(
-            {"message": "Пользователь не прошел все уроки/главы"},
-            status=status.HTTP_403_FORBIDDEN,
-        )
+        return Response({"message": message}, status=status_code)
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):

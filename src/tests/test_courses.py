@@ -565,6 +565,9 @@ class TestCourse:
             subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
             if finish_course:
+                lessons = Lesson.objects.filter(chapter__course=course)
+                for lesson in lessons:
+                    lesson.finish(subscription)
                 course.finish(subscription)
             if course_in_progress:
                 lesson = Lesson.objects.filter(chapter__course=course).first()
@@ -618,17 +621,21 @@ class TestCourse:
         Проверяем что курс можно завершить только с завершенными главами, в противном случае получаем 403.
         """
         course = CourseWith2Chapters()
-        user_completed_chapters = user.user_chapter_status.all().filter(progress=2, chapter__course=course.pk)
-        total_completed_chapters = course.chapters.all()
         url = reverse("courses-complete", kwargs={"pk": course.id})
         url_course = reverse("courses-detail", kwargs={"pk": course.id})
         response = user_client.post(url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        subscription = SubscriptionFactory(user=user, course=course)
+        response = user_client.post(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
         response_course = user_client.get(url_course)
-        if len(user_completed_chapters) == len(total_completed_chapters):
-            assert response.status_code == status.HTTP_200_OK
-            assert response_course.json()["user_status"] == Subscription.Status.COMPLETED
-        else:
-            assert response.status_code == status.HTTP_403_FORBIDDEN
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            lesson.finish(subscription)
+        response = user_client.post(url)
+        response_course = user_client.get(url_course)
+        assert response.status_code == status.HTTP_200_OK
+        assert response_course.json()["user_status"] == Subscription.Status.COMPLETED
 
     def test_signal_sent_after_complete_course(self, user):
         """Тест, что отправляется сигнал для получения ачивок после завершения курса."""

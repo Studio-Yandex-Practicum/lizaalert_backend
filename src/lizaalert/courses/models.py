@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F
 from django.utils import timezone
+from rest_framework import status
 
 from lizaalert.courses.exceptions import AlreadyExistsException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
@@ -158,14 +159,21 @@ class Course(
         return subscription
 
     def finish(self, subscription):
-        super().finish(subscription)
-        user = subscription.user
-        progress_status, created = Subscription.objects.get_or_create(
-            user=user, course=self, defaults={"status": Subscription.Status.COMPLETED}
-        )
-        if not created:
-            progress_status.status = Subscription.Status.COMPLETED
-            progress_status.save()
+        user_completed_chapters = subscription.chapter_progress.filter(chapter__course_id=self.id).count()
+        total_chapters = self.chapters.all().count()
+        if user_completed_chapters == total_chapters:
+            super().finish(subscription)
+            user = subscription.user
+            progress_status, created = Subscription.objects.get_or_create(
+                user=user, course=self, defaults={"status": Subscription.Status.COMPLETED}
+            )
+            if not created:
+                progress_status.status = Subscription.Status.COMPLETED
+                progress_status.save()
+            message = "Курс успешно завершен"
+            return (message, status.HTTP_200_OK)
+        message = "Пользователь не прошел все уроки/главы"
+        return (message, status.HTTP_403_FORBIDDEN)
 
     def activate(self, subscription):
         super().activate(subscription)
