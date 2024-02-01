@@ -9,7 +9,14 @@ from rest_framework.views import APIView
 
 from lizaalert.courses.models import Subscription
 from lizaalert.users.models import Badge, Level, User, UserRole, Volunteer, VolunteerBadge
-from lizaalert.users.serializers import BadgeSerializer, LevelSerializer, UserRoleSerializer, VolunteerSerializer
+from lizaalert.users.serializers import (
+    BadgeSerializer,
+    Error400Serializer,
+    Error404Serializer,
+    LevelSerializer,
+    UserRoleSerializer,
+    VolunteerSerializer,
+)
 
 
 class VolunteerAPIview(APIView):
