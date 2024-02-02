@@ -93,7 +93,6 @@ class Course(
 
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
-    start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
     cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
     level = models.ForeignKey(
@@ -441,6 +440,9 @@ class Cohort(TimeStampedModel):
     end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
     students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
+    max_students = models.PositiveIntegerField(
+        verbose_name="Максимальное количество студентов", null=True, blank=True, default=None
+    )
 
     class Meta:
 

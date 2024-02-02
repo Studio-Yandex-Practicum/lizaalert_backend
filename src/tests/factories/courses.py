@@ -3,7 +3,17 @@ import json
 
 import factory.fuzzy
 
-from lizaalert.courses.models import FAQ, Chapter, Course, CourseFaq, CourseKnowledge, Knowledge, Lesson, Subscription
+from lizaalert.courses.models import (
+    FAQ,
+    Chapter,
+    Cohort,
+    Course,
+    CourseFaq,
+    CourseKnowledge,
+    Knowledge,
+    Lesson,
+    Subscription,
+)
 from tests.factories.users import LevelFactory, UserFactory
 
 
@@ -24,9 +34,6 @@ class CourseFactory(factory.django.DjangoModelFactory):
     course_format = factory.Sequence(lambda n: "Курс {}".format(n))
     level = factory.SubFactory(LevelFactory)
     cover_path = factory.django.ImageField()
-    start_date = factory.fuzzy.FuzzyDate(
-        start_date=datetime.date.today() - datetime.timedelta(days=5),
-    )
     short_description = factory.Sequence(lambda n: "Курс{}".format(n))
     full_description = factory.Sequence(lambda n: "Курс{}".format(n))
     user_created = factory.SubFactory(UserFactory)
@@ -225,3 +232,21 @@ class CourseWith2Chapters(CourseFactory):
         factory_related_name="course",
         title=factory.Iterator([2]),
     )
+
+
+class CohortFactory(factory.django.DjangoModelFactory):
+    """Test factory for Cohort model."""
+
+    class Meta:
+        model = Cohort
+
+    course = factory.SubFactory(CourseFactory)
+    start_date = factory.fuzzy.FuzzyDate(
+        start_date=datetime.date.today() + datetime.timedelta(days=5),
+    )
+    end_date = factory.LazyAttribute(lambda o: o.start_date + datetime.timedelta(days=30))
+    teacher = factory.SubFactory(UserFactory)
+    user_created = factory.SubFactory(UserFactory)
+    user_modifier = factory.SubFactory(UserFactory)
+    students_count = factory.fuzzy.FuzzyInteger(0, 10)
+    max_students = factory.fuzzy.FuzzyInteger(20)
