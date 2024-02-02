@@ -141,6 +141,6 @@ class BadgeVolunteerListViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def get_queryset(self):
         queryset = Volunteer.objects.all()
-        badge_slug = self.kwargs['badge_slug']
+        badge_slug = self.kwargs["badge_slug"]
         queryset = queryset.filter(badges__badge_slug=badge_slug)
         return queryset
