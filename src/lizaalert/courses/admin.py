@@ -160,7 +160,6 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(ChapterProgressStatus)
 class ChapterProgressStatusAdmin(admin.ModelAdmin):
-    raw_id_fields = ("user",)
 
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
@@ -188,7 +187,6 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
 
 @admin.register(CourseProgressStatus)
 class CourseProgressStatusAdmin(admin.ModelAdmin):
-    raw_id_fields = ("user",)
 
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
