@@ -63,6 +63,7 @@ class BadgeFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence")
     badge_type = Badge.BadgeType.MANUAL
     badge_category = Badge.BadgeCategory.ONE_TIME
+    badge_slug = factory.Faker("slug")
     issued_for = factory.Faker("word")
     threshold_courses = None
     threshold_course = None
