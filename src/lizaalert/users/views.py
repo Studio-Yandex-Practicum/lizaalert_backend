@@ -1,7 +1,6 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
