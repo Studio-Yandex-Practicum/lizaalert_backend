@@ -4,7 +4,10 @@ from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
+<<<<<<< HEAD
 from rest_framework.generics import ListAPIView
+=======
+>>>>>>> 7e233d0 (TM-34 #307 [backend] Выдача волонтеров по ачивкам)
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -156,7 +159,11 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
+<<<<<<< HEAD
 class BadgeVolunteerListView(ListAPIView):
+=======
+class BadgeVolunteerListViewSet(viewsets.ReadOnlyModelViewSet):
+>>>>>>> 7e233d0 (TM-34 #307 [backend] Выдача волонтеров по ачивкам)
     """
     Отображение списка волонтёров по ачивке (slug-полю поиска).
 
@@ -175,6 +182,7 @@ class BadgeVolunteerListView(ListAPIView):
     pagination_class = LimitOffsetPagination
 
     @swagger_auto_schema(
+<<<<<<< HEAD
         operation_description="""
         Получение QuerySet для волонтеров имеющих определенный бэйдж.
 
@@ -189,5 +197,15 @@ class BadgeVolunteerListView(ListAPIView):
     def get_queryset(self):
         queryset = Volunteer.objects.all()
         badge_slug = self.kwargs["badge_slug"]
+=======
+        responses={
+            200: VolunteerSerializer(),
+            400: "Bad Request",
+        }
+    )
+    def get_queryset(self):
+        queryset = Volunteer.objects.all()
+        badge_slug = self.kwargs['badge_slug']
+>>>>>>> 7e233d0 (TM-34 #307 [backend] Выдача волонтеров по ачивкам)
         queryset = queryset.filter(badges__badge_slug=badge_slug)
         return queryset
