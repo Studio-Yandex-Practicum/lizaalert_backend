@@ -2,7 +2,12 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from lizaalert.users.views import (
-    BadgeVolunteerListViewSet, LevelViewSet, ListRoles, UserRoleViewSet, VolunteerAPIview, VolunteerBadgeListViewSet
+    BadgeVolunteerListViewSet,
+    LevelViewSet,
+    ListRoles,
+    UserRoleViewSet,
+    VolunteerAPIview,
+    VolunteerBadgeListViewSet,
 )
 
 router = DefaultRouter()
