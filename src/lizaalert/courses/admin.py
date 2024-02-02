@@ -87,7 +87,7 @@ class CohortAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("course").annotate(course_title=F("course__title"))
+        qs = super().get_queryset(request).select_related("course")
         return qs
 
     def course_title(self, obj):
