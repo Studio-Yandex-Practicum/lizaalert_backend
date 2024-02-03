@@ -82,7 +82,7 @@ class CohortAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_select_related = ("course__title",)
+    list_select_related = ("course",)
     ordering = ("-updated_at",)
 
     def course_title(self, obj):
