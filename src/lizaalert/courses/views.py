@@ -277,11 +277,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             subscription = get_object_or_404(Subscription, course=course, user=user)
         except ValueError:
             raise BadRequestException({"detail": "Invalid id."})
-        message, status_code = course.finish(subscription)
+        course.finish(subscription)
         # Отправить сигнал для получения ачивок
-        if status_code == status.HTTP_200_OK:
-            course.get_achievements(course, user)
-        return Response({"message": message}, status=status_code)
+        course.get_achievements(course, user)
+        return Response({"message": "Курс успешно завершен"}, status=status.HTTP_200_OK)
 
 
 class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
