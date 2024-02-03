@@ -629,7 +629,6 @@ class TestCourse:
         subscription = SubscriptionFactory(user=user, course=course)
         response = user_client.post(url)
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        response_course = user_client.get(url_course)
         lessons = Lesson.objects.filter(chapter__course=course)
         for lesson in lessons:
             lesson.finish(subscription)
