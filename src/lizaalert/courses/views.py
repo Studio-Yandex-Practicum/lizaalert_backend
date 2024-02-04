@@ -28,8 +28,8 @@ from lizaalert.courses.serializers import (
     CurrentLessonSerializer,
     FilterSerializer,
     LessonSerializer,
-    MessageResponseSerializer,
     UserStatusEnrollmentSerializer,
+    MessageResponseSerializer,
 )
 from lizaalert.users.models import Level
 
@@ -281,8 +281,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         course.finish(subscription)
         # Отправить сигнал для получения ачивок
         course.get_achievements(course, user)
-        message = "Курс успешно завершен"
-        serializer = MessageResponseSerializer(data=message)
+        serializer = MessageResponseSerializer(data="Курс успешно завершен")
         return Response(serializer.initial_data, status=status.HTTP_200_OK)
 
 
