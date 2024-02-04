@@ -251,3 +251,12 @@ class UserStatusEnrollmentSerializer(CurrentLessonSerializer):
         if subscription.status == Subscription.Status.ENROLLED and subscription.course.is_available:
             return Subscription.Status.AVAILABLE
         return subscription.status
+
+
+class MessageResponseSerializer(serializers.Serializer):
+    """Сериалайзер для ответа."""
+
+    message = serializers.CharField()
+
+    class Meta:
+        fields = ("message",)
