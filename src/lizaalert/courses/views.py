@@ -28,8 +28,8 @@ from lizaalert.courses.serializers import (
     CurrentLessonSerializer,
     FilterSerializer,
     LessonSerializer,
-    UserStatusEnrollmentSerializer,
     MessageResponseSerializer,
+    UserStatusEnrollmentSerializer,
 )
 from lizaalert.users.models import Level
 
