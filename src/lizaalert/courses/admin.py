@@ -6,6 +6,7 @@ from lizaalert.courses.models import (
     FAQ,
     Chapter,
     ChapterProgressStatus,
+    Cohort,
     Course,
     CourseFaq,
     CourseKnowledge,
@@ -61,6 +62,33 @@ class ChapterInline(admin.TabularInline):
         return format_html('<a href="{}">{}</a>', url, obj.title)
 
     get_chapter_link.short_description = "Глава"
+
+
+@admin.register(Cohort)
+class CohortAdmin(admin.ModelAdmin):
+    """
+    Админка когорты.
+
+    При созданиии объекта исключается поле cohort_number.
+    """
+
+    model = Cohort
+    extra = 1
+    list_display = (
+        "course_title",
+        "start_date",
+        "end_date",
+        "teacher",
+        "created_at",
+        "updated_at",
+    )
+    list_select_related = ("course",)
+    ordering = ("-updated_at",)
+
+    def course_title(self, obj):
+        return obj.course_title
+
+    course_title.short_description = "Курс"
 
 
 @admin.register(Course)
