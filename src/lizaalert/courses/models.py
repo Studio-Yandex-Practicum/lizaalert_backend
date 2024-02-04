@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Max
 from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException
@@ -420,6 +420,53 @@ class CourseKnowledge(models.Model):
         ordering = ("knowledge",)
 
 
+class Cohort(TimeStampedModel):
+    """
+    Модель для представления группы курса.
+
+    Поля модели:
+    - course: ForeignKey к модели Course
+    - cohort_number: уникальный номер группы в рамках курса
+    - start_date: дата начала обучения
+    - end_date: дата окончания обучения
+    - students_count: количество студентов в группе
+    - teacher: имя преподавателя группы
+    """
+
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name="cohorts", verbose_name="Курс")
+    cohort_number = models.PositiveIntegerField(
+        verbose_name="Номер группы", blank=True, help_text="Данное поле будет рассчитано автоматически при сохранении."
+    )
+    start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
+    end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
+    students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
+    teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
+
+    class Meta:
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "cohort_number"],
+                name="unique_course_cohort_number",
+            )
+        ]
+        verbose_name = "Группа курса"
+        verbose_name_plural = "Группы курса"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            max_cohort_number = Cohort.objects.filter(course=self.course).aggregate(Max("cohort_number"))[
+                "cohort_number__max"
+            ]
+
+            self.cohort_number = max_cohort_number + 1 if max_cohort_number is not None else 1
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.course_id} - {self.cohort_number}"
+
+
 class Subscription(TimeStampedModel):
     """
     Модель для записи пользователя на курс.
@@ -442,13 +489,22 @@ class Subscription(TimeStampedModel):
         max_length=20, choices=Status.choices, verbose_name="статус записи на курс", default=Status.ENROLLED
     )
 
+    cohort = models.ForeignKey(
+        Cohort, on_delete=models.PROTECT, related_name="subscriptions", null=True, blank=True, verbose_name="Группа"
+    )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
+                fields=["cohort", "course"],
+                name="unique_cohort_course",
+            ),
+            models.UniqueConstraint(
                 fields=["user", "course"],
                 name="unique_user_course",
-            )
+            ),
         ]
+
         ordering = ("user",)
         verbose_name = "Подписка на курс"
         verbose_name_plural = "Подписки на курс"
