@@ -58,8 +58,9 @@ class VolunteerAPIview(APIView):
     @swagger_auto_schema(
         operation_description="""
         Внесение изменений в профиль пользователя
-        
-        Для внесения изменений в поля department и location необходимо предварительно создать соответсвующие экземпляры моделей Department и Location. 
+
+        Для внесения изменений в поля department и location необходимо
+        предварительно создать соответсвующие экземпляры моделей Department и Location. 
         """,
         request_body=VolunteerSerializer,
         responses={200: VolunteerSerializer(), 400: Error400Serializer(), 404: Error404Serializer()},
