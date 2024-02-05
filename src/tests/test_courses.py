@@ -567,6 +567,9 @@ class TestCourse:
             subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
             if finish_course:
+                lessons = Lesson.objects.filter(chapter__course=course)
+                for lesson in lessons:
+                    lesson.finish(subscription)
                 course.finish(subscription)
             if course_in_progress:
                 lesson = Lesson.objects.filter(chapter__course=course).first()
@@ -617,11 +620,20 @@ class TestCourse:
         Тест эндпоинта завершения курса.
 
         Проверяем, что при завершении курса, пользователь получает статус COMPLETED.
+        Проверяем что если нет подписки на курс, получаем ошибку 404.
+        Проверяем что курс можно завершить только с завершенными главами, в противном случае получаем 403.
         """
         course = CourseWith2Chapters()
-        _ = SubscriptionFactory(user=user, course=course)
         url = reverse("courses-complete", kwargs={"pk": course.id})
         url_course = reverse("courses-detail", kwargs={"pk": course.id})
+        response = user_client.post(url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        subscription = SubscriptionFactory(user=user, course=course)
+        response = user_client.post(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            lesson.finish(subscription)
         response = user_client.post(url)
         response_course = user_client.get(url_course)
         assert response.status_code == status.HTTP_200_OK
