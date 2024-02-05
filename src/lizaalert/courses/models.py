@@ -174,7 +174,7 @@ class Course(
         if uncompleted_lessons:
             raise ProgressNotFinishedException()
         super().finish(subscription)
-        subscription.update_status(Subscription.Status.COMPLETED)
+        subscription.finish()
 
     def activate(self, subscription):
         super().activate(subscription)
@@ -465,7 +465,7 @@ class Subscription(TimeStampedModel):
     def __str__(self):
         return f"<Subscription: {self.id}, user: {self.user_id}, course: {self.course_id}>"
 
-    def update_status(self, status):
-        """Изменение статуса подписки на крус."""
-        self.status = status
+    def finish(self):
+        """Завершить подписку на курс."""
+        self.status = Subscription.Status.COMPLETED
         self.save()
