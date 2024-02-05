@@ -225,3 +225,15 @@ class CourseWith2Chapters(CourseFactory):
         factory_related_name="course",
         title=factory.Iterator([2]),
     )
+
+
+class UnpublishedLessonFactory(LessonFactory):
+    """Test factory for unpublished Lesson."""
+
+    status = Lesson.LessonStatus.DRAFT
+
+
+class UnpublishedCourseFactory(CourseFactory):
+    """Test factory for unpublished Course."""
+
+    status = Course.CourseStatus.DRAFT
