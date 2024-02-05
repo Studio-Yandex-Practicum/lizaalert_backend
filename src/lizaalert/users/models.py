@@ -1,5 +1,3 @@
-import sys
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -321,4 +319,4 @@ def create_default_volunteer_level(sender, instance, created, **kwargs):
             existing_record = VolunteerLevel.objects.filter(volunteer=volunteer, level=beginner_level).exists()
 
             if not existing_record:
-                VolunteerLevel.objects.create(volunteer=volunteer, level=Level.LevelName.beginner, confirmed=True)
+                VolunteerLevel.objects.create(volunteer=volunteer, level=beginner_level, confirmed=True)
