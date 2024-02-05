@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 
-from lizaalert.users.models import Badge, Level, Location, UserRole, Volunteer
+from lizaalert.users.models import Badge, Department, Level, Location, UserRole, Volunteer
 
 User = get_user_model()
 
@@ -52,6 +52,10 @@ class VolunteerSerializer(serializers.ModelSerializer):
             location = validated_data.get("location", None)
             if location and (Location.objects.filter(region=location["region"]).exists()):
                 instance.location = Location.objects.get(region=location["region"])
+
+            department = validated_data.get("department", None)
+            if department and (Department.objects.filter(title=department["title"]).exists()):
+                instance.department = Department.objects.get(title=department["title"])
 
             full_name = validated_data.get("user", {}).get("full_name", None)
             if full_name is not None:
