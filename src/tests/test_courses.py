@@ -579,8 +579,7 @@ class TestCourse:
          прохождения курса, либо даты начала курса.
         """
 
-        def assert_subscription_status(user, cohort, expected_status, finish_course=False, course_in_progress=False):
-            course = CourseWith2Chapters()
+        def assert_subscription_status(course, user, cohort, expected_status, finish_course=False, course_in_progress=False):
             _ = cohort(course=course)
             subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
@@ -596,22 +595,21 @@ class TestCourse:
             assert response.json()["user_status"] == expected_status
 
         # Тестируем статус при старте курса в будущем
-        assert_subscription_status(user, CohortFactory, Subscription.Status.ENROLLED)
+        assert_subscription_status(CourseWith2Chapters(), user, CohortFactory, Subscription.Status.ENROLLED)
 
         # Тестируем статус при уже стартовавшем курсе
-        assert_subscription_status(user, CohortFactory, Subscription.Status.AVAILABLE)
+        assert_subscription_status(CourseWith2Chapters(), user, CohortFactory, Subscription.Status.AVAILABLE)
 
         # Тестируем статус при прохождении курса
-        assert_subscription_status(user, CohortTodayFactory, Subscription.Status.IN_PROGRESS, course_in_progress=True)
+        assert_subscription_status(CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.IN_PROGRESS, course_in_progress=True)
 
         # Тестируем статус при завершенном курсе
-        assert_subscription_status(user, CohortTodayFactory, Subscription.Status.COMPLETED, finish_course=True)
+        assert_subscription_status(CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.COMPLETED, finish_course=True)
 
     def test_enrollment_permission_for_lessons(self, user_client, user):
         """Тест, что доступ к урокам возможен только для подписанных пользователей и на начавшийся курс."""
 
-        def assert_permision(expected_status, cohort, subscribed=False):
-            course = CourseWith2Chapters()
+        def assert_permision(course, expected_status, cohort, subscribed=False):
             _ = cohort(course=course)
             if subscribed:
                 _ = SubscriptionFactory(user=user, course=course)
@@ -621,13 +619,13 @@ class TestCourse:
             assert response.status_code == expected_status
 
         # Тестируем доступ при отсутствии подсписки
-        assert_permision(status.HTTP_403_FORBIDDEN, CohortTodayFactory)
+        assert_permision(CourseWith2Chapters(), status.HTTP_403_FORBIDDEN, CohortTodayFactory)
 
         # Тестриуем доступ при подписке и стартовавшем курсе
-        assert_permision(status.HTTP_200_OK, CohortTodayFactory, subscribed=True)
+        assert_permision(CourseWith2Chapters(), status.HTTP_200_OK, CohortTodayFactory, subscribed=True)
 
         # Тестируем доступ при подписке и не стартовавшем курсе
-        assert_permision(status.HTTP_403_FORBIDDEN, CohortFactory, subscribed=True)
+        assert_permision(CourseWith2Chapters(), status.HTTP_403_FORBIDDEN, CohortFactory, subscribed=True)
 
     def test_course_completion_endpoint(self, user_client, user):
         """
