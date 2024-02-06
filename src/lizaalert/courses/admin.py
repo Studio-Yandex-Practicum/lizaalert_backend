@@ -1,9 +1,12 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
     ChapterProgressStatus,
+    Cohort,
     Course,
     CourseFaq,
     CourseKnowledge,
@@ -45,6 +48,47 @@ class ChapterInline(admin.TabularInline):
     model = Chapter
     min_num = 1
     extra = 0
+    readonly_fields = ("get_chapter_link",)
+    fields = (
+        "get_chapter_link",
+        "order_number",
+        "title",
+        "deleted_at",
+    )
+
+    # Метод для отображения ссылки на главу курса
+    def get_chapter_link(self, obj):
+        url = reverse("admin:courses_chapter_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj.title)
+
+    get_chapter_link.short_description = "Глава"
+
+
+@admin.register(Cohort)
+class CohortAdmin(admin.ModelAdmin):
+    """
+    Админка когорты.
+
+    При созданиии объекта исключается поле cohort_number.
+    """
+
+    model = Cohort
+    extra = 1
+    list_display = (
+        "course_title",
+        "start_date",
+        "end_date",
+        "teacher",
+        "created_at",
+        "updated_at",
+    )
+    list_select_related = ("course",)
+    ordering = ("-updated_at",)
+
+    def course_title(self, obj):
+        return obj.course_title
+
+    course_title.short_description = "Курс"
 
 
 @admin.register(Course)

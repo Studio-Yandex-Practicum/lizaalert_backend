@@ -22,6 +22,8 @@ from tests.factories.courses import (
     LessonFactory,
     Subscription,
     SubscriptionFactory,
+    UnpublishedCourseFactory,
+    UnpublishedLessonFactory,
 )
 from tests.factories.users import LevelFactory
 
@@ -665,3 +667,23 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["lesson_id"] == lesson.id
         assert response.json()["chapter_id"] == lesson.chapter_id
+
+    def test_unpublished_objects_cant_be_accessed(self, user_client, user):
+        """
+        Тест, что непубликованные объекты вернут соответствующую ошибку.
+
+        1. При доступе к неопубликованному уроку опубликованного курса ожидаем ошибку 403.
+        2. При доступе к неопубликованному курсу ожидаем ошибку 404.
+        """
+        lesson = UnpublishedLessonFactory()
+        course = UnpublishedCourseFactory()
+
+        def assert_unpublished_object(subscription_instance, url, pk, expected_status):
+            _ = SubscriptionFactory(course=subscription_instance, user=user)
+            response = user_client.get(reverse(url, kwargs={"pk": pk}))
+            assert response.status_code == expected_status
+
+        # 1. Нельзя получить доступ к неопубликованному уроку опубликованного курса ожидаем ошибку 403.
+        assert_unpublished_object(lesson.chapter.course, "lessons-detail", lesson.id, status.HTTP_403_FORBIDDEN)
+        # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
+        assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)
