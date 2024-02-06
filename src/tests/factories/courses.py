@@ -148,16 +148,6 @@ class CourseWith3KnowledgeFactory(CourseFactory):
     )
 
 
-class SubscriptionFactory(factory.django.DjangoModelFactory):
-    """Test factory for user Subscription on Course."""
-
-    class Meta:
-        model = Subscription
-
-    user = factory.SubFactory(UserFactory)
-    course = factory.SubFactory(CourseFactory)
-
-
 class ChapterWith3Lessons(ChapterFactory):
     """Test Chapter factory with 3 related lessons."""
 
@@ -214,6 +204,69 @@ class ChapterWith4Lessons(ChapterFactory):
     )
 
 
+class CohortFactory(factory.django.DjangoModelFactory):
+    """Test factory for Cohort model."""
+
+    class Meta:
+        model = Cohort
+
+    course = factory.SubFactory(CourseFactory)
+    start_date = factory.fuzzy.FuzzyDate(
+        datetime.date.today() + datetime.timedelta(days=5),
+        datetime.date.today() + datetime.timedelta(days=10),
+    )
+    end_date = factory.LazyAttribute(lambda o: o.start_date + datetime.timedelta(days=30))
+    teacher = factory.SubFactory(UserFactory)
+    students_count = factory.fuzzy.FuzzyInteger(0, 10)
+    max_students = factory.fuzzy.FuzzyInteger(20)
+
+
+class CohortTodayFactory(CohortFactory):
+    """Test factory for Cohort model with start date today."""
+
+    start_date = datetime.date.today()
+    end_date = datetime.date.today() + datetime.timedelta(days=30)
+
+
+class CohortAlwaysAvailableFactory(factory.django.DjangoModelFactory):
+    """Test factory for Cohort model with no requirements."""
+
+    class Meta:
+        model = Cohort
+
+    course = factory.SubFactory(CourseFactory)
+    teacher = factory.SubFactory(UserFactory)
+    students_count = factory.fuzzy.FuzzyInteger(0, 10)
+
+
+class CourseWithAvailableCohortFactory(CourseFactory):
+    """Test factory for Course with available Cohort."""
+
+    membership1 = factory.RelatedFactory(
+        CohortAlwaysAvailableFactory,
+        factory_related_name="course",
+    )
+
+
+class SubscriptionFactory(factory.django.DjangoModelFactory):
+    """Test factory for user Subscription on Course."""
+
+    class Meta:
+        model = Subscription
+
+    user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseWithAvailableCohortFactory)
+
+
+class SubscriptionAlwaysAvailableFactory(SubscriptionFactory):
+    """Test factory for user Subscription on Course with no requirements/start date."""
+
+    membership1 = factory.RelatedFactory(
+        CohortAlwaysAvailableFactory,
+        factory_related_name="subscriptions",
+    )
+
+
 class CourseWith2Chapters(CourseFactory):
     """
     Создает курс, 2 главы с 4 уроками в каждой.
@@ -232,21 +285,25 @@ class CourseWith2Chapters(CourseFactory):
         factory_related_name="course",
         title=factory.Iterator([2]),
     )
-
-
-class CohortFactory(factory.django.DjangoModelFactory):
-    """Test factory for Cohort model."""
-
-    class Meta:
-        model = Cohort
-
-    course = factory.SubFactory(CourseFactory)
-    start_date = factory.fuzzy.FuzzyDate(
-        start_date=datetime.date.today() + datetime.timedelta(days=5),
+    membership3 = factory.RelatedFactory(
+        CohortAlwaysAvailableFactory,
+        factory_related_name="course",
     )
-    end_date = factory.LazyAttribute(lambda o: o.start_date + datetime.timedelta(days=30))
-    teacher = factory.SubFactory(UserFactory)
-    user_created = factory.SubFactory(UserFactory)
-    user_modifier = factory.SubFactory(UserFactory)
-    students_count = factory.fuzzy.FuzzyInteger(0, 10)
-    max_students = factory.fuzzy.FuzzyInteger(20)
+
+
+class CourseWithFutureCohortFactory(CourseFactory):
+    """Test factory for Course with Cohort thats starts in future."""
+
+    membership1 = factory.RelatedFactory(
+        CohortFactory,
+        factory_related_name="course",
+    )
+
+
+class CourseWithTodayCohortFactory(CourseFactory):
+    """Test factory for Course with Cohort thats starts today."""
+
+    membership1 = factory.RelatedFactory(
+        CohortTodayFactory,
+        factory_related_name="course",
+    )

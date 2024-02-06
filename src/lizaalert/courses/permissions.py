@@ -1,4 +1,7 @@
+from django.utils import timezone
 from rest_framework import permissions
+
+from lizaalert.courses.models import Subscription
 
 
 class IsUserOrReadOnly(permissions.BasePermission):
@@ -25,12 +28,7 @@ class CurrentLessonOrProhibited(permissions.BasePermission):
 
 
 class EnrolledAndCourseHasStarted(permissions.BasePermission):
-    """
-    Доступ к урокам курса только для записанных и на курс, который начался.
-
-    access_statuses - статусы пользователся, с которыми можно получить доступ к курсу.
-    update_subscriptions - обновляет статусы подписок пользователя.
-    """
+    """Доступ к урокам курса только для записанных и на курс, когорта которого началась."""
 
     message = "Доступ к урокам курса только для подписчиков и на курс, который начался."
 
@@ -39,7 +37,9 @@ class EnrolledAndCourseHasStarted(permissions.BasePermission):
         course = obj.chapter.course
         if user.is_authenticated:
             try:
-                return user.subscriptions.filter(course=course).exists() and course.is_available
+                subscription = Subscription.objects.get(user=user, course=course)
+                if subscription.cohort.is_available:
+                    return True
             except Exception:
                 return False
         return False

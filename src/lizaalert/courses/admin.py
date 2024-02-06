@@ -53,7 +53,8 @@ class ChapterInline(admin.TabularInline):
         "get_chapter_link",
         "order_number",
         "title",
-        "deleted_at",
+        "user_created",
+        "user_modifier",
     )
 
     # Метод для отображения ссылки на главу курса
@@ -76,17 +77,18 @@ class CohortAdmin(admin.ModelAdmin):
     extra = 1
     list_display = (
         "course_title",
+        "cohort_number",
         "start_date",
         "end_date",
         "teacher",
         "created_at",
         "updated_at",
     )
-    list_select_related = ("course__title",)
+    list_select_related = ("course",)
     ordering = ("-updated_at",)
 
     def course_title(self, obj):
-        return obj.course_title
+        return obj.course.title
 
     course_title.short_description = "Курс"
 
