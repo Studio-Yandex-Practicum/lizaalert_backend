@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 from django.urls import reverse
 
+from lizaalert.courses.models import Lesson
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
 from lizaalert.users.models import Badge, VolunteerBadge, VolunteerCourseCompletion
 from lizaalert.users.utils import (
@@ -153,13 +154,13 @@ class TestBadgeAssignments:
         user_client.force_authenticate(user=user)
         volunteer = user.volunteer
         course = CourseWith2Chapters()
-        _ = SubscriptionFactory(user=user, course=course)
-
+        subscription = SubscriptionFactory(user=user, course=course)
         BadgeFactory(threshold_course=course)
         BadgeFactory(threshold_courses=1)
-
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            lesson.finish(subscription)
         url = reverse("courses-complete", kwargs={"pk": course.id})
         _ = user_client.post(url)
-
         assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
         assert volunteer.course_completion.first().completed_courses_count == 1
