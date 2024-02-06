@@ -579,7 +579,9 @@ class TestCourse:
          прохождения курса, либо даты начала курса.
         """
 
-        def assert_subscription_status(course, user, cohort, expected_status, finish_course=False, course_in_progress=False):
+        def assert_subscription_status(
+            course, user, cohort, expected_status, finish_course=False, course_in_progress=False
+        ):
             _ = cohort(course=course)
             subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
@@ -601,10 +603,14 @@ class TestCourse:
         assert_subscription_status(CourseWith2Chapters(), user, CohortFactory, Subscription.Status.AVAILABLE)
 
         # Тестируем статус при прохождении курса
-        assert_subscription_status(CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.IN_PROGRESS, course_in_progress=True)
+        assert_subscription_status(
+            CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.IN_PROGRESS, course_in_progress=True
+        )
 
         # Тестируем статус при завершенном курсе
-        assert_subscription_status(CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.COMPLETED, finish_course=True)
+        assert_subscription_status(
+            CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.COMPLETED, finish_course=True
+        )
 
     def test_enrollment_permission_for_lessons(self, user_client, user):
         """Тест, что доступ к урокам возможен только для подписанных пользователей и на начавшийся курс."""
