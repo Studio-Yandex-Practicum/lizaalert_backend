@@ -39,6 +39,7 @@ class VolunteerAPIview(APIView):
         responses={200: VolunteerSerializer(), 204: "", 404: Error404Serializer()},
     )
     def get(self, request):
+        """Получить профиль пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.annotate(
             count_pass_course=Subquery(
@@ -63,6 +64,7 @@ class VolunteerAPIview(APIView):
         responses={200: VolunteerSerializer(), 400: Error400Serializer(), 404: Error404Serializer()},
     )
     def patch(self, request):
+        """Изменить профиль пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         serializer = VolunteerSerializer(volunteer, data=request.data, partial=True)
         if serializer.is_valid():
