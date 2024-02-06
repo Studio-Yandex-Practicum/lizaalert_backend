@@ -600,7 +600,7 @@ class TestCourse:
         assert_subscription_status(CourseWith2Chapters(), user, CohortFactory, Subscription.Status.ENROLLED)
 
         # Тестируем статус при уже стартовавшем курсе
-        assert_subscription_status(CourseWith2Chapters(), user, CohortFactory, Subscription.Status.AVAILABLE)
+        assert_subscription_status(CourseWith2Chapters(), user, CohortTodayFactory, Subscription.Status.AVAILABLE)
 
         # Тестируем статус при прохождении курса
         assert_subscription_status(
