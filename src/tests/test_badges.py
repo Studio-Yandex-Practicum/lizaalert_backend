@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
-from lizaalert.users.models import Badge
+from lizaalert.users.models import Badge, Volunteer
 from tests.factories.courses import CourseFactory
 from tests.factories.users import BadgeFactory, UserFactory, VolunteerBadgeFactory
 
@@ -14,6 +14,20 @@ class TestBadgeModel:
         """Тестирование создания объекта Badge с использованием фикстуры."""
         created_badge = BadgeFactory()
         assert created_badge.id
+
+    def test_create_badge_without_badge_slug(self):
+        """Тестирование создания объекта Badge без поля badge_slug."""
+        created_badge = BadgeFactory(badge_slug=None)
+        assert created_badge.id
+
+    def test_volunteer_badge_finding(self):
+        """Тестирование фильтрации волонтеров по бэйджу."""
+        badge_1, badge_2 = BadgeFactory(badge_slug="test_slug_1"), BadgeFactory(badge_slug="test_slug_2")
+        user_1, user_2 = UserFactory(), UserFactory()
+        volunteer_badge_1 = VolunteerBadgeFactory(user=user_1, badge=badge_1)
+        _ = VolunteerBadgeFactory(user=user_2, badge=badge_2)
+        volunteer_1 = volunteer_badge_1.volunteer
+        assert Volunteer.objects.filter(badges__badge_slug="test_slug_1").get() == volunteer_1
 
     def test_badge_validation_both_thresholds_filled(self):
         """Тестирование валидации, когда оба поля (threshold_courses и threshold_course) заполнены."""

@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='badge',
             name='badge_slug',
-            field=models.SlugField(blank=True, max_length=100, unique=True, verbose_name='Поле поиска'),
+            field=models.SlugField(null=True, blank=True, max_length=100, unique=True, verbose_name='Поле поиска'),
         ),
     ]

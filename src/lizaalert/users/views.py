@@ -2,6 +2,7 @@ from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
+from rest_framework.generics import ListAPIView
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -115,7 +116,7 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class BadgeVolunteerListViewSet(viewsets.ReadOnlyModelViewSet):
+class BadgeVolunteerListView(ListAPIView):
     """
     Отображение списка волонтёров по ачивке (slug-полю поиска).
 
@@ -134,10 +135,16 @@ class BadgeVolunteerListViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = LimitOffsetPagination
 
     @swagger_auto_schema(
+        operation_description="""
+        Получение QuerySet для волонтеров имеющих определенный бэйдж.
+
+        Возвращает:
+            QuerySet: QuerySet для волонтеров отфильтрованных по полю "badge_slug" в модели Badge.
+        """,
         responses={
             200: VolunteerSerializer(),
             400: "Bad Request",
-        }
+        },
     )
     def get_queryset(self):
         queryset = Volunteer.objects.all()
