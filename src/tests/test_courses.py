@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import Mock
 
 import pytest
@@ -675,3 +676,66 @@ class TestCourse:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["lesson_id"] == lesson.id
         assert response.json()["chapter_id"] == lesson.chapter_id
+
+    def test_apropriate_cohort_allocation(self, user_client):
+        """
+        Тест, что при подписке на курс находится подходящая когорта.
+
+        Параметры для подходящей когорты:
+            - когорта начинается сегодня или позже
+            - в когорте есть свободные места
+            - либо когорта доступна всегда
+
+        1. Проверяем, что есть возможность записаться в когорту, которая стартует сегодня.
+        2. Проверям, что есть возможность записаться в когорту, которая стартует в будущем.
+        3. Проверяем, что есть возможность записаться в когорту, которая всегда открыта.
+        4. Проверяем, что нельзя записаться в когорту, которая уже началась.
+        5. Проверяем, что нельзя записаться в когорту, в которой закончились свободные места.
+        6. Проверяем, что при наличии нескольких когорт, запись происходит в ближайшую.
+        В каждом тесте проверяем, что количество студентов в когорте изменилось/не изменилось соответственно.
+        """
+
+        def assert_cohort_allocation(cohort, expected_status):
+            course = cohort.course
+            initial_student_count = cohort.students_count
+            url = reverse("courses-enroll", kwargs={"pk": course.id})
+            response = user_client.post(url)
+            assert response.status_code == expected_status
+            cohort.refresh_from_db()
+            if expected_status == status.HTTP_201_CREATED:
+                assert cohort.students_count == initial_student_count + 1
+            else:
+                assert cohort.students_count == initial_student_count
+
+        # 1. Проверяем, что есть возможность записаться в когорту, которая стартует сегодня.
+        assert_cohort_allocation(CohortTodayFactory(), status.HTTP_201_CREATED)
+
+        # 2. Проверям, что есть возможность записаться в когорту, которая стартует в будущем.
+        assert_cohort_allocation(CohortFactory(), status.HTTP_201_CREATED)
+
+        # 3. Проверяем, что есть возможность записаться в когорту, которая всегда открыта.
+        assert_cohort_allocation(CohortAlwaysAvailableFactory(), status.HTTP_201_CREATED)
+
+        # 4. Проверяем, что нельзя записаться в когорту, которая уже началась.
+        assert_cohort_allocation(
+            CohortFactory(start_date=datetime.date.today() - datetime.timedelta(days=5)), status.HTTP_404_NOT_FOUND
+        )
+
+        # 5. Проверяем, что нельзя записаться в когорту, в которой закончились свободные места.
+        assert_cohort_allocation(CohortFactory(students_count=20, max_students=20), status.HTTP_404_NOT_FOUND)
+
+        # 6. Проверяем, что при наличии нескольких когорт, запись происходит в ближайшую
+        course = CourseWith2Chapters()
+        nearest_cohort = CohortFactory(course=course, start_date=datetime.date.today() + datetime.timedelta(days=5))
+        further_cohort = CohortFactory(course=course, start_date=datetime.date.today() + datetime.timedelta(days=10))
+        initial_student_count_nearest_cohort = nearest_cohort.students_count
+        initial_student_count_further_cohort = further_cohort.students_count
+
+        url = reverse("courses-enroll", kwargs={"pk": course.id})
+        response = user_client.post(url)
+        assert response.status_code == status.HTTP_201_CREATED
+
+        nearest_cohort.refresh_from_db()
+        further_cohort.refresh_from_db()
+        assert nearest_cohort.students_count == initial_student_count_nearest_cohort + 1
+        assert further_cohort.students_count == initial_student_count_further_cohort
