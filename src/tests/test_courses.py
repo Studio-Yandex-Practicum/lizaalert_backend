@@ -111,9 +111,10 @@ class TestCourse:
         """
         novice = LevelFactory(name="novice")
         prof = LevelFactory(name="professional")
+        exper = LevelFactory(name="experienced")
         course_1 = CourseFactory(level=novice)
         course_2 = CourseFactory(level=prof)
-        _ = CourseFactory()
+        _ = CourseFactory(level=exper)
         level_1 = course_1.level
         level_2 = course_2.level
         params = {"level": level_1.id}
