@@ -218,7 +218,7 @@ class CohortFactory(factory.django.DjangoModelFactory):
     end_date = factory.LazyAttribute(lambda o: o.start_date + datetime.timedelta(days=30))
     teacher = factory.SubFactory(UserFactory)
     students_count = factory.fuzzy.FuzzyInteger(0, 10)
-    max_students = factory.fuzzy.FuzzyInteger(20)
+    max_students = factory.fuzzy.FuzzyInteger(20, 40)
 
 
 class CohortTodayFactory(CohortFactory):

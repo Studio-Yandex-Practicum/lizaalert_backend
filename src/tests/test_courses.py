@@ -22,8 +22,6 @@ from tests.factories.courses import (
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     CourseWithAvailableCohortFactory,
-    CourseWithFutureCohortFactory,
-    CourseWithTodayCohortFactory,
     LessonFactory,
     Subscription,
     SubscriptionFactory,
@@ -171,10 +169,11 @@ class TestCourse:
         1. Проверяем, что можно записаться на курс в когорту, которая начнется в будущем и нельзя записаться повторно.
         2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
         """
-        course_1 = CourseWithFutureCohortFactory()
-        course_2 = CourseWithTodayCohortFactory()
+        cohort_1 = CohortFactory()
+        cohort_2 = CohortAlwaysAvailableFactory()
 
-        def assert_subscription(course, expected_response, expected_status, recurrent_response):
+        def assert_subscription(cohort, expected_response, expected_status, recurrent_response):
+            course = cohort.course
             subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
             subscription_response = user_client.post(subscribe)
             url = reverse("courses-detail", kwargs={"pk": course.id})
@@ -188,7 +187,7 @@ class TestCourse:
 
         # 1. Проверяем, что можно записаться на курс в когорту, которая начнется в будущем и нельзя записаться повторно.
         assert_subscription(
-            course_1,
+            cohort_1,
             status.HTTP_201_CREATED,
             Subscription.Status.ENROLLED,
             status.HTTP_403_FORBIDDEN,
@@ -196,7 +195,7 @@ class TestCourse:
 
         # 2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
         assert_subscription(
-            course_2,
+            cohort_2,
             status.HTTP_201_CREATED,
             Subscription.Status.AVAILABLE,
             status.HTTP_403_FORBIDDEN,
