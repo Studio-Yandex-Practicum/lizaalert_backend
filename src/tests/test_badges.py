@@ -155,18 +155,17 @@ class TestBadgeAssignments:
         volunteer = user.volunteer
         course = CourseWith2Chapters()
         subscription = SubscriptionFactory(user=user, course=course)
-
         lessons = Lesson.objects.filter(chapter__course=course)
         for lesson in lessons:
             LessonProgressStatus.objects.create(
                 subscription=subscription, lesson=lesson, progress=LessonProgressStatus.ProgressStatus.FINISHED
             )
-
         BadgeFactory(threshold_course=course)
         BadgeFactory(threshold_courses=1)
-
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            lesson.finish(subscription)
         url = reverse("courses-complete", kwargs={"pk": course.id})
         _ = user_client.post(url)
-
         assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
         assert volunteer.course_completion.first().completed_courses_count == 1

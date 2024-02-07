@@ -86,7 +86,7 @@ class CohortAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
 
     def course_title(self, obj):
-        return obj.course_title
+        return obj.course.title
 
     course_title.short_description = "Курс"
 
