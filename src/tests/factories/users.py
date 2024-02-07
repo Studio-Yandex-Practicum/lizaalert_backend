@@ -63,11 +63,7 @@ class BadgeFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence")
     badge_type = Badge.BadgeType.MANUAL
     badge_category = Badge.BadgeCategory.ONE_TIME
-<<<<<<< HEAD
     badge_slug = factory.Sequence(lambda n: f"test_slug_{n}")
-=======
-    badge_slug = factory.Faker("slug")
->>>>>>> 7e233d0 (TM-34 #307 [backend] Выдача волонтеров по ачивкам)
     issued_for = factory.Faker("word")
     threshold_courses = None
     threshold_course = None
