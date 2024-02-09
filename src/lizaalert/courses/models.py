@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import DateField, F, Max, Q, Value
-from django.db.models.functions import Cast, Coalesce
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort
