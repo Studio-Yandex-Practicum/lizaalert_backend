@@ -1,7 +1,10 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import F, Max
+from django.db.models import DateField, F, Max, Q, Value
+from django.db.models.functions import Cast, Coalesce
 from django.utils import timezone
 
 from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort
@@ -459,6 +462,7 @@ class Cohort(TimeStampedModel):
         ]
         verbose_name = "Группа курса"
         verbose_name_plural = "Группы курса"
+        ordering = ("start_date",)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -542,26 +546,23 @@ class Subscription(TimeStampedModel):
         """
         if not self.pk:
             with transaction.atomic():
+                current_date = timezone.now().date()
+                # Создается дата в далеком будущем для корректной сортировки ближайших когорт
+                far_future_date = datetime(9999, 1, 1).date()
                 cohort = (
                     Cohort.objects.select_for_update()
-                    .filter(
-                        start_date__gte=timezone.now().date(),
-                        course=self.course,
-                        students_count__lt=F("max_students"),
+                    .annotate(
+                        sorted_start_date=Coalesce("start_date", Value(far_future_date, output_field=DateField()))
                     )
-                    .order_by("start_date")
+                    .filter(
+                        Q(start_date__gte=current_date, students_count__lt=F("max_students"))
+                        | Q(start_date=None, max_students=None),
+                        course=self.course,
+                    )
+                    .order_by("sorted_start_date")
                     .first()
                 )
-                if not cohort:
-                    cohort = (
-                        Cohort.objects.select_for_update()
-                        .filter(
-                            start_date=None,
-                            course=self.course,
-                            max_students=None,
-                        )
-                        .first()
-                    )
+
                 if cohort:
                     Cohort.objects.filter(pk=cohort.pk).update(students_count=F("students_count") + 1)
                     self.cohort = cohort

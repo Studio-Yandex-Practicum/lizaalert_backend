@@ -84,6 +84,7 @@ class CohortAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    raw_id_fields = ("teacher",)
     list_select_related = ("course",)
     ordering = ("-updated_at",)
 
