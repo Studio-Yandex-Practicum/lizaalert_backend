@@ -12,7 +12,7 @@ class HomeworkFactory(factory.django.DjangoModelFactory):
         model = Homework
 
     reviewer = factory.SubFactory(UserFactory)
-    status = factory.fuzzy.FuzzyInteger(0, 5)
+    status = Homework.ProgressionStatus.DRAFT
     lesson = factory.SubFactory(LessonFactory)
     text = factory.Faker("text", max_nb_chars=10000)
     subscription = factory.SubFactory(SubscriptionFactory)
