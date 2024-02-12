@@ -1,6 +1,6 @@
 from django.urls import path
 
-from lizaalert.homeworks.views import HomeworkViewSet, HomeworkDetailViewSet
+from lizaalert.homeworks.views import HomeworkDetailViewSet, HomeworkViewSet
 
 urlpatterns = [
     path("homeworks/", HomeworkViewSet.as_view(), name="homework"),

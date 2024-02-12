@@ -1,24 +1,19 @@
 from django.core.exceptions import ObjectDoesNotExist
-
-
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, generics
+from rest_framework import generics, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException, ValidationError
 
-
-from lizaalert.courses.models import Lesson, Subscription, LessonProgressStatus, Course
+from lizaalert.courses.models import Course, Lesson, LessonProgressStatus, Subscription
 from lizaalert.homeworks.models import Homework
-from lizaalert.homeworks.serializers import (
-    HomeworkDetailSerializer,
-    HomeworkSerializer,
+from lizaalert.homeworks.serializers import HomeworkDetailSerializer, HomeworkSerializer
 
-)
-#from lizaalert.users.models import Level
+# from lizaalert.users.models import Level
+
 
 class HomeworkException(APIException):
     """Базовый класс для исключений, связанных с квизами."""
@@ -34,10 +29,11 @@ class HomeworkViewSet(generics.ListAPIView):
     Методы:
     - GET: Получение информации о квизе и его вопросах.
     """
+
     serializer_class = HomeworkSerializer
 
     def get_queryset(self):
-        lesson = self.request.query_params.get('lesson')
+        lesson = self.request.query_params.get("lesson")
         if lesson:
             return Homework.objects.filter(reviewer=self.request.user, lesson=lesson)
         return Homework.objects.filter(reviewer=self.request.user)
@@ -63,24 +59,25 @@ class HomeworkDetailViewSet(generics.RetrieveAPIView, generics.CreateAPIView):
         except ObjectDoesNotExist as e:
             HomeworkException.default_detail = e
             raise HomeworkException
-        
 
     def create(self, request, *args, **kwargs):
-        lesson = request.data.get('lesson')
+        lesson = request.data.get("lesson")
         if lesson:
             try:
-                homework = Homework.objects.get(id=request.data.get('id'))
-                homework.text = request.data.get('text')
+                homework = Homework.objects.get(id=request.data.get("id"))
+                homework.text = request.data.get("text")
                 return Response(request.data, status=status.HTTP_201_CREATED)
             except ObjectDoesNotExist as e:
                 HomeworkException.default_code = e
                 raise HomeworkException
 
-        lesson_id = self.kwargs.get('lesson_id')
-        request.data['status'] = Homework.ProgressionStatus.SUBMITTED
-        request.data['subscription'] = Subscription.objects.get(user=self.request.user, course=Course.objects.get(
-            chapters=Lesson.objects.get(id=self.kwargs.get('lesson_id')).chapter)).pk
-        request.data['lesson'] = Lesson.objects.get(id=lesson_id).pk
+        lesson_id = self.kwargs.get("lesson_id")
+        request.data["status"] = Homework.ProgressionStatus.SUBMITTED
+        request.data["subscription"] = Subscription.objects.get(
+            user=self.request.user,
+            course=Course.objects.get(chapters=Lesson.objects.get(id=self.kwargs.get("lesson_id")).chapter),
+        ).pk
+        request.data["lesson"] = Lesson.objects.get(id=lesson_id).pk
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
