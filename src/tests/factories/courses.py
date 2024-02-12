@@ -307,3 +307,15 @@ class CourseWithTodayCohortFactory(CourseFactory):
         CohortTodayFactory,
         factory_related_name="course",
     )
+
+
+class UnpublishedLessonFactory(LessonFactory):
+    """Test factory for unpublished Lesson."""
+
+    status = Lesson.LessonStatus.DRAFT
+
+
+class UnpublishedCourseFactory(CourseFactory):
+    """Test factory for unpublished Course."""
+
+    status = Course.CourseStatus.DRAFT

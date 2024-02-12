@@ -1,10 +1,17 @@
 from datetime import datetime
 
 import pytest
+from django.urls import reverse
 
+from lizaalert.courses.models import Lesson, LessonProgressStatus
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
-from lizaalert.users.models import Badge
-from tests.factories.courses import CourseFactory
+from lizaalert.users.models import Badge, VolunteerBadge, VolunteerCourseCompletion
+from lizaalert.users.utils import (
+    assign_achievements_for_completion,
+    assign_achievements_for_course,
+    increment_completed_courses_count,
+)
+from tests.factories.courses import CourseFactory, CourseWith2Chapters, SubscriptionFactory
 from tests.factories.users import BadgeFactory, UserFactory, VolunteerBadgeFactory
 
 
@@ -104,3 +111,61 @@ class TestVolunteerBadgeModel:
             f"Волонтер '{created_volunteer_badge.volunteer}' уже имеет значок '{created_volunteer_badge.badge}'."
             in form.errors["__all__"]
         )
+
+
+@pytest.mark.django_db
+class TestBadgeAssignments:
+    def test_increment_completed_courses_count(self):
+        """Тест функции инкремента счетчика завершенных курсов."""
+        user = UserFactory()
+        volunteer = user.volunteer
+        _ = VolunteerCourseCompletion.objects.create(volunteer=volunteer)
+
+        for _ in range(5):
+            count_before = volunteer.course_completion.first().completed_courses_count
+            increment_completed_courses_count(user)
+            count_after = volunteer.course_completion.first().completed_courses_count
+            assert count_after == count_before + 1
+
+    def test_assign_achievements_for_completion(self):
+        """Тест функции присвоения ачивок за завершенные курсы."""
+        user = UserFactory()
+        course = CourseFactory()
+        BadgeFactory(threshold_courses=1)
+
+        increment_completed_courses_count(user)
+        assign_achievements_for_completion(user, course.id)
+
+        assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
+
+    def test_assign_achievements_for_course(self):
+        """Тест функции присвоения ачивок за конкретный курс."""
+        user = UserFactory()
+        course = CourseFactory()
+        BadgeFactory(threshold_course=course)
+
+        assign_achievements_for_course(user, course.id)
+
+        assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
+
+    def test_course_completion_signal(self, user_client):
+        """Проверяем, есть ли у пользователя соответствующие значки и увеличен ли счетчик завершенных курсов после вызова эндпоинта завершения курса."""
+        user = UserFactory(username="course_completion_signal_user")
+        user_client.force_authenticate(user=user)
+        volunteer = user.volunteer
+        course = CourseWith2Chapters()
+        subscription = SubscriptionFactory(user=user, course=course)
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            LessonProgressStatus.objects.create(
+                subscription=subscription, lesson=lesson, progress=LessonProgressStatus.ProgressStatus.FINISHED
+            )
+        BadgeFactory(threshold_course=course)
+        BadgeFactory(threshold_courses=1)
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            lesson.finish(subscription)
+        url = reverse("courses-complete", kwargs={"pk": course.id})
+        _ = user_client.post(url)
+        assert VolunteerBadge.objects.filter(volunteer__user=user, course_id=course.id).exists()
+        assert volunteer.course_completion.first().completed_courses_count == 1

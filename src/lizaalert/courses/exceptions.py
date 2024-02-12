@@ -19,3 +19,9 @@ class NoSuitableCohort(NotFound):
     """Исключение для подписки для данного пользователя на данный курс."""
 
     default_detail = "Не получилось найти подходящую когорту для данного курса"
+
+
+class ProgressNotFinishedException(PermissionDenied):
+    """Исключение для завершения курса при незавершенных уроках."""
+
+    default_detail = "Имеются незавершенные уроки"

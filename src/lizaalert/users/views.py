@@ -1,5 +1,7 @@
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, permissions, status, views, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -35,6 +37,7 @@ class VolunteerAPIview(APIView):
         responses={200: VolunteerSerializer(), 204: "", 404: Error404Serializer()},
     )
     def get(self, request):
+        """Получить профиль пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         queryset = Volunteer.objects.annotate(
             count_pass_course=Subquery(
@@ -59,6 +62,7 @@ class VolunteerAPIview(APIView):
         responses={200: VolunteerSerializer(), 400: Error400Serializer(), 404: Error404Serializer()},
     )
     def patch(self, request):
+        """Изменить профиль пользователя."""
         volunteer = get_object_or_404(Volunteer, user=request.user)
         serializer = VolunteerSerializer(volunteer, data=request.data, partial=True)
         if serializer.is_valid():
@@ -112,6 +116,23 @@ class UserRoleViewSet(
             current_user.save()
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(
+        operation_description="Список ачивок пользователя",
+        manual_parameters=[
+            openapi.Parameter(
+                name="course",
+                required=False,
+                type="integer",
+                in_="query",
+                description="Id курса",
+            ),
+        ],
+        responses={200: BadgeSerializer(), 400: Error400Serializer()},
+    ),
+)
+@method_decorator(name="retrieve", decorator=swagger_auto_schema(auto_schema=None))
 class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Отображение списка ачивок пользователя.
@@ -125,12 +146,6 @@ class VolunteerBadgeListViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Badge.objects.all()
     serializer_class = BadgeSerializer
 
-    @swagger_auto_schema(
-        responses={
-            200: BadgeSerializer(),
-            400: "Bad Request",
-        }
-    )
     def get_queryset(self):
         volunteer_badge = VolunteerBadge.objects.filter(volunteer__user=self.request.user)
         if course_id := self.request.query_params.get("course", None):

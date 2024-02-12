@@ -7,7 +7,7 @@ from django.db.models import DateField, F, Max, Q, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort
+from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort, ProgressNotFinishedException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.courses.signals import course_finished
 from lizaalert.quizzes.models import Quiz
@@ -149,14 +149,23 @@ class Course(
         return subscription
 
     def finish(self, subscription):
-        super().finish(subscription)
-        user = subscription.user
-        progress_status, created = Subscription.objects.get_or_create(
-            user=user, course=self, defaults={"status": Subscription.Status.COMPLETED}
+        """Завершить данный курс."""
+        uncompleted_lessons = (
+            Lesson.objects.filter(
+                chapter__course=self,
+                status=Lesson.LessonStatus.PUBLISHED,
+            )
+            .exclude(
+                id__in=LessonProgressStatus.objects.filter(
+                    subscription=subscription, progress=LessonProgressStatus.ProgressStatus.FINISHED
+                ).values_list("lesson_id", flat=True)
+            )
+            .exists()
         )
-        if not created:
-            progress_status.status = Subscription.Status.COMPLETED
-            progress_status.save()
+        if uncompleted_lessons:
+            raise ProgressNotFinishedException()
+        super().finish(subscription)
+        subscription.finish()
 
     def activate(self, subscription):
         super().activate(subscription)
@@ -569,3 +578,8 @@ class Subscription(TimeStampedModel):
                 else:
                     raise NoSuitableCohort()
         super().save(*args, **kwargs)
+
+    def finish(self):
+        """Завершить подписку на курс."""
+        self.status = Subscription.Status.COMPLETED
+        self.save()

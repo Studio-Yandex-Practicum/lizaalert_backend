@@ -26,6 +26,8 @@ from tests.factories.courses import (
     LessonFactory,
     Subscription,
     SubscriptionFactory,
+    UnpublishedCourseFactory,
+    UnpublishedLessonFactory,
 )
 from tests.factories.users import LevelFactory
 
@@ -113,9 +115,10 @@ class TestCourse:
         """
         novice = LevelFactory(name="novice")
         prof = LevelFactory(name="professional")
+        exper = LevelFactory(name="experienced")
         course_1 = CourseFactory(level=novice)
         course_2 = CourseFactory(level=prof)
-        _ = CourseFactory()
+        _ = CourseFactory(level=exper)
         level_1 = course_1.level
         level_2 = course_2.level
         params = {"level": level_1.id}
@@ -586,6 +589,9 @@ class TestCourse:
             subscription = SubscriptionFactory(user=user, course=course)
             course_url = reverse("courses-detail", kwargs={"pk": course.id})
             if finish_course:
+                lessons = Lesson.objects.filter(chapter__course=course)
+                for lesson in lessons:
+                    lesson.finish(subscription)
                 course.finish(subscription)
             if course_in_progress:
                 lesson = Lesson.objects.filter(chapter__course=course).first()
@@ -638,11 +644,20 @@ class TestCourse:
         Тест эндпоинта завершения курса.
 
         Проверяем, что при завершении курса, пользователь получает статус COMPLETED.
+        Проверяем что если нет подписки на курс, получаем ошибку 404.
+        Проверяем что курс можно завершить только с завершенными главами, в противном случае получаем 403.
         """
         course = CourseWith2Chapters()
-        _ = SubscriptionFactory(user=user, course=course)
         url = reverse("courses-complete", kwargs={"pk": course.id})
         url_course = reverse("courses-detail", kwargs={"pk": course.id})
+        response = user_client.post(url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        subscription = SubscriptionFactory(user=user, course=course)
+        response = user_client.post(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        lessons = Lesson.objects.filter(chapter__course=course)
+        for lesson in lessons:
+            lesson.finish(subscription)
         response = user_client.post(url)
         response_course = user_client.get(url_course)
         assert response.status_code == status.HTTP_200_OK
@@ -739,3 +754,23 @@ class TestCourse:
         further_cohort.refresh_from_db()
         assert nearest_cohort.students_count == initial_student_count_nearest_cohort + 1
         assert further_cohort.students_count == initial_student_count_further_cohort
+
+    def test_unpublished_objects_cant_be_accessed(self, user_client, user):
+        """
+        Тест, что непубликованные объекты вернут соответствующую ошибку.
+
+        1. При доступе к неопубликованному уроку опубликованного курса ожидаем ошибку 403.
+        2. При доступе к неопубликованному курсу ожидаем ошибку 404.
+        """
+        lesson = UnpublishedLessonFactory()
+        course = UnpublishedCourseFactory()
+
+        def assert_unpublished_object(subscription_instance, url, pk, expected_status):
+            _ = SubscriptionFactory(course=subscription_instance, user=user)
+            response = user_client.get(reverse(url, kwargs={"pk": pk}))
+            assert response.status_code == expected_status
+
+        # 1. Нельзя получить доступ к неопубликованному уроку опубликованного курса ожидаем ошибку 403.
+        assert_unpublished_object(lesson.chapter.course, "lessons-detail", lesson.id, status.HTTP_403_FORBIDDEN)
+        # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
+        assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)

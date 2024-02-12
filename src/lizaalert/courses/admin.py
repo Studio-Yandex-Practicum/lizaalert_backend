@@ -77,14 +77,12 @@ class CohortAdmin(admin.ModelAdmin):
     extra = 1
     list_display = (
         "course_title",
-        "cohort_number",
         "start_date",
         "end_date",
         "teacher",
         "created_at",
         "updated_at",
     )
-    raw_id_fields = ("teacher",)
     list_select_related = ("course",)
     ordering = ("-updated_at",)
 
