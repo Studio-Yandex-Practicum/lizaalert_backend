@@ -34,7 +34,7 @@ class Homework(TimeStampedModel):
         related_name="reviewer",
         verbose_name="Проверяющий",
     )
-    status = models.IntegerField(
+    status = models.PositiveSmallIntegerField(
         verbose_name="Статус", choices=ProgressionStatus.choices, default=ProgressionStatus.DRAFT
     )
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, verbose_name="Урок")
