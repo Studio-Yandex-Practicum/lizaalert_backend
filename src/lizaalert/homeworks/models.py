@@ -37,7 +37,7 @@ class Homework(TimeStampedModel):
     status = models.IntegerField(
         verbose_name="Статус", choices=ProgressionStatus.choices, default=ProgressionStatus.DRAFT
     )
-    lesson = models.OneToOneField(Lesson, on_delete=models.CASCADE, verbose_name="Урок")
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, verbose_name="Урок")
     text = models.CharField(verbose_name="Текст задания", max_length=10000)
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, verbose_name="Подписка")
     required = models.BooleanField(verbose_name="Обязательное задание", default=True)
