@@ -26,7 +26,6 @@ from tests.factories.courses import (
     LessonFactory,
     Subscription,
     SubscriptionFactory,
-    UnpublishedCourseFactory,
     UnpublishedLessonFactory,
 )
 from tests.factories.users import LevelFactory
@@ -762,8 +761,9 @@ class TestCourse:
         1. При доступе к неопубликованному уроку опубликованного курса ожидаем ошибку 403.
         2. При доступе к неопубликованному курсу ожидаем ошибку 404.
         """
+        course = CourseWith2Chapters(status=Course.CourseStatus.DRAFT)
         lesson = UnpublishedLessonFactory()
-        course = UnpublishedCourseFactory()
+        _ = CohortFactory(course=lesson.chapter.course)
 
         def assert_unpublished_object(subscription_instance, url, pk, expected_status):
             _ = SubscriptionFactory(course=subscription_instance, user=user)
