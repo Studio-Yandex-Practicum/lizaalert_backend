@@ -1,10 +1,13 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from django.db import models
-from django.db.models import F, Max
+from django.db import models, transaction
+from django.db.models import DateField, F, Max, Q, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-from lizaalert.courses.exceptions import AlreadyExistsException, ProgressNotFinishedException
+from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort, ProgressNotFinishedException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.courses.signals import course_finished
 from lizaalert.quizzes.models import Quiz
@@ -93,7 +96,6 @@ class Course(
 
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
-    start_date = models.DateField(blank=True, null=True, verbose_name="Дата начала курса")
     cover_path = models.FileField(blank=True, null=True, verbose_name="Путь к обложке курса")
     short_description = models.CharField(max_length=120, verbose_name="Краткое описание курса")
     level = models.ForeignKey(
@@ -139,17 +141,6 @@ class Course(
             return lesson_queryset.order_by("-ordering")[:1]
 
         return current_lesson_queryset
-
-    @property
-    def is_available(self):
-        """
-        Проверить доступность курса.
-
-        Если дата начала курса не указана, то курс доступен всегда.
-        """
-        if self.start_date:
-            return timezone.now().date() >= self.start_date
-        return True
 
     def subscribe(self, user):
         """Подписать пользователя на данный курс."""
@@ -447,10 +438,29 @@ class Cohort(TimeStampedModel):
     cohort_number = models.PositiveIntegerField(
         verbose_name="Номер группы", blank=True, help_text="Данное поле будет рассчитано автоматически при сохранении."
     )
-    start_date = models.DateField(verbose_name="Дата начала", null=True, blank=True)
-    end_date = models.DateField(verbose_name="Дата окончания", null=True, blank=True)
-    students_count = models.PositiveIntegerField(verbose_name="Количество студентов", null=True, blank=True)
+    start_date = models.DateField(
+        verbose_name="Дата начала",
+        null=True,
+        blank=True,
+        help_text="Не заполняйте это поле, если хотите, чтобы группа была доступна всегда.",
+    )
+    end_date = models.DateField(
+        verbose_name="Дата окончания",
+        null=True,
+        blank=True,
+        help_text="Не заполняйте это поле, если хотите, чтобы группа была доступна всегда.",
+    )
+    students_count = models.PositiveIntegerField(
+        verbose_name="Текущее количество студентов", null=True, blank=True, default=0
+    )
     teacher = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Преподаватель")
+    max_students = models.PositiveIntegerField(
+        verbose_name="Максимальное количество студентов",
+        null=True,
+        blank=True,
+        default=None,
+        help_text="Не заполняйте это поле, если хотите, чтобы группа была доступна всегда.",
+    )
 
     class Meta:
 
@@ -460,8 +470,9 @@ class Cohort(TimeStampedModel):
                 name="unique_course_cohort_number",
             )
         ]
-        verbose_name = "Когорта"
-        verbose_name_plural = "Когорты"
+        verbose_name = "Группа курса"
+        verbose_name_plural = "Группы курса"
+        ordering = ("start_date",)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -474,7 +485,18 @@ class Cohort(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.course_id} - {self.cohort_number}"
+        return f"Курс {self.course_id} - Когорта {self.cohort_number}"
+
+    @property
+    def is_available(self):
+        """
+        Проверить доступность курса.
+
+        Если дата начала курса не указана, то курс доступен всегда.
+        """
+        if self.start_date:
+            return timezone.now().date() >= self.start_date
+        return True
 
 
 class Subscription(TimeStampedModel):
@@ -521,6 +543,42 @@ class Subscription(TimeStampedModel):
 
     def __str__(self):
         return f"<Subscription: {self.id}, user: {self.user_id}, course: {self.course_id}>"
+
+    def save(self, *args, **kwargs):
+        """
+        Найти подходящую когорту для записи на курс.
+
+        Ищем когорту с датой начала, которая меньше или равна текущей дате и в которой есть места.
+        Если не найдена, ищем универсальную когорту без даты начала и без максимального количества студентов.
+        Увеличиваем количество студентов в когорте на 1.
+        В случае отсутствия подходящей когорты, вызываем исключение NoSuitableCohort.
+        Во время исполнения функции поддерживается атомарность транзакции и блокируется найденная когорта.
+        """
+        if not self.pk:
+            with transaction.atomic():
+                current_date = timezone.now().date()
+                # Создается дата в далеком будущем для корректной сортировки ближайших когорт
+                far_future_date = datetime(9999, 1, 1).date()
+                cohort = (
+                    Cohort.objects.select_for_update()
+                    .annotate(
+                        sorted_start_date=Coalesce("start_date", Value(far_future_date, output_field=DateField()))
+                    )
+                    .filter(
+                        Q(start_date__gte=current_date, students_count__lt=F("max_students"))
+                        | Q(start_date=None, max_students=None),
+                        course=self.course,
+                    )
+                    .order_by("sorted_start_date")
+                    .first()
+                )
+
+                if cohort:
+                    Cohort.objects.filter(pk=cohort.pk).update(students_count=F("students_count") + 1)
+                    self.cohort = cohort
+                else:
+                    raise NoSuitableCohort()
+        super().save(*args, **kwargs)
 
     def finish(self):
         """Завершить подписку на курс."""

@@ -51,7 +51,8 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     def get_user_status(self, obj):
         user = self.context.get("request").user
         if user.is_authenticated:
-            if obj.user_status == Subscription.Status.ENROLLED and obj.is_available:
+            subscription = Subscription.objects.filter(user=user, course=obj).first()
+            if obj.user_status == Subscription.Status.ENROLLED and subscription.cohort.is_available:
                 return Subscription.Status.AVAILABLE
             return obj.user_status
         return Subscription.Status.NOT_ENROLLED
@@ -67,7 +68,6 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "title",
             "level",
             "course_format",
-            "start_date",
             "short_description",
             "lessons_count",
             "course_duration",
@@ -130,7 +130,6 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "full_description",
             "faq",
             "knowledge",
-            "start_date",
             "cover_path",
             "lessons_count",
             "course_duration",
@@ -248,7 +247,7 @@ class UserStatusEnrollmentSerializer(CurrentLessonSerializer):
     @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
     def get_user_status(self, obj):
         subscription = self.context["subscription"]
-        if subscription.status == Subscription.Status.ENROLLED and subscription.course.is_available:
+        if subscription.status == Subscription.Status.ENROLLED and subscription.cohort.is_available:
             return Subscription.Status.AVAILABLE
         return subscription.status
 
