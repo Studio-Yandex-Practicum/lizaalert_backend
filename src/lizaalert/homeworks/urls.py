@@ -1,10 +1,12 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework import routers
 
-from lizaalert.homeworks.views import HomeworkDetailViewSet, HomeworkViewSet
+from lizaalert.homeworks.views import HomeworkViewSet
+
+router = routers.SimpleRouter()
+router.register(r"lessons/(?P<lesson_id>\d+)/homeworks", HomeworkViewSet, basename="homework")
+
 
 urlpatterns = [
-    path("homeworks/", HomeworkViewSet.as_view(), name="homework"),
-    path("lessons/<int:lesson_id>/homework/", HomeworkDetailViewSet.as_view(), name="homework-detail"),
-    # path("lessons/<int:lesson_id>/quiz/run/", RunQuizView.as_view(), name="run-quiz"),
-    # path("lessons/<int:lesson_id>/quiz/answer/", QuizDetailAnswerView.as_view(), name="quiz-answer"),
+    path("", include(router.urls)),
 ]

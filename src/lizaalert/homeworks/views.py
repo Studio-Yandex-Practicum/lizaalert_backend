@@ -1,39 +1,18 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
-from rest_framework.exceptions import APIException
+from rest_framework import mixins, status, viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from lizaalert.courses.models import Course, Lesson, Subscription
+from lizaalert.homeworks.exceptions import HomeworkException
 from lizaalert.homeworks.models import Homework
 from lizaalert.homeworks.serializers import HomeworkSerializer
+from lizaalert.users.models import UserRole
 
 
-class HomeworkException(APIException):
-    """Базовый класс для исключений, связанных с квизами."""
-
-    status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = "Некорректный запрос"
-
-
-class HomeworkViewSet(generics.ListAPIView):
-    """
-    Класс для отображения всех домашних работ одного преподавателя.
-
-    Методы:
-    - GET: Получение информации о домашних работах для преподавателя.
-    """
-
-    serializer_class = HomeworkSerializer
-
-    def get_queryset(self):
-        lesson = self.request.query_params.get("lesson")
-        if lesson:
-            return Homework.objects.filter(reviewer=self.request.user, lesson=lesson)
-        return Homework.objects.filter(reviewer=self.request.user)
-
-
-class HomeworkDetailViewSet(generics.RetrieveAPIView, generics.CreateAPIView):
+class HomeworkViewSet(
+    mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
+):
     """
     Отображение деталей домашней работы.
 
@@ -44,24 +23,44 @@ class HomeworkDetailViewSet(generics.RetrieveAPIView, generics.CreateAPIView):
 
     queryset = Homework.objects.all()
     serializer_class = HomeworkSerializer
+    permission_classes = (IsAuthenticated,)
 
-    def get_object(self):
-        lesson = get_object_or_404(Lesson, id=self.kwargs.get("lesson_id"))
-        try:
-            homework = lesson.homework_set.first()
-            return homework
-        except ObjectDoesNotExist as e:
-            HomeworkException.default_detail = e
-            raise HomeworkException
+    def list(self, request, *args, **kwargs):
+        if (
+            self.request.user.is_authenticated
+            and UserRole.objects.get(user=self.request.user).role == UserRole.Role.VOLUNTEER
+        ):
+            queryset = Homework.objects.filter(
+                lesson=Lesson.objects.get(id=self.kwargs.get("lesson_id")),
+                subscription=Subscription.objects.get(
+                    user=self.request.user,
+                    course=Course.objects.get(chapters=Lesson.objects.get(id=self.kwargs.get("lesson_id")).chapter),
+                ),
+            ).first()
+            serializer = self.get_serializer(queryset)
+            return Response(serializer.data)
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         lesson = Lesson.objects.get(id=self.kwargs.get("lesson_id"))
-        homework = lesson.homework_set.first()
         subscription = Subscription.objects.get(
             user=self.request.user,
             course=Course.objects.get(chapters=lesson.chapter),
         )
+        request.data["status"] = Homework.ProgressionStatus.DRAFT
         reviewer = subscription.cohort.teacher
+        homework = lesson.homework_set.filter(subscription=subscription).first()
         if homework:
             try:
                 serializer = self.get_serializer(homework, data=request.data, partial=True)
