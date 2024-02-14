@@ -1,12 +1,11 @@
-from django.urls import include, path
-from rest_framework import routers
+from django.urls import path
 
 from lizaalert.homeworks.views import HomeworkViewSet
 
-router = routers.SimpleRouter()
-router.register(r"lessons/(?P<lesson_id>\d+)/homeworks", HomeworkViewSet, basename="homework")
-
-
 urlpatterns = [
-    path("", include(router.urls)),
+    path(
+        "lessons/<int:lesson_id>/homework/",
+        HomeworkViewSet.as_view({"get": "retrieve", "post": "create"}),
+        name="lesson-homework-detail",
+    ),
 ]

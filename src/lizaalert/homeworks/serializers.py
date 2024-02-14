@@ -22,9 +22,3 @@ class HomeworkSerializer(serializers.ModelSerializer):
             "subscription",
             "required",
         )
-
-
-class HomeworkDetailSerializer(HomeworkSerializer):
-    """Сериалайзер класс для домашней работы."""
-
-    pass
