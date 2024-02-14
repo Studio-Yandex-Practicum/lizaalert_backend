@@ -5,18 +5,16 @@ from lizaalert.homeworks.models import Homework
 
 @admin.register(Homework)
 class HomeworkAdmin(admin.ModelAdmin):
-    """Админка домашней работы."""
+    """Админка домашних заданий."""
 
-    model = Homework
-    extra = 1
     list_display = (
-        "id",
         "reviewer",
+        "user",
         "status",
         "lesson",
-        "text",
-        "subscription",
-        "required",
     )
-    list_select_related = ("lesson",)
-    ordering = ("-updated_at",)
+    ordering = ("updated_at",)
+    list_select_related = ("subscription",)
+
+    def user(self, obj):
+        return obj.subscription.user
