@@ -112,6 +112,19 @@ class CourseAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
 
+    # Автоматическое заполнение полей user_created и user_modifier для главы
+    def save_formset(self, request, form, formset, change):
+        if formset.model == Chapter:
+            chapters = formset.save(commit=False)
+            for chapter in chapters:
+                if not chapter.id:
+                    chapter.user_created = request.user
+                chapter.user_modifier = request.user
+                chapter.save()
+            formset.save_m2m()
+        else:
+            super().save_formset(request, form, formset, change)
+
 
 @admin.register(Chapter)
 class ChapterAdmin(admin.ModelAdmin):
