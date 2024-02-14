@@ -469,8 +469,8 @@ class Cohort(TimeStampedModel):
                 name="unique_course_cohort_number",
             )
         ]
-        verbose_name = "Группа курса"
-        verbose_name_plural = "Группы курса"
+        verbose_name = "Когорта"
+        verbose_name_plural = "Когорты"
         ordering = ("start_date",)
 
     def save(self, *args, **kwargs):
