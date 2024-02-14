@@ -54,19 +54,15 @@ class ChapterInline(admin.TabularInline):
         "order_number",
         "title",
         "deleted_at",
-        "user_created",
-        "user_modifier",
     )
 
     # Метод для отображения ссылки на главу курса
     def get_chapter_link(self, obj):
         id = obj.id
-        title = obj.title
+        if not id:
+            return "Нет названия"
+        title = obj.title or "Нет названия"
         url = reverse("admin:courses_chapter_change", args=(id,))
-        if id is None:
-            return "Новая глава"
-        if title is None:
-            title = "Нет названия"
         return format_html('<a href="{}">{}</a>', url, title)
 
     get_chapter_link.short_description = "Глава"
