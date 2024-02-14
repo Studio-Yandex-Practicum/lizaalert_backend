@@ -53,7 +53,8 @@ class ChapterInline(admin.TabularInline):
         "get_chapter_link",
         "order_number",
         "title",
-        "deleted_at",
+        "user_created",
+        "user_modifier",
     )
 
     # Метод для отображения ссылки на главу курса
