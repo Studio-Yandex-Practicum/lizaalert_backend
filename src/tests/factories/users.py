@@ -58,7 +58,7 @@ class LevelFactory(factory.django.DjangoModelFactory):
 class BadgeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Badge
-        django_get_or_create = ('badge_slug',)
+        django_get_or_create = ("badge_slug",)
 
     name = factory.Faker("word")
     description = factory.Faker("sentence")
