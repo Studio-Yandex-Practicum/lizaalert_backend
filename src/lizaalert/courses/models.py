@@ -115,6 +115,7 @@ class Course(
     )
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
     status = models.IntegerField(verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT)
+    is_hidden = models.BooleanField(verbose_name="скрытый курс", default=False)
 
     class Meta:
         verbose_name = "Курс"

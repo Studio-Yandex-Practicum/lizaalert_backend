@@ -688,3 +688,22 @@ class TestCourse:
         assert_unpublished_object(lesson.chapter.course, "lessons-detail", lesson.id, status.HTTP_403_FORBIDDEN)
         # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
         assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)
+
+    def test_hidden_course_appears_for_subscribed_user(self, user_client, user):
+        """Тест, что скрытый курс появляется для подписанного пользователя."""
+        hidden_course = CourseFactory(is_hidden=True)
+        _ = SubscriptionFactory(course=hidden_course, user=user)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert hidden_course.title in [course["title"] for course in response.json()["results"]]
+
+    def test_hidden_course_not_visible_for_unsubscribed_user(self, user_client):
+        """Тест, что скрытый курс не появляется для неподписанного пользователя."""
+        hidden_course = CourseFactory(is_hidden=True)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert hidden_course.title not in [course["title"] for course in response.json()["results"]]
