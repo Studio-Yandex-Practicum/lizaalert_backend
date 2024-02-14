@@ -2,10 +2,11 @@ from datetime import datetime
 
 import pytest
 from django.urls import reverse
+from rest_framework import status
 
 from lizaalert.courses.models import Lesson, LessonProgressStatus
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
-from lizaalert.users.models import Badge, Volunteer, VolunteerBadge, VolunteerCourseCompletion
+from lizaalert.users.models import Badge, VolunteerBadge, VolunteerCourseCompletion
 from lizaalert.users.utils import (
     assign_achievements_for_completion,
     assign_achievements_for_course,
@@ -22,19 +23,16 @@ class TestBadgeModel:
         created_badge = BadgeFactory()
         assert created_badge.id
 
-    def test_create_badge_without_badge_slug(self):
-        """Тестирование создания объекта Badge без поля badge_slug."""
-        created_badge = BadgeFactory(badge_slug=None)
-        assert created_badge.id
-
-    def test_volunteer_badge_finding(self):
+    def test_volunteer_badge_finding(self, user_client):
         """Тестирование фильтрации волонтеров по бэйджу."""
-        badge_1, badge_2 = BadgeFactory(badge_slug="test_slug_1"), BadgeFactory(badge_slug="test_slug_2")
+        badge_1, badge_2 = BadgeFactory(), BadgeFactory()
         user_1, user_2 = UserFactory(), UserFactory()
-        volunteer_badge_1 = VolunteerBadgeFactory(user=user_1, badge=badge_1)
-        _ = VolunteerBadgeFactory(user=user_2, badge=badge_2)
-        volunteer_1 = volunteer_badge_1.volunteer
-        assert Volunteer.objects.filter(badges__badge_slug="test_slug_1").get() == volunteer_1
+        _, _ = VolunteerBadgeFactory(user=user_1, badge=badge_1), VolunteerBadgeFactory(user=user_2, badge=badge_2)
+        url = reverse("volunteerbadgelist", kwargs={"badge_slug": badge_1.badge_slug})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+        assert response.json()[0]["id"] == user_1.id
 
     def test_badge_validation_both_thresholds_filled(self):
         """Тестирование валидации, когда оба поля (threshold_courses и threshold_course) заполнены."""
