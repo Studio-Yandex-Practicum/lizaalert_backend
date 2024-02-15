@@ -10,6 +10,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
     reviewer = serializers.StringRelatedField(read_only=True)
     subscription = serializers.PrimaryKeyRelatedField(read_only=True)
     lesson = serializers.PrimaryKeyRelatedField(read_only=True)
+    required = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Homework
@@ -22,3 +23,10 @@ class HomeworkSerializer(serializers.ModelSerializer):
             "subscription",
             "required",
         )
+
+
+class EmptyHomeworkSerializer(serializers.Serializer):
+    """Сериалайзер класс для домашних работ."""
+
+    status = serializers.CharField(default=Homework.ProgressionStatus.DRAFT, initial=Homework.ProgressionStatus.DRAFT)
+    text = serializers.CharField(default="", initial="")

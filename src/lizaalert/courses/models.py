@@ -250,6 +250,7 @@ class Lesson(
         VIDEOLESSON = "Videolesson", "Видеоурок"
         WEBINAR = "Webinar", "Вебинар"
         QUIZ = "Quiz", "Тест"
+        HOMEWORK = "Homework", "Домашняя работа"
 
     class LessonStatus(models.IntegerChoices):
         DRAFT = 0, "В разработке"

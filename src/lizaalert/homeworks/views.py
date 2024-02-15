@@ -1,12 +1,12 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, viewsets
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import mixins, response, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from lizaalert.courses.models import Subscription
-from lizaalert.homeworks.exceptions import HomeworkException
 from lizaalert.homeworks.models import Homework
-from lizaalert.homeworks.serializers import HomeworkSerializer
+from lizaalert.homeworks.serializers import EmptyHomeworkSerializer, HomeworkSerializer
 
 
 class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -15,8 +15,8 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
 
     Методы:
     - GET: Получение информации домашней работе.
-    - POST: При отправлении запроса необходимо передать {'text':'Текст сохранен', 'status':0} --> сохранено
-    - POST: При отправлении запроса необходимо передать {'text':'Текст отправлен', 'status':1} --> отправлено
+    - POST: При отправлении запроса необходимо передать {'text':'Текст сохранен', 'status':draft} --> сохранено
+    - POST: При отправлении запроса необходимо передать {'text':'Текст отправлен', 'status':submitted} --> отправлено
     """
 
     queryset = Homework.objects.all()
@@ -37,21 +37,17 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         serializer.instance = homework
         return super().perform_create(serializer)
 
-    def get_object(self):
-        queryset = self.filter_queryset(self.get_queryset())
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-        assert lookup_url_kwarg in self.kwargs, (
-            "Expected view %s to be called with a URL keyword argument "
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
-        )
-
-        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: HomeworkSerializer,
+            status.HTTP_204_NO_CONTENT: EmptyHomeworkSerializer,
+        }
+    )
+    def retrieve(self, request, *args, **kwargs):
         try:
-            obj = get_object_or_404(queryset, **filter_kwargs)
-        except Http404 as e:
-            HomeworkException.default_detail = ["У пользователя пока нет домашней работы", e]
-            raise HomeworkException
-        self.check_object_permissions(self.request, obj)
-        return obj
+            instance = get_object_or_404(Homework, **kwargs)
+            serializer = self.get_serializer(instance)
+        except Http404:
+            print(Homework.ProgressionStatus.DRAFT)
+            serializer = EmptyHomeworkSerializer()
+        return response.Response(serializer.data, status=status.HTTP_204_NO_CONTENT)

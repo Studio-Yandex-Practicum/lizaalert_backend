@@ -18,13 +18,13 @@ class Homework(TimeStampedModel):
     required - обязательное задание или нет, по умолчанию обязательное.
     """
 
-    class ProgressionStatus(models.IntegerChoices):
-        DRAFT = 0, "Черновик"
-        SUBMITTED = 1, "Отправлено"
-        IN_REVIEW = 2, "На проверке"
-        APPROVED = 3, "Одобрено"
-        REJECTED = 4, "Отклонено"
-        CANCELLED = 5, "Отменено"
+    class ProgressionStatus(models.TextChoices):
+        DRAFT = "draft", "Черновик"
+        SUBMITTED = "submitted", "Отправлено"
+        IN_REVIEW = "in_review", "На проверке"
+        APPROVED = "approved", "Одобрено"
+        REJECTED = "rejected", "Отклонено"
+        CANCELLED = "cancelled", "Отменено"
 
     reviewer = models.ForeignKey(
         User,
@@ -34,8 +34,8 @@ class Homework(TimeStampedModel):
         related_name="reviewer",
         verbose_name="Проверяющий",
     )
-    status = models.PositiveSmallIntegerField(
-        verbose_name="Статус", choices=ProgressionStatus.choices, default=ProgressionStatus.DRAFT
+    status = models.CharField(
+        verbose_name="Статус", choices=ProgressionStatus.choices, default=ProgressionStatus.DRAFT, max_length=120
     )
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, verbose_name="Урок")
     text = models.CharField(verbose_name="Текст задания", max_length=10000)
