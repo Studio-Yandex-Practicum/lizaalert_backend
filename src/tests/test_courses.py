@@ -23,6 +23,7 @@ from tests.factories.courses import (
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     CourseWithAvailableCohortFactory,
+    CourseWithFutureCohortFactory,
     LessonFactory,
     Subscription,
     SubscriptionFactory,
@@ -777,7 +778,7 @@ class TestCourse:
 
     def test_hidden_course_appears_for_subscribed_user(self, user_client, user):
         """Тест, что скрытый курс появляется для подписанного пользователя."""
-        hidden_course = CourseFactory(is_hidden=True)
+        hidden_course = CourseWithFutureCohortFactory(status=Course.CourseStatus.HIDDEN)
         _ = SubscriptionFactory(course=hidden_course, user=user)
         url = reverse("courses-list")
         response = user_client.get(url)
@@ -787,7 +788,7 @@ class TestCourse:
 
     def test_hidden_course_not_visible_for_unsubscribed_user(self, user_client):
         """Тест, что скрытый курс не появляется для неподписанного пользователя."""
-        hidden_course = CourseFactory(is_hidden=True)
+        hidden_course = CourseWithFutureCohortFactory(status=Course.CourseStatus.HIDDEN)
         url = reverse("courses-list")
         response = user_client.get(url)
 

@@ -154,12 +154,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
             queryset = (
                 Course.objects.filter(
-                    Q(
-                        status=Course.CourseStatus.PUBLISHED,
-                        is_hidden=False,
-                    )
+                    Q(status=Course.CourseStatus.PUBLISHED)
                     | Q(
-                        status=Course.CourseStatus.PUBLISHED,
+                        status=Course.CourseStatus.HIDDEN,
                         id__in=Subquery(
                             Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("course")
                         ),
@@ -173,10 +170,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             )
             return queryset
 
-        return Course.objects.filter(
-            status=Course.CourseStatus.PUBLISHED,
-            is_hidden=False,
-        ).annotate(**base_annotations)
+        return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 
     def get_serializer_class(self):
         if self.action == "enroll" or self.action == "unroll":

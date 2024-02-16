@@ -93,6 +93,7 @@ class Course(
         DRAFT = 0, "в разработке"
         PUBLISHED = 1, "опубликован"
         ARCHIVE = 2, "в архиве"
+        HIDDEN = 3, "скрытый"
 
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
@@ -117,7 +118,6 @@ class Course(
     )
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
     status = models.IntegerField(verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT)
-    is_hidden = models.BooleanField(verbose_name="скрытый курс", default=False)
 
     class Meta:
         verbose_name = "Курс"
