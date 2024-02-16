@@ -10,6 +10,7 @@ from django.utils import timezone
 from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort, ProgressNotFinishedException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.courses.signals import course_finished
+from lizaalert.courses.utils import check_finished_content
 from lizaalert.quizzes.models import Quiz
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
@@ -250,7 +251,7 @@ class Lesson(
         VIDEOLESSON = "Videolesson", "Видеоурок"
         WEBINAR = "Webinar", "Вебинар"
         QUIZ = "Quiz", "Тест"
-        HOMEWORK = "Homework", "Домашняя работа"
+        HOMEWORK = "Homework", "Домашнее задание"
 
     class LessonStatus(models.IntegerChoices):
         DRAFT = 0, "В разработке"
@@ -311,6 +312,11 @@ class Lesson(
         """Вернуть предыдущий по очереди урок."""
         ordered_lessons = self.ordered
         return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering")[:1]
+
+    @check_finished_content(lesson_type=[LessonType.HOMEWORK])
+    def finish(self, subscription):
+        """Завершить данный урок."""
+        super().finish(subscription)
 
 
 class LessonProgressStatus(TimeStampedModel, BaseProgress):
