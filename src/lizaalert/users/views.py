@@ -183,7 +183,7 @@ class BadgeVolunteerListView(ListAPIView):
         """,
         responses={
             200: VolunteerSerializer(),
-            400: "Bad Request",
+            400: Error400Serializer(),
         },
     )
     def get_queryset(self):
