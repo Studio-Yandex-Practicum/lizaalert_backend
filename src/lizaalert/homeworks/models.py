@@ -26,14 +26,6 @@ class Homework(TimeStampedModel):
     required - обязательное задание или нет, по умолчанию обязательное.
     """
 
-    class ProgressionStatus(models.IntegerChoices):
-        DRAFT = 0, "Черновик"
-        SUBMITTED = 1, "Отправлено"
-        IN_REVIEW = 2, "На проверке"
-        APPROVED = 3, "Одобрено"
-        REJECTED = 4, "Отклонено"
-        CANCELLED = 5, "Отменено"
-
     reviewer = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,

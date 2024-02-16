@@ -1,9 +1,10 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from lizaalert.courses.models import Lesson
-from lizaalert.homeworks.models import Homework
+from lizaalert.homeworks.models import Homework, ProgressionStatus
 from tests.factories.courses import CourseWith2Chapters, SubscriptionFactory
 from tests.factories.homeworks import HomeworkFactory
 from tests.factories.users import UserRoleFactory
@@ -17,35 +18,45 @@ class TestHomework:
         obj = Homework.objects.get(id=homework.id)
         assert obj == homework
 
-    def test_create_homework(self, user, user_client):
+    def test_create_homework(self, user, user_client: APIClient):
         """Проверка создания и получения домашней работы."""
         course = CourseWith2Chapters()
         lessons = Lesson.objects.filter(chapter__course=course)
         for lesson in lessons:
             lesson.lesson_type = Lesson.LessonType.HOMEWORK
             lesson.save()
-        text = "Тестовая запись"
-        text_change = "Тестовая запись после замены"
         _ = UserRoleFactory(user=user)
         _ = SubscriptionFactory(course=course, user=user)
-        draft_data = {"text": text, "status": "draft"}
-        submit_data = {"text": text_change, "status": "submitted"}
-        response_draft = user_client.post(
-            reverse("lesson-homework-detail", kwargs={"lesson_id": lesson.id}),
-            data=draft_data,
-            format="json",
+
+        def assert_status_homework(
+            user, user_client, status_code, text="", request_method="get", result=ProgressionStatus.DRAFT
+        ):
+
+            data = {"text": text, "status": result}
+            if request_method == "post":
+                response = user_client.post(
+                    reverse("lesson-homework-detail", kwargs={"lesson_id": lesson.id}),
+                    data=data,
+                    format="json",
+                )
+                assert response.status_code == status_code
+            else:
+                response = user_client.get(reverse("lesson-homework-detail", kwargs={"lesson_id": lesson.id}))
+            assert response.data["text"] == text
+            assert response.data["status"] == result
+            assert response.status_code == status_code
+
+        # 1. Проверяем, что при get-запросе не существующей домашней работе возвращается код 204 и пустое поле текст.
+        assert_status_homework(user, user_client, status.HTTP_204_NO_CONTENT)
+        # 2. Проверяем, что создается объект домашней работы возвращается код 201 и поле текст соответствует
+        # переданному тексту.
+        assert_status_homework(user, user_client, status.HTTP_201_CREATED, "Текст", "post")
+        # 3. Проверяем, что при get-запросе существующей домашней работе возвращается код 200 и поле текст==текст в б.д.
+        assert_status_homework(user, user_client, status.HTTP_200_OK, "Текст")
+        # 4. Проверяем, что при post-запросе изменяется объект домашней работе возвращается код 201.
+        assert_status_homework(
+            user, user_client, status.HTTP_201_CREATED, "Текст1", "post", ProgressionStatus.SUBMITTED
         )
-        response_submitted = user_client.post(
-            reverse("lesson-homework-detail", kwargs={"lesson_id": lesson.id}),
-            data=submit_data,
-            format="json",
-        )
-        response_get_homework = user_client.get(reverse("lesson-homework-detail", kwargs={"lesson_id": lesson.id}))
-        assert response_draft.status_code == status.HTTP_201_CREATED
-        assert response_draft.json()["text"] == text
-        assert response_draft.json()["status"] == Homework.ProgressionStatus.DRAFT
-        assert response_submitted.status_code == status.HTTP_201_CREATED
-        assert response_submitted.json()["id"] == response_draft.json()["id"]
-        assert response_submitted.json()["status"] == Homework.ProgressionStatus.SUBMITTED
-        assert response_get_homework.status_code == status.HTTP_200_OK
-        assert response_get_homework.json()["text"] == text_change == response_submitted.json()["text"]
+        # 5. Проверяем, что при get-запросе получаем измененный объект домашней работе возвращается код 200 и
+        # новый статус.
+        assert_status_homework(user, user_client, status.HTTP_200_OK, "Текст1", result=ProgressionStatus.SUBMITTED)

@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
-from lizaalert.homeworks.models import Homework
+from lizaalert.homeworks.models import Homework, ProgressionStatus
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
     """Сериалайзер класс для домашних работ."""
 
-    status = serializers.ChoiceField(choices=Homework.ProgressionStatus)
+    status = serializers.ChoiceField(choices=ProgressionStatus)
     reviewer = serializers.StringRelatedField(read_only=True)
     subscription = serializers.PrimaryKeyRelatedField(read_only=True)
     lesson = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -28,5 +28,5 @@ class HomeworkSerializer(serializers.ModelSerializer):
 class EmptyHomeworkSerializer(serializers.Serializer):
     """Сериалайзер класс для домашних работ."""
 
-    status = serializers.CharField(default=Homework.ProgressionStatus.DRAFT, initial=Homework.ProgressionStatus.DRAFT)
+    status = serializers.CharField(default=ProgressionStatus.DRAFT, initial=ProgressionStatus.DRAFT)
     text = serializers.CharField(default="", initial="")
