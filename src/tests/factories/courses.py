@@ -319,3 +319,9 @@ class UnpublishedCourseFactory(CourseFactory):
     """Test factory for unpublished Course."""
 
     status = Course.CourseStatus.DRAFT
+
+
+class HomeworkLessonFactory(LessonFactory):
+    """Test factory for Lesson with Homework."""
+
+    lesson_type = Lesson.LessonType.HOMEWORK

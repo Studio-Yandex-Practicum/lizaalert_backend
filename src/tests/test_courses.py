@@ -788,7 +788,6 @@ class TestCourse:
         homework = HomeworkFactory()
         lesson = homework.lesson
         subscription = homework.subscription
-        lesson.lesson_type = Lesson.LessonType.HOMEWORK
         _ = CohortAlwaysAvailableFactory(course=lesson.chapter.course)
 
         def assert_finish(lesson, homework_status, expected_status=BaseProgress.ProgressStatus.FINISHED):

@@ -1,7 +1,7 @@
 import factory.fuzzy
 
-from lizaalert.homeworks.models import Homework, ProgressionStatus
-from tests.factories.courses import LessonFactory, SubscriptionFactory
+from lizaalert.homeworks.models import Homework
+from tests.factories.courses import HomeworkLessonFactory, SubscriptionFactory
 from tests.factories.users import UserFactory
 
 
@@ -12,8 +12,7 @@ class HomeworkFactory(factory.django.DjangoModelFactory):
         model = Homework
 
     reviewer = factory.SubFactory(UserFactory)
-    status = ProgressionStatus.DRAFT
-    lesson = factory.SubFactory(LessonFactory)
+    lesson = factory.SubFactory(HomeworkLessonFactory)
     text = factory.Faker("text", max_nb_chars=10000)
     subscription = factory.SubFactory(SubscriptionFactory)
     required = True
