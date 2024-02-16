@@ -25,14 +25,12 @@ class TestBadgeModel:
 
     def test_volunteer_badge_finding(self, user_client):
         """Тестирование фильтрации волонтеров по бэйджу."""
-        badge_1, badge_2 = BadgeFactory(), BadgeFactory()
-        user_1, user_2 = UserFactory(), UserFactory()
-        _, _ = VolunteerBadgeFactory(user=user_1, badge=badge_1), VolunteerBadgeFactory(user=user_2, badge=badge_2)
-        url = reverse("volunteerbadgelist", kwargs={"badge_slug": badge_1.badge_slug})
+        volunter_badge_1,  _ = VolunteerBadgeFactory(), VolunteerBadgeFactory()
+        url = reverse("volunteerbadgelist", kwargs={"badge_slug": volunter_badge_1.badge.badge_slug})
         response = user_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 1
-        assert response.json()[0]["id"] == user_1.id
+        assert response.json()[0]["id"] == volunter_badge_1.volunteer.id
 
     def test_badge_validation_both_thresholds_filled(self):
         """Тестирование валидации, когда оба поля (threshold_courses и threshold_course) заполнены."""
