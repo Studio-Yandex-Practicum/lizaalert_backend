@@ -30,7 +30,7 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
     lesson_id = serializers.IntegerField()
 
 
-def check_finished_content(lesson_type=()):
+def check_finished_content(lesson_type=None):
     """
     Проверка завершения контента урока.
 
@@ -40,9 +40,7 @@ def check_finished_content(lesson_type=()):
 
     def decorator_func(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            lesson = args[0]
-            subscription = args[1]
+        def wrapper(lesson, subscription, *args, **kwargs):
             if lesson.lesson_type in lesson_type:
                 approved = (
                     getattr(lesson, lesson.lesson_type.lower())
@@ -51,7 +49,7 @@ def check_finished_content(lesson_type=()):
                 )
                 if not approved:
                     raise ProgressNotFinishedException("Необходимый контент урока не пройден.")
-            return func(*args, **kwargs)
+            return func(lesson, subscription, *args, **kwargs)
 
         return wrapper
 

@@ -568,7 +568,7 @@ class Subscription(TimeStampedModel):
                     )
                     .filter(
                         Q(start_date__gte=current_date, students_count__lt=F("max_students"))
-                        | Q(start_date=None, max_students=None),
+                        | Q(start_date=None, max_students=None),  # noqa
                         course=self.course,
                     )
                     .order_by("sorted_start_date")

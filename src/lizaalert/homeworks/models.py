@@ -4,13 +4,13 @@ from lizaalert.courses.mixins import TimeStampedModel
 from lizaalert.users.models import User
 
 
-class ProgressionStatus(models.TextChoices):
-    DRAFT = "draft", "Черновик"
-    SUBMITTED = "submitted", "Отправлено"
-    IN_REVIEW = "in_review", "На проверке"
-    APPROVED = "approved", "Одобрено"
-    REJECTED = "rejected", "Отклонено"
-    CANCELLED = "cancelled", "Отменено"
+class ProgressionStatus(models.IntegerChoices):
+    DRAFT = 0, "Черновик"
+    SUBMITTED = 1, "Отправлено"
+    IN_REVIEW = 2, "На проверке"
+    APPROVED = 3, "Одобрено"
+    REJECTED = 4, "Отклонено"
+    CANCELLED = 5, "Отменено"
 
 
 class Homework(TimeStampedModel):
@@ -34,8 +34,10 @@ class Homework(TimeStampedModel):
         related_name="reviewer",
         verbose_name="Проверяющий",
     )
-    status = models.CharField(
-        verbose_name="Статус", choices=ProgressionStatus.choices, default=ProgressionStatus.DRAFT, max_length=20
+    status = models.PositiveSmallIntegerField(
+        verbose_name="Статус",
+        choices=ProgressionStatus.choices,
+        default=ProgressionStatus.DRAFT,
     )
     lesson = models.ForeignKey("courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="homework")
     text = models.CharField(verbose_name="Текст задания", max_length=10000)

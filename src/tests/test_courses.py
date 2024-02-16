@@ -8,7 +8,7 @@ from rest_framework import status
 
 from lizaalert.courses.exceptions import ProgressNotFinishedException
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import BaseProgress, Chapter, Course, Lesson
+from lizaalert.courses.models import BaseProgress, Chapter, Course, Lesson, LessonProgressStatus
 from lizaalert.courses.signals import course_finished
 from lizaalert.homeworks.models import ProgressionStatus
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
@@ -796,7 +796,10 @@ class TestCourse:
             homework.save()
             if homework_status == ProgressionStatus.APPROVED:
                 lesson.finish(subscription)
-                assert subscription.lesson_progress.get(lesson=lesson).progress == expected_status
+                assert (
+                    LessonProgressStatus.objects.get(lesson=lesson, subscription=subscription).progress
+                    == expected_status
+                )
             else:
                 with pytest.raises(ProgressNotFinishedException):
                     lesson.finish(subscription)
