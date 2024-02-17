@@ -4,6 +4,7 @@ Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
 import logging
+import requests
 import smtplib
 import socket
 
@@ -16,8 +17,10 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from lizaalert.settings.base import YANDEX_INFO_URL
 from .serializers import ResetPasswordSerializer, UserIdSerialiazer, UserSerializer
 from .utils import get_new_password
 
@@ -111,3 +114,43 @@ class HiddenTestAuth(APIView):
         if request.user and request.user.username == "test_user":
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class TokenExchange(APIView):
+    """
+    Замена OAuth-токена Яндекс ID на JWT-токен.
+
+    Методы:
+    - POST: Принимает OAuth-токен Яндекс, Возвращает acsess и refresh JWT-токены.
+
+    """
+
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Принимает OAuth-токен Яндекс, Возвращает acsess и refresh JWT-токены",
+        request_body={"oauth_token": "OAuth-токен Яндекс"},
+        responses={
+            201: {"refresh": "refresh JWT-token", "access": "access JWT-token"},
+            401: "Bad request",
+        },
+    )
+    def post(self, request):
+        yandex_user_data, status_code = self.get_yandex_user_data(request.data['oauth_token'])
+        if not yandex_user_data:
+            return Response({"yandex_response_status": status_code}, status=status.HTTP_401_UNAUTHORIZED)
+        user = User.objects.get_or_create(username=yandex_user_data["login"], yandex_id=int(yandex_user_data["id"]))[0]
+        refresh = RefreshToken.for_user(user)
+        data = {"refresh": str(refresh), "access": str(refresh.access_token)}
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def get_yandex_user_data(oauth_token):
+        url = f"{YANDEX_INFO_URL}format=json"
+        headers = {"Authorization": f"OAuth {oauth_token}"}
+        request = requests.get(url, headers=headers)
+        if request.status_code == requests.codes.ok:
+            user_data = {"id": request.json()["id"], "login": request.json()["login"]}
+        else:
+            user_data = None
+        return user_data, request.status_code

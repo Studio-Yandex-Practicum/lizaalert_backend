@@ -164,6 +164,8 @@ DJOSER = {
     "ACTIVATION_URL": False,
 }
 
+YANDEX_INFO_URL = 'https://login.yandex.ru/info?'
+
 # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
