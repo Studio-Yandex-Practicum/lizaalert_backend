@@ -27,8 +27,12 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
     def perform_create(self, serializer):
         lesson_id = self.kwargs.get("lesson_id")
         subscription = get_object_or_404(Subscription, user=self.request.user, course__chapters__lessons__id=lesson_id)
+        try:
+            reviewer = subscription.cohort.teacher
+        except AttributeError:
+            reviewer = None
         homework, created = Homework.objects.get_or_create(
-            lesson_id=lesson_id, subscription=subscription, defaults={"reviewer": subscription.cohort.teacher}
+            lesson_id=lesson_id, subscription=subscription, defaults={"reviewer": reviewer}
         )
         if not created:
             for attr, value in serializer.validated_data.items():
