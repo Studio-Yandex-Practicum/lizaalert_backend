@@ -14,7 +14,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255, blank=True, verbose_name="Полное имя")
     phone = PhoneNumberField(max_length=20, null=True, blank=True, verbose_name="телефон")
-    yandex_id = models.IntegerField(unique=True, blank=True, null=True, verbose_name='ЯндексID')
+    yandex_id = models.IntegerField(unique=True, blank=True, null=True, verbose_name="ЯндексID")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]

@@ -4,10 +4,10 @@ Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
 import logging
-import requests
 import smtplib
 import socket
 
+import requests
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -17,11 +17,18 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from lizaalert.settings.base import YANDEX_INFO_URL
-from .serializers import ResetPasswordSerializer, UserIdSerialiazer, UserSerializer
+from .serializers import (
+    OauthTokenSerializer,
+    ResetPasswordSerializer,
+    UserIdSerialiazer,
+    UserSerializer,
+    YandexResponseStatusSerializer,
+)
 from .utils import get_new_password
 
 User = get_user_model()
@@ -129,14 +136,14 @@ class TokenExchange(APIView):
 
     @swagger_auto_schema(
         operation_description="Принимает OAuth-токен Яндекс, Возвращает acsess и refresh JWT-токены",
-        request_body={"oauth_token": "OAuth-токен Яндекс"},
+        request_body=OauthTokenSerializer,
         responses={
-            201: {"refresh": "refresh JWT-token", "access": "access JWT-token"},
-            401: "Bad request",
+            201: TokenRefreshSerializer,
+            401: YandexResponseStatusSerializer,
         },
     )
     def post(self, request):
-        yandex_user_data, status_code = self.get_yandex_user_data(request.data['oauth_token'])
+        yandex_user_data, status_code = self.get_yandex_user_data(request.data["oauth_token"])
         if not yandex_user_data:
             return Response({"yandex_response_status": status_code}, status=status.HTTP_401_UNAUTHORIZED)
         user = User.objects.get_or_create(username=yandex_user_data["login"], yandex_id=int(yandex_user_data["id"]))[0]
