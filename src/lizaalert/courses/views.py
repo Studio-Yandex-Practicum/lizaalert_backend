@@ -173,7 +173,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 
     def get_serializer_class(self):
-        if self.action == "enroll" or self.action == "unroll":
+        if self.action in (
+            "enroll",
+            "unroll",
+            "complete",
+        ):
             return None
         if self.action == "retrieve":
             return CourseDetailSerializer
