@@ -1,4 +1,7 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+
+from lizaalert.courses.exceptions import BadRequestException
 
 
 class CourseBreadcrumbSerializer(serializers.Serializer):
@@ -23,3 +26,11 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
 
     chapter_id = serializers.IntegerField()
     lesson_id = serializers.IntegerField()
+
+
+def validate_id(model, message="Invalid id.", **kwargs):
+    """Проверить коррекстность введенного id."""
+    try:
+        return get_object_or_404(model, **kwargs)
+    except ValueError:
+        raise BadRequestException({"detail": message})

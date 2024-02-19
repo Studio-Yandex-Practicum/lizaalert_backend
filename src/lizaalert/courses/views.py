@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from lizaalert.courses.exceptions import BadRequestException, SubscriptionDoesNotExist
+from lizaalert.courses.exceptions import SubscriptionDoesNotExist
 from lizaalert.courses.filters import CourseFilter
 from lizaalert.courses.models import (
     Chapter,
@@ -31,6 +31,7 @@ from lizaalert.courses.serializers import (
     MessageResponseSerializer,
     UserStatusEnrollmentSerializer,
 )
+from lizaalert.courses.utils import validate_id
 from lizaalert.users.models import Level
 
 
@@ -80,7 +81,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         course_id = self.kwargs.get("pk")
         course = None
         if course_id:
-            course = get_object_or_404(Course, id=course_id)
+            course = validate_id(Course, id=course_id)
         lesson_status = Lesson.LessonStatus.PUBLISHED
         base_annotations = {
             "course_duration": Sum(
@@ -171,10 +172,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def _get_current_lesson(self, **kwargs):
         """Вспомогательный метод для получения текущего урока и главы пользователя для курса."""
         user = self.request.user
-        try:
-            course = get_object_or_404(Course, **kwargs)
-        except ValueError:
-            raise BadRequestException({"detail": "Invalid id."})
+        course = validate_id(Course, **kwargs)
 
         current_lesson = course.current_lesson(user).first()
         return current_lesson, user, course
@@ -202,10 +200,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         """
         user = self.request.user
-        try:
-            course = get_object_or_404(Course, **kwargs)
-        except ValueError:
-            raise BadRequestException({"detail": "Invalid id."})
+        course = validate_id(Course, **kwargs)
         subscription = course.subscribe(user)
         current_lesson = course.current_lesson(user).first()
         serializer = UserStatusEnrollmentSerializer(current_lesson, context={"subscription": subscription})
@@ -233,10 +228,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         """
         user = self.request.user
-        try:
-            course = get_object_or_404(Course, **kwargs)
-        except ValueError:
-            raise BadRequestException({"detail": "Invalid id."})
+        course = validate_id(Course, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -273,11 +265,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         Данное событие вызывает сигнал завершения курса.
         """
         user = self.request.user
-        try:
-            course = get_object_or_404(Course, **kwargs)
-            subscription = get_object_or_404(Subscription, course=course, user=user)
-        except ValueError:
-            raise BadRequestException({"detail": "Invalid id."})
+        course = validate_id(Course, **kwargs)
+        subscription = validate_id(Subscription, course=course, user=user)
         course.finish(subscription)
         # Отправить сигнал для получения ачивок
         course.get_achievements(course, user)
@@ -328,7 +317,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         user = self.request.user
         lesson_id = self.kwargs.get("pk")
-        lesson = get_object_or_404(Lesson, id=lesson_id)
+        lesson = validate_id(Lesson, id=lesson_id)
         lesson_with_ordering = lesson.ordered.get(id=lesson_id)
         if user.is_authenticated:
             try:
@@ -419,7 +408,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             необходимые действия по завершению урока для конкретного пользователя.
         """
         user = self.request.user
-        lesson = get_object_or_404(Lesson, **kwargs)
+        lesson = validate_id(Lesson, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=lesson.chapter.course)
         lesson.finish(subscription)
         return Response(status=status.HTTP_201_CREATED)
