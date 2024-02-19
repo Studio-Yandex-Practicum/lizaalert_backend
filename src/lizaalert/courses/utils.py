@@ -29,7 +29,7 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
 
 
 def validate_id(model, message="Invalid id.", **kwargs):
-    """Проверить коррекстность введенного id."""
+    """Проверить корректность введенного id."""
     try:
         return get_object_or_404(model, **kwargs)
     except ValueError:
