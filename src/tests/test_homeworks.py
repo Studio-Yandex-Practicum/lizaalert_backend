@@ -43,7 +43,7 @@ class TestHomework:
             else:
                 response = user_client.get(reverse("lesson-homework-detail", kwargs={"lesson_id": lesson.id}))
             assert response.data["text"] == text
-            assert response.data["status"] == result.label
+            assert response.data["status"] == result
             assert response.status_code == status_code
 
         # 1. Проверяем, что при get-запросе не существующей домашней работе возвращается код 204 и пустое поле текст.
