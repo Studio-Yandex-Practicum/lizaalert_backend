@@ -150,6 +150,9 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 ),
                 "current_lesson": current_lesson.values("id")[:1],
                 "current_chapter": current_lesson.values("chapter_id")[:1],
+                "start_date": Subscription.objects.filter(course=OuterRef("id"), user=user).values(
+                    "cohort__start_date"
+                )[:1],
             }
             return (
                 Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
