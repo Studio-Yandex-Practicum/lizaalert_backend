@@ -14,10 +14,7 @@ class HomeworkAdmin(admin.ModelAdmin):
         "lesson",
     )
     ordering = ("updated_at",)
-    list_select_related = (
-        "subscription",
-        # "user",
-    )
+    list_select_related = ("subscription",)
 
     def user(self, obj):
         """Получить пользователя, связанного с подпиской на задание."""
