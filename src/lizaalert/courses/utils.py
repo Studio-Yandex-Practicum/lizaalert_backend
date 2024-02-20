@@ -1,9 +1,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-
-from lizaalert.homeworks.models import ProgressionStatus
 from lizaalert.courses.exceptions import BadRequestException
+from lizaalert.homeworks.models import ProgressionStatus
 
 
 class CourseBreadcrumbSerializer(serializers.Serializer):
