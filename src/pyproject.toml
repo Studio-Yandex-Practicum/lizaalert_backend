@@ -25,6 +25,8 @@ factory-boy = "^3.2.1"
 django-filter = "^22.1"
 djoser = "^2.1.0"
 sentry-sdk = {extras = ["django"], version = "^1.39.2"}
+django-tinymce = "^3.7.1"
+pyenchant = "^3.2.2"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
