@@ -46,8 +46,8 @@ class TestHomework:
             assert response.data["status"] == result
             assert response.status_code == status_code
 
-        # 1. Проверяем, что при get-запросе не существующей домашней работе возвращается код 204 и пустое поле текст.
-        assert_status_homework(user, user_client, status.HTTP_204_NO_CONTENT)
+        # 1. Проверяем, что при get-запросе не существующей домашней работе возвращается код 404 и пустое поле текст.
+        assert_status_homework(user, user_client, status.HTTP_404_NOT_FOUND)
         # 2. Проверяем, что создается объект домашней работы возвращается код 201 и поле текст соответствует
         # переданному тексту.
         assert_status_homework(user, user_client, status.HTTP_201_CREATED, "Текст", "post")

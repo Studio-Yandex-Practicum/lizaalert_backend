@@ -53,5 +53,5 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
             serializer = self.get_serializer(instance)
         except Http404:
             serializer = EmptyHomeworkSerializer()
-            return response.Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+            return response.Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
         return response.Response(serializer.data, status=status.HTTP_200_OK)
