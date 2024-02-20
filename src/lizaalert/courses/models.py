@@ -315,7 +315,8 @@ class Lesson(
 
     def finish(self, subscription):
         """Завершить данный урок."""
-        check_finished_content(self, subscription, lesson_type=[Lesson.LessonType.HOMEWORK])
+        if not check_finished_content(self, subscription, lesson_type=[Lesson.LessonType.HOMEWORK]):
+            raise ProgressNotFinishedException("Необходимый контент урока не пройден.")
         super().finish(subscription)
 
 

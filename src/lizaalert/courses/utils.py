@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from lizaalert.courses.exceptions import ProgressNotFinishedException
 from lizaalert.homeworks.models import ProgressionStatus
 
 
@@ -36,10 +35,9 @@ def check_finished_content(lesson, subscription, lesson_type=None):
     Если тип урока имеет обязательный контент, то необходимо проверить, что контент пройден.
     """
     if lesson.lesson_type in lesson_type:
-        approved = (
+        return (
             getattr(lesson, lesson.lesson_type.lower())
             .filter(subscription=subscription, status=ProgressionStatus.APPROVED, required=True)
             .exists()
         )
-        if not approved:
-            raise ProgressNotFinishedException("Необходимый контент урока не пройден.")
+    return True
