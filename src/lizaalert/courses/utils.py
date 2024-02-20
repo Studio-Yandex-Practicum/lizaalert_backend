@@ -28,9 +28,9 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
     lesson_id = serializers.IntegerField()
 
 
-def get_object(model, message="Invalid id.", **kwargs):
+def get_object(model, **kwargs):
     """Проверить корректность введенного id."""
     try:
         return get_object_or_404(model, **kwargs)
     except ValueError:
-        raise BadRequestException({"detail": message})
+        raise BadRequestException()
