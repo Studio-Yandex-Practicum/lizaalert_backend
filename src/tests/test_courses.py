@@ -73,6 +73,9 @@ class TestCourse:
         interfere with our Course.
         Asserts correct lessons_count.
         Asserts correct total course duration.
+
+        Проверяем, что дата начала курса для подписанного пользователя отображается правильно
+         в зависимости от условий начала когорты, как в списке курсов, так и у конкретного курса.
         """
         chapter = ChapterWith3Lessons()
         lessons = Lesson.objects.filter(chapter_id=chapter.id)
@@ -84,6 +87,28 @@ class TestCourse:
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
         assert response.json()["lessons_count"] == 3
         assert response.json()["course_duration"] == course_duration
+
+        def assert_start_date(cohort):
+            course = cohort.course
+            start_date = cohort.start_date.isoformat() if cohort.start_date else None
+            _ = SubscriptionFactory(course=course, user=user)
+            url = reverse("courses-detail", kwargs={"pk": course.id})
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["start_date"] == start_date
+
+            url = reverse("courses-list")
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            for result in response.json()["results"]:
+                if result["id"] == course.id:
+                    assert result["start_date"] == start_date
+
+        # Тест с датой начала когрты в будущем.
+        assert_start_date(CohortFactory())
+
+        # Тест с открытой когортой.
+        assert_start_date(CohortAlwaysAvailableFactory())
 
     def test_course_status_anonymous(self, anonymous_client):
         response = anonymous_client.get(self.url)
@@ -774,33 +799,3 @@ class TestCourse:
         assert_unpublished_object(lesson.chapter.course, "lessons-detail", lesson.id, status.HTTP_403_FORBIDDEN)
         # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
         assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)
-
-    def test_start_date_working_properly(self, user, user_client):
-        """
-        Тест, что дата начала курса работает корректно.
-
-        Проверяем, что дата начала курса для подписанного пользователя отображается правильно
-         в зависимости от условий начала когорты, как в списке курсов, так и у конкретного курса.
-        """
-
-        def assert_start_date(cohort):
-            course = cohort.course
-            start_date = cohort.start_date.isoformat() if cohort.start_date else None
-            _ = SubscriptionFactory(course=course, user=user)
-            url = reverse("courses-detail", kwargs={"pk": course.id})
-            response = user_client.get(url)
-            assert response.status_code == status.HTTP_200_OK
-            assert response.json()["start_date"] == start_date
-
-            url = reverse("courses-list")
-            response = user_client.get(url)
-            assert response.status_code == status.HTTP_200_OK
-            for result in response.json()["results"]:
-                if result["id"] == course.id:
-                    assert result["start_date"] == start_date
-
-        # Тест с датой начала когрты в будущем.
-        assert_start_date(CohortFactory())
-
-        # Тест с открытой когортой.
-        assert_start_date(CohortAlwaysAvailableFactory())
