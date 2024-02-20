@@ -313,9 +313,10 @@ class Lesson(
         ordered_lessons = self.ordered
         return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering")[:1]
 
-    @check_finished_content(lesson_type=[LessonType.HOMEWORK])
     def finish(self, subscription):
         """Завершить данный урок."""
+        if not check_finished_content(self, subscription, lesson_type=[Lesson.LessonType.HOMEWORK]):
+            raise ProgressNotFinishedException("Необходимый контент урока не пройден.")
         super().finish(subscription)
 
 

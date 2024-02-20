@@ -2,7 +2,9 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ValidationErro
 
 
 class BadRequestException(ValidationError):
-    pass
+    """Исключение для некорректных данных."""
+
+    default_detail = "Invalid id or other value."
 
 
 class AlreadyExistsException(PermissionDenied):

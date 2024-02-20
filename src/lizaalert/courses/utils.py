@@ -1,8 +1,7 @@
-import functools
-
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from lizaalert.courses.exceptions import ProgressNotFinishedException
+from lizaalert.courses.exceptions import BadRequestException
 from lizaalert.homeworks.models import ProgressionStatus
 
 
@@ -30,27 +29,25 @@ class BreadcrumbLessonSerializer(serializers.Serializer):
     lesson_id = serializers.IntegerField()
 
 
-def check_finished_content(lesson_type=None):
+def check_finished_content(lesson, subscription, lesson_type=None):
     """
     Проверка завершения контента урока.
 
     В кортеж lesson_type передаются типы уроков, для которых необходимо проверить завершение контента.
     Если тип урока имеет обязательный контент, то необходимо проверить, что контент пройден.
     """
+    if lesson.lesson_type in lesson_type:
+        return (
+            getattr(lesson, lesson.lesson_type.lower())
+            .filter(subscription=subscription, status=ProgressionStatus.APPROVED, required=True)
+            .exists()
+        )
+    return True
 
-    def decorator_func(func):
-        @functools.wraps(func)
-        def wrapper(lesson, subscription, *args, **kwargs):
-            if lesson.lesson_type in lesson_type:
-                approved = (
-                    getattr(lesson, lesson.lesson_type.lower())
-                    .filter(subscription=subscription, status=ProgressionStatus.APPROVED, required=True)
-                    .exists()
-                )
-                if not approved:
-                    raise ProgressNotFinishedException("Необходимый контент урока не пройден.")
-            return func(lesson, subscription, *args, **kwargs)
 
-        return wrapper
-
-    return decorator_func
+def get_object(model, **kwargs):
+    """Проверить корректность введенного id."""
+    try:
+        return get_object_or_404(model, **kwargs)
+    except ValueError:
+        raise BadRequestException()
