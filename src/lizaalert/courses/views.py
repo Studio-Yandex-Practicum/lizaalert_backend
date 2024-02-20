@@ -31,7 +31,7 @@ from lizaalert.courses.serializers import (
     MessageResponseSerializer,
     UserStatusEnrollmentSerializer,
 )
-from lizaalert.courses.utils import validate_id
+from lizaalert.courses.utils import get_object
 from lizaalert.users.models import Level
 
 
@@ -81,7 +81,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         course_id = self.kwargs.get("pk")
         course = None
         if course_id:
-            course = validate_id(Course, id=course_id)
+            course = get_object(Course, id=course_id)
         lesson_status = Lesson.LessonStatus.PUBLISHED
         base_annotations = {
             "course_duration": Sum(
@@ -172,7 +172,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def _get_current_lesson(self, **kwargs):
         """Вспомогательный метод для получения текущего урока и главы пользователя для курса."""
         user = self.request.user
-        course = validate_id(Course, **kwargs)
+        course = get_object(Course, **kwargs)
 
         current_lesson = course.current_lesson(user).first()
         return current_lesson, user, course
@@ -200,7 +200,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         """
         user = self.request.user
-        course = validate_id(Course, **kwargs)
+        course = get_object(Course, **kwargs)
         subscription = course.subscribe(user)
         current_lesson = course.current_lesson(user).first()
         serializer = UserStatusEnrollmentSerializer(current_lesson, context={"subscription": subscription})
@@ -228,7 +228,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         """
         user = self.request.user
-        course = validate_id(Course, **kwargs)
+        course = get_object(Course, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=course)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -265,8 +265,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         Данное событие вызывает сигнал завершения курса.
         """
         user = self.request.user
-        course = validate_id(Course, **kwargs)
-        subscription = validate_id(Subscription, course=course, user=user)
+        course = get_object(Course, **kwargs)
+        subscription = get_object(Subscription, course=course, user=user)
         course.finish(subscription)
         # Отправить сигнал для получения ачивок
         course.get_achievements(course, user)
@@ -317,7 +317,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         """
         user = self.request.user
         lesson_id = self.kwargs.get("pk")
-        lesson = validate_id(Lesson, id=lesson_id)
+        lesson = get_object(Lesson, id=lesson_id)
         lesson_with_ordering = lesson.ordered.get(id=lesson_id)
         if user.is_authenticated:
             try:
@@ -408,7 +408,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             необходимые действия по завершению урока для конкретного пользователя.
         """
         user = self.request.user
-        lesson = validate_id(Lesson, **kwargs)
+        lesson = get_object(Lesson, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=lesson.chapter.course)
         lesson.finish(subscription)
         return Response(status=status.HTTP_201_CREATED)
