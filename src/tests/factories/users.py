@@ -58,11 +58,13 @@ class LevelFactory(factory.django.DjangoModelFactory):
 class BadgeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Badge
+        django_get_or_create = ("badge_slug",)
 
     name = factory.Faker("word")
     description = factory.Faker("sentence")
     badge_type = Badge.BadgeType.MANUAL
     badge_category = Badge.BadgeCategory.ONE_TIME
+    badge_slug = factory.Sequence(lambda n: f"test_slug_{n}")
     issued_for = factory.Faker("word")
     threshold_courses = None
     threshold_course = None

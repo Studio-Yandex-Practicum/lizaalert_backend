@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 from django.urls import reverse
+from rest_framework import status
 
 from lizaalert.courses.models import Lesson, LessonProgressStatus
 from lizaalert.users.admin import BadgeAdminForm, VolunteerBadgeAdminForm
@@ -21,6 +22,15 @@ class TestBadgeModel:
         """Тестирование создания объекта Badge с использованием фикстуры."""
         created_badge = BadgeFactory()
         assert created_badge.id
+
+    def test_volunteer_badge_finding(self, user_client):
+        """Тестирование фильтрации волонтеров по бэйджу."""
+        volunteer_badge_1, _ = VolunteerBadgeFactory(), VolunteerBadgeFactory()
+        url = reverse("volunteerbadgelist", kwargs={"badge_slug": volunteer_badge_1.badge.badge_slug})
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 1
+        assert response.json()[0]["id"] == volunteer_badge_1.volunteer.id
 
     def test_badge_validation_both_thresholds_filled(self):
         """Тестирование валидации, когда оба поля (threshold_courses и threshold_course) заполнены."""
