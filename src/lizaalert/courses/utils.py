@@ -1,6 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
+
 from lizaalert.homeworks.models import ProgressionStatus
+from lizaalert.courses.exceptions import BadRequestException
 
 
 class CourseBreadcrumbSerializer(serializers.Serializer):
@@ -41,3 +44,11 @@ def check_finished_content(lesson, subscription, lesson_type=None):
             .exists()
         )
     return True
+
+
+def get_object(model, **kwargs):
+    """Проверить корректность введенного id."""
+    try:
+        return get_object_or_404(model, **kwargs)
+    except ValueError:
+        raise BadRequestException()

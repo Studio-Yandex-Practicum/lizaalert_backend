@@ -46,6 +46,7 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     user_course_progress = serializers.ChoiceField(
         default=CourseProgressStatus.ProgressStatus.NOT_STARTED, choices=CourseProgressStatus.ProgressStatus
     )
+    start_date = serializers.DateField(read_only=True, default=None)
 
     @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
     def get_user_status(self, obj):
@@ -77,6 +78,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "knowledge",
             "user_status",
             "user_course_progress",
+            "start_date",
         )
 
 
@@ -137,6 +139,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "user_status",
             "user_course_progress",
             "current_lesson",
+            "start_date",
         )
 
     @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
