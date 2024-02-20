@@ -6,9 +6,11 @@ from django.dispatch import receiver
 from django.urls import reverse
 from rest_framework import status
 
+from lizaalert.courses.exceptions import ProgressNotFinishedException
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.courses.models import BaseProgress, Chapter, Course, Lesson, LessonProgressStatus
 from lizaalert.courses.signals import course_finished
+from lizaalert.homeworks.models import ProgressionStatus
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -28,6 +30,7 @@ from tests.factories.courses import (
     SubscriptionFactory,
     UnpublishedLessonFactory,
 )
+from tests.factories.homeworks import HomeworkFactory
 from tests.factories.users import LevelFactory
 
 
@@ -799,3 +802,34 @@ class TestCourse:
         assert_unpublished_object(lesson.chapter.course, "lessons-detail", lesson.id, status.HTTP_403_FORBIDDEN)
         # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
         assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)
+
+    def test_lessons_with_content_check(self, user):
+        """
+        Тест, что урок с контентом можно завершить только после прохождения контента.
+
+        1. Проверяем, что урок c непройденным контентом вызовет ошибку при завершении.
+        2. Проверяем, что урок с пройденным контентом можно завершить.
+        """
+        homework = HomeworkFactory()
+        lesson = homework.lesson
+        subscription = homework.subscription
+        _ = CohortAlwaysAvailableFactory(course=lesson.chapter.course)
+
+        def assert_finish(lesson, homework_status, expected_status=BaseProgress.ProgressStatus.FINISHED):
+            homework.status = homework_status
+            homework.save()
+            if homework_status == ProgressionStatus.APPROVED:
+                lesson.finish(subscription)
+                assert (
+                    LessonProgressStatus.objects.get(lesson=lesson, subscription=subscription).progress
+                    == expected_status
+                )
+            else:
+                with pytest.raises(ProgressNotFinishedException):
+                    lesson.finish(subscription)
+
+        # 1. Проверяем, что урок c непройденным контентом вызовет ошибку при завершении.
+        assert_finish(lesson, ProgressionStatus.DRAFT)
+
+        # 2. Проверяем, что урок с пройденным контентом можно завершить.
+        assert_finish(lesson, ProgressionStatus.APPROVED)
