@@ -131,10 +131,11 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Value(0),
                 )
             )
+            subscription_info = Subscription.objects.filter(course_id=OuterRef("id"), user=user)
 
             users_annotations = {
                 "user_status": Coalesce(
-                    Subquery(Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("status")),
+                    Subquery(subscription_info.values("status")),
                     Value("not_enrolled"),
                 ),
                 "user_course_progress": Coalesce(
@@ -150,6 +151,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 ),
                 "current_lesson": current_lesson.values("id")[:1],
                 "current_chapter": current_lesson.values("chapter_id")[:1],
+                "start_date": subscription_info.values("cohort__start_date")[:1],
             }
             return (
                 Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
