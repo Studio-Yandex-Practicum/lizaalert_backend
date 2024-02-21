@@ -46,6 +46,7 @@ class BadgeAdminForm(forms.ModelForm):
             "badge_type",
             "badge_category",
             "issued_for",
+            "badge_slug",
             "threshold_courses",
             "threshold_course",
         )

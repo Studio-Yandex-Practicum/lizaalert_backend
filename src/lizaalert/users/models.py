@@ -153,6 +153,7 @@ class Badge(models.Model):
     image = ThumbnailerImageField("Изображение значка", upload_to="badges/", blank=True, null=True)
     badge_type = models.CharField("Вид значка", choices=BadgeType.choices, max_length=20)
     badge_category = models.CharField("Тип значка", choices=BadgeCategory.choices, max_length=20)
+    badge_slug = models.SlugField("Поле поиска", max_length=100, blank=True, null=True, unique=True)
     issued_for = models.CharField("За что", max_length=255)
     threshold_courses = models.PositiveIntegerField("Количество курсов для получения", null=True, blank=True)
     threshold_course = models.ForeignKey(
