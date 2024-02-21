@@ -35,16 +35,15 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
             lesson_id=lesson_id, subscription=subscription, defaults={"reviewer": reviewer}
         )
         if not created:
-            for attr, value in serializer.validated_data.items():
-                setattr(homework, attr, value)
-            homework.save()
+            homework.status = serializer.validated_data.get("status")
+            homework.text = serializer.validated_data.get("text")
         serializer.instance = homework
         return super().perform_create(serializer)
 
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: HomeworkSerializer,
-            status.HTTP_204_NO_CONTENT: EmptyHomeworkSerializer,
+            status.HTTP_404_NOT_FOUND: EmptyHomeworkSerializer,
         }
     )
     def retrieve(self, request, *args, **kwargs):
