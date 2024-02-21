@@ -1,6 +1,15 @@
+from collections import namedtuple
+from unittest.mock import patch
+
 import pytest
+from django.contrib.auth import get_user_model
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from lizaalert.authentication.views import TokenExchange
+
+User = get_user_model()
 
 
 class TestAuthFull:
@@ -36,6 +45,30 @@ class TestAuthFull:
         headers = {"HTTP_AUTHORIZATION": f"Bearer {response_obj['access']}"}
         response = client.post("/api/v1/auth/users/test/", **headers)
         assert response.status_code == status.HTTP_200_OK
+
+    @pytest.mark.django_db(transaction=True)
+    def test_yandex_auth(self, client):
+        url = reverse("token_exchange")
+        oauth_token = {"oauth_token": "fake_token"}
+        with patch.object(TokenExchange, "get_yandex_user_data") as mock_user_data:
+            mock_user_data.return_value = (None, status.HTTP_400_BAD_REQUEST)
+            response = client.post(url, data=oauth_token)
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.data == {"yandex_response_status": status.HTTP_400_BAD_REQUEST}
+            assert len(User.objects.all()) == 0
+
+            user_data = namedtuple("UserData", ("id", "login"))(1, "test_user")
+            mock_user_data.return_value = (user_data, status.HTTP_200_OK)
+            response = client.post(url, data=oauth_token)
+            assert response.status_code == status.HTTP_201_CREATED
+            assert bool(response.data.get("refresh", False)) + bool(response.data.get("refresh", False)) == 2
+            assert len(User.objects.all()) == 1
+            assert User.objects.filter(id=1, username="test_user").exists()
+
+            response = client.post(url, data=oauth_token)
+            assert response.status_code == status.HTTP_201_CREATED
+            assert bool(response.data.get("refresh", False)) + bool(response.data.get("refresh", False)) == 2
+            assert len(User.objects.all()) == 1
 
     @pytest.mark.django_db(transaction=True)
     def test_short_login(self, django_user_model):

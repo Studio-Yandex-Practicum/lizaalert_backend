@@ -6,8 +6,10 @@ Note:
 import logging
 import smtplib
 import socket
+from collections import namedtuple
 
 import requests
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -21,15 +23,15 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from lizaalert.settings.base import YANDEX_INFO_URL
-from .serializers import (
+from lizaalert.authentication.serializers import (
     OauthTokenSerializer,
     ResetPasswordSerializer,
     UserIdSerialiazer,
     UserSerializer,
     YandexResponseStatusSerializer,
 )
-from .utils import get_new_password
+from lizaalert.authentication.utils import get_new_password
+from lizaalert.users.serializers import Error400Serializer
 
 User = get_user_model()
 
@@ -139,25 +141,28 @@ class TokenExchange(APIView):
         request_body=OauthTokenSerializer,
         responses={
             201: TokenRefreshSerializer,
+            400: Error400Serializer,
             401: YandexResponseStatusSerializer,
         },
     )
     def post(self, request):
         yandex_user_data, status_code = self.get_yandex_user_data(request.data["oauth_token"])
         if not yandex_user_data:
-            return Response({"yandex_response_status": status_code}, status=status.HTTP_401_UNAUTHORIZED)
-        user = User.objects.get_or_create(username=yandex_user_data["login"], yandex_id=int(yandex_user_data["id"]))[0]
+            serializer = YandexResponseStatusSerializer(data={"yandex_response_status": status_code})
+            if serializer.is_valid():
+                return Response(serializer.data, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user, _ = User.objects.get_or_create(id=int(yandex_user_data.id), username=yandex_user_data.login)
         refresh = RefreshToken.for_user(user)
         data = {"refresh": str(refresh), "access": str(refresh.access_token)}
         return Response(data, status=status.HTTP_201_CREATED)
 
     @staticmethod
     def get_yandex_user_data(oauth_token):
-        url = f"{YANDEX_INFO_URL}format=json"
         headers = {"Authorization": f"OAuth {oauth_token}"}
-        request = requests.get(url, headers=headers)
-        if request.status_code == requests.codes.ok:
-            user_data = {"id": request.json()["id"], "login": request.json()["login"]}
+        request = requests.get(settings.YANDEX_INFO_URL, headers=headers)
+        if request.status_code == status.HTTP_200_OK:
+            user_data = namedtuple("UserData", ("id", "login"))(request.json()["id"], request.json()["login"])
         else:
             user_data = None
         return user_data, request.status_code
