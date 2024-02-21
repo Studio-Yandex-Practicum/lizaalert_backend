@@ -31,6 +31,7 @@ class BaseProgress(models.Model):
         verbose_name="прогресс",
         choices=ProgressStatus.choices,
         default=0,
+        db_index=True,
     )
 
     class Meta:
@@ -104,6 +105,7 @@ class Course(
         on_delete=models.PROTECT,
         verbose_name="Уровень",
         related_name="course",
+        db_index=True,
     )
     full_description = models.TextField(verbose_name="Полное описание курса")
     knowledge = models.ManyToManyField(
@@ -117,7 +119,9 @@ class Course(
         verbose_name="Часто задаваемые вопросы",
     )
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
-    status = models.IntegerField(verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT)
+    status = models.IntegerField(
+        verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT, db_index=True
+    )
 
     class Meta:
         verbose_name = "Курс"
@@ -264,7 +268,7 @@ class Lesson(
     )
     description = models.TextField(blank=True, null=True, verbose_name="описание урока")
     video_link = models.URLField(blank=True, null=True, verbose_name="Ссылка на видеоурок")
-    lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices)
+    lesson_type = models.CharField(max_length=20, verbose_name="тип урока", choices=LessonType.choices, db_index=True)
     tags = models.CharField(max_length=255, verbose_name="ключевые слова урока")
     duration = models.PositiveSmallIntegerField(verbose_name="продолжительность урока")
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="квиз")
@@ -280,7 +284,9 @@ class Lesson(
         on_delete=models.PROTECT,
         verbose_name="пользователь, внёсший изменения в урок",
     )
-    status = models.IntegerField(verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT)
+    status = models.IntegerField(
+        verbose_name="статус урока", choices=LessonStatus.choices, default=LessonStatus.DRAFT, db_index=True
+    )
     additional = models.BooleanField(verbose_name="дополнительный урок", default=False)
     diploma = models.BooleanField(verbose_name="дипломный урок", default=False)
 
@@ -538,6 +544,9 @@ class Subscription(TimeStampedModel):
                 fields=["user", "course"],
                 name="unique_user_course",
             ),
+        ]
+        indexes = [
+            models.Index(fields=["user", "course"]),
         ]
 
         ordering = ("user",)

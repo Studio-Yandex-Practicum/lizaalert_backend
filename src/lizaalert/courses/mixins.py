@@ -32,7 +32,10 @@ def order_number_mixin(step, parent_field):
             abstract = True
 
         order_number = models.PositiveSmallIntegerField(
-            verbose_name="порядковый номер", validators=[MinValueValidator(1)], blank=True
+            verbose_name="порядковый номер",
+            validators=[MinValueValidator(1)],
+            blank=True,
+            db_index=True,
         )
 
         @property
