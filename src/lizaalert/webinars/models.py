@@ -9,15 +9,40 @@ WEBINAR_PROGRESS = (
 )
 
 
-class Webinar(TimeStampedModel):
+class WebinarTemplate(TimeStampedModel):
     """
-    Модель для вебинара.
+    Модель для создания вебинара.
 
-    У модели есть 2 статуса прохождения.
-    status - статус прохождения;
     урок - урок, к которому привязан вебинар;
     link - ссылка на вебинар;
-    subscription - подписка, к которой привязан вебинар.
+    когорта - когорта, к которой привязан вебинар.
+    """
+
+    lesson = models.ForeignKey("courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="webinar")
+    description = models.TextField(verbose_name="Описание вебинара")
+    link = models.CharField(verbose_name="Ссылка на вебинар", max_length=400)
+    cohort = models.ForeignKey(
+        "courses.Cohort", on_delete=models.CASCADE, verbose_name="Когорта", related_name="webinar"
+    )
+    webinar_date = models.DateTimeField(verbose_name="Дата вебинара")
+
+    class Meta:
+        verbose_name = "Вебинар для когорты"
+        verbose_name_plural = "Вебинары для когорты"
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"Вебинар для урока {self.lesson}"
+
+
+class Webinar(TimeStampedModel):
+    """
+    Модель прогресса вебинара.
+
+    status - прогресс вебинара;
+    subscription - подписка, к которой привязан вебинар;
+    lesson - урок, к которому привязан вебинар;
+    template - шаблон вебинара.
     """
 
     status = models.PositiveSmallIntegerField(
@@ -25,15 +50,16 @@ class Webinar(TimeStampedModel):
         choices=WEBINAR_PROGRESS,
         default=ProgressionStatus.DRAFT,
     )
-    lesson = models.ForeignKey("courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="webinar")
-    link = models.CharField(verbose_name="Ссылка на вебинар", max_length=400)
     subscription = models.ForeignKey("courses.Subscription", on_delete=models.CASCADE, verbose_name="Подписка")
-    webinar_date = models.DateTimeField(verbose_name="Дата вебинара")
+    template = models.ForeignKey(WebinarTemplate, on_delete=models.CASCADE, verbose_name="Шаблон вебинара")
+    lesson = models.ForeignKey(
+        "courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="webinar_progress"
+    )
 
     class Meta:
-        verbose_name = "Вебинар"
-        verbose_name_plural = "Вебинары"
+        verbose_name = "Прогресс вебинара"
+        verbose_name_plural = "Прогресс вебинара"
         ordering = ["-updated_at"]
 
     def __str__(self):
-        return f"Вебинар для урока {self.lesson} - от пользователя {self.subscription}"
+        return f"Прогресс вебинара {self.template} для {self.subscription}"
