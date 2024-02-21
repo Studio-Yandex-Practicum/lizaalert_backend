@@ -28,6 +28,7 @@ class Webinar(TimeStampedModel):
     lesson = models.ForeignKey("courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="webinar")
     link = models.CharField(verbose_name="Ссылка на вебинар", max_length=400)
     subscription = models.ForeignKey("courses.Subscription", on_delete=models.CASCADE, verbose_name="Подписка")
+    webinar_date = models.DateTimeField(verbose_name="Дата вебинара")
 
     class Meta:
         verbose_name = "Вебинар"
