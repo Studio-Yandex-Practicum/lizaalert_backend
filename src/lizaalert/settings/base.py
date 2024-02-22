@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "lizaalert.quizzes",
     "lizaalert.authentication",
     "lizaalert.homeworks",
+    "lizaalert.webinars",
 ]
 
 MIDDLEWARE = [
