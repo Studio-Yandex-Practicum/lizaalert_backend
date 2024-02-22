@@ -25,7 +25,7 @@ class WebinarViewSet(viewsets.ReadOnlyModelViewSet):
         lesson = self.kwargs.get("lesson_id")
         user = self.request.user
         return Webinar.objects.filter(
-            lesson_id=lesson, cohort__subscriptions__user=user, cohort__course__chapters__lessons=lesson
+            lesson_id=lesson, cohort__subscriptions__user_id=user, cohort__course__chapters__lessons=lesson
         ).order_by("webinar_date")
 
     def get_object(self):
