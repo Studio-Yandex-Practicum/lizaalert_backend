@@ -18,7 +18,7 @@ class Webinar(admin.ModelAdmin):
         "webinar_date",
     )
     ordering = ("updated_at",)
-    list_select_related = ("cohort",)
+    list_select_related = ("cohort", "lesson")
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Ограничить в выдаче только уроки типа вебинар."""
