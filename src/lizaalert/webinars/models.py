@@ -26,4 +26,4 @@ class Webinar(TimeStampedModel):
         ordering = ["-updated_at"]
 
     def __str__(self):
-        return f"Вебинар для урока {self.lesson} и когорты {self.cohort}"
+        return f"<Lesson: {self.lesson_id}, Cohort: {self.cohort_id}>"

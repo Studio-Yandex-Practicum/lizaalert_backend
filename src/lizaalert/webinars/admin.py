@@ -15,6 +15,7 @@ class Webinar(admin.ModelAdmin):
     list_display = (
         "lesson",
         "cohort",
+        "course",
         "webinar_date",
     )
     ordering = ("updated_at",)
@@ -28,3 +29,6 @@ class Webinar(admin.ModelAdmin):
         if db_field.name == "lesson":
             kwargs["queryset"] = Lesson.objects.filter(lesson_type=Lesson.LessonType.WEBINAR)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def course(self, obj):
+        return obj.lesson.chapter.course

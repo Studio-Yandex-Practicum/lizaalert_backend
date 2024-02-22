@@ -19,4 +19,4 @@ class WebinarFactory(factory.django.DjangoModelFactory):
         datetime.date.today() + datetime.timedelta(days=5),
         datetime.date.today() + datetime.timedelta(days=10),
     )
-    cohort = factory.SubFactory(CohortFactory)
+    cohort = factory.SubFactory(CohortFactory, course=factory.SelfAttribute("..lesson.chapter.course"))
