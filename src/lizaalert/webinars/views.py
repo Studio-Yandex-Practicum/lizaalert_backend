@@ -1,9 +1,10 @@
-from rest_framework import viewsets
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from lizaalert.webinars.exceptions import NoSuitableWebinar
 from lizaalert.webinars.models import Webinar
-from lizaalert.webinars.serializers import WebinarSerializer
+from lizaalert.webinars.serializers import ErrorSerializer, WebinarSerializer
 
 
 class WebinarViewSet(viewsets.ReadOnlyModelViewSet):
@@ -33,3 +34,12 @@ class WebinarViewSet(viewsets.ReadOnlyModelViewSet):
         if obj := queryset.first():
             return obj
         raise NoSuitableWebinar()
+
+    @swagger_auto_schema(
+        responses={
+            status.HTTP_200_OK: WebinarSerializer,
+            status.HTTP_404_NOT_FOUND: ErrorSerializer("Подходящий вебинар не найден."),
+        }
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)

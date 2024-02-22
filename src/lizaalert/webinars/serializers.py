@@ -16,3 +16,9 @@ class WebinarSerializer(serializers.ModelSerializer):
             "cohort",
             "webinar_date",
         )
+
+
+class ErrorSerializer(serializers.Serializer):
+    """Сериализатор ошибки."""
+
+    detail = serializers.CharField()
