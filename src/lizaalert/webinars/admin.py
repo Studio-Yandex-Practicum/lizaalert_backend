@@ -22,6 +22,7 @@ class Webinar(admin.ModelAdmin):
     list_select_related = (
         "cohort",
         "lesson",
+        "lesson__chapter__course",
     )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
