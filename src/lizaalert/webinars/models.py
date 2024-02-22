@@ -13,8 +13,8 @@ class Webinar(TimeStampedModel):
     """
 
     lesson = models.ForeignKey("courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="webinar")
-    description = models.TextField(verbose_name="Описание вебинара")
-    link = models.CharField(verbose_name="Ссылка на вебинар", max_length=400)
+    description = models.TextField(verbose_name="Описание вебинара", max_length=5000, blank=True, null=True)
+    link = models.URLField(verbose_name="Ссылка на вебинар", max_length=400)
     cohort = models.ForeignKey(
         "courses.Cohort", on_delete=models.CASCADE, verbose_name="Когорта", related_name="webinar"
     )
@@ -26,4 +26,4 @@ class Webinar(TimeStampedModel):
         ordering = ["-updated_at"]
 
     def __str__(self):
-        return f"Вебинар для урока {self.lesson}"
+        return f"Вебинар для урока {self.lesson} и когорты {self.cohort}"

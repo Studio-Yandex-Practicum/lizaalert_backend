@@ -4,8 +4,8 @@ from lizaalert.webinars.views import WebinarViewSet
 
 urlpatterns = [
     path(
-        "lessons/<int:lesson_id>/homework/",
+        "lessons/<int:lesson_id>/webinar/",
         WebinarViewSet.as_view({"get": "retrieve"}),
-        name="lesson-homework-detail",
+        name="lesson-webinar-detail",
     ),
 ]
