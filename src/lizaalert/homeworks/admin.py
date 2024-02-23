@@ -4,7 +4,7 @@ from rest_framework.decorators import permission_classes
 from tinymce.widgets import TinyMCE
 
 from lizaalert.homeworks.models import Homework
-from lizaalert.homeworks.permissions import IsAuthenticated
+from lizaalert.homeworks.permissions import IsReviewerOrSuperUser
 
 
 class HomeworkAdminForm(forms.ModelForm):
@@ -28,7 +28,7 @@ class HomeworkAdmin(admin.ModelAdmin):
         "lesson",
     )
     ordering = ("updated_at",)
-    list_select_related = ("subscription",)
+    list_select_related = ("subscription__user",)
 
     def user(self, obj):
         """Получить пользователя, связанного с подпиской на задание."""
@@ -47,12 +47,12 @@ class HomeworkAdmin(admin.ModelAdmin):
             return qs
         return qs.filter(reviewer=request.user)
 
-    @permission_classes([IsAuthenticated])
-    def has_change_permission(self, request, obj=None):
+    @permission_classes([IsReviewerOrSuperUser])
+    def has_permission(self, request, obj=None):
         """Проверить разрешение на изменение."""
         pass
 
-    @permission_classes([IsAuthenticated])
-    def has_delete_permission(self, request, obj=None):
+    @permission_classes([IsReviewerOrSuperUser])
+    def has_object_permission(self, request, view, obj=None):
         """Проверить разрешение на удаление."""
         pass
