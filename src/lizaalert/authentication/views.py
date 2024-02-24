@@ -31,7 +31,6 @@ from lizaalert.authentication.serializers import (
     YandexResponseStatusSerializer,
 )
 from lizaalert.authentication.utils import get_new_password
-from lizaalert.users.serializers import Error400Serializer
 
 User = get_user_model()
 
@@ -134,35 +133,38 @@ class TokenExchange(APIView):
 
     """
 
+    class YandexStatus:
+        def __init__(self, status):
+            self.yandex_response_status = status
+
     permission_classes = [AllowAny]
+    UserData = namedtuple("UserData", ("id", "login"))
+    StatusCode = namedtuple("StatusCode", ("yandex_response_status",))
 
     @swagger_auto_schema(
         operation_description="Принимает OAuth-токен Яндекс, Возвращает acsess и refresh JWT-токены",
         request_body=OauthTokenSerializer,
         responses={
             201: TokenRefreshSerializer,
-            400: Error400Serializer,
             401: YandexResponseStatusSerializer,
         },
     )
     def post(self, request):
         yandex_user_data, status_code = self.get_yandex_user_data(request.data["oauth_token"])
         if not yandex_user_data:
-            serializer = YandexResponseStatusSerializer(data={"yandex_response_status": status_code})
-            if serializer.is_valid():
-                return Response(serializer.data, status=status.HTTP_401_UNAUTHORIZED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = YandexResponseStatusSerializer(status_code)
+            return Response(serializer.data, status=status.HTTP_401_UNAUTHORIZED)
         user, _ = User.objects.get_or_create(id=int(yandex_user_data.id), username=yandex_user_data.login)
         refresh = RefreshToken.for_user(user)
         data = {"refresh": str(refresh), "access": str(refresh.access_token)}
         return Response(data, status=status.HTTP_201_CREATED)
 
-    @staticmethod
-    def get_yandex_user_data(oauth_token):
+    def get_yandex_user_data(self, oauth_token):
         headers = {"Authorization": f"OAuth {oauth_token}"}
         request = requests.get(settings.YANDEX_INFO_URL, headers=headers)
         if request.status_code == status.HTTP_200_OK:
-            user_data = namedtuple("UserData", ("id", "login"))(request.json()["id"], request.json()["login"])
+            request_data = request.json()
+            user_data = self.UserData(request_data["id"], request_data["login"])
         else:
             user_data = None
-        return user_data, request.status_code
+        return user_data, self.YandexStatus(request.status_code)
