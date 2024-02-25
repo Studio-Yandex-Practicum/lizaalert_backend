@@ -11,6 +11,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("lizaalert.courses.urls")),
     path("api/v1/", include("lizaalert.quizzes.urls")),
+    path("api/v1/", include("lizaalert.webinars.urls")),
     path("api/v1/", include("lizaalert.homeworks.urls")),
     path("api/v1/", include("lizaalert.users.urls")),
     path("api/v1/", include("lizaalert.authentication.urls")),
