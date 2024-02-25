@@ -38,7 +38,7 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
             homework.status = serializer.validated_data.get("status")
             homework.text = serializer.validated_data.get("text")
         serializer.instance = homework
-        return super().perform_create(serializer)
+        serializer.save()
 
     @swagger_auto_schema(
         responses={
