@@ -34,11 +34,10 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         homework, created = Homework.objects.get_or_create(
             lesson_id=lesson_id, subscription=subscription, defaults={"reviewer": reviewer}
         )
-        if not created:
-            homework.status = serializer.validated_data.get("status")
-            homework.text = serializer.validated_data.get("text")
+        homework.status = serializer.validated_data.get("status")
+        homework.text = serializer.validated_data.get("text")
+        homework.save()
         serializer.instance = homework
-        serializer.save()
 
     @swagger_auto_schema(
         responses={
