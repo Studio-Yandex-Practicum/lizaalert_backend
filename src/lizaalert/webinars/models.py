@@ -1,6 +1,8 @@
 from django.db import models
+from django.utils import timezone
 
 from lizaalert.courses.mixins import TimeStampedModel
+from lizaalert.settings.constants import DEFAULT_WEBINAR_LENGTH
 
 
 class Webinar(TimeStampedModel):
@@ -20,6 +22,9 @@ class Webinar(TimeStampedModel):
     description = models.TextField(verbose_name="Описание вебинара", max_length=5000, blank=True, null=True)
     link = models.URLField(verbose_name="Ссылка на вебинар", max_length=400, blank=True, null=True)
     recording_link = models.URLField(verbose_name="Запись вебинара", max_length=400, blank=True, null=True)
+    recording_description = models.TextField(
+        verbose_name="Описание записи вебинара", max_length=1000, blank=True, null=True
+    )
     cohort = models.ForeignKey(
         "courses.Cohort", on_delete=models.CASCADE, verbose_name="Когорта", related_name="webinar"
     )
@@ -27,6 +32,7 @@ class Webinar(TimeStampedModel):
     status = models.PositiveSmallIntegerField(
         verbose_name="Статус вебинара", default=Status.COMING, choices=Status.choices
     )
+    duration = models.PositiveSmallIntegerField(verbose_name="Длительность вебинара", default=DEFAULT_WEBINAR_LENGTH)
 
     class Meta:
         verbose_name = "Вебинар для когорты"
@@ -35,3 +41,15 @@ class Webinar(TimeStampedModel):
 
     def __str__(self):
         return f"<Lesson: {self.lesson_id}, Cohort: {self.cohort_id}>"
+
+    @property
+    def check_status(self):
+        """
+        Получение статуса прохождения вебинара.
+
+        Если дата-время вебинара + предполагаемая длительность вебинара в минутах, меньше текущего времени,
+        то вебинар считается завершенным, иначе - запланированным.
+        """
+        if (self.webinar_date + timezone.timedelta(minutes=self.duration)) <= timezone.now():
+            return Webinar.Status.FINISHED
+        return Webinar.Status.COMING

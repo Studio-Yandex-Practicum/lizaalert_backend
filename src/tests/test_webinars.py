@@ -59,7 +59,7 @@ class TestWebinar:
 
         def assert_status(delta, status):
             webinar = WebinarFactory(
-                webinar_date=datetime.date.today() + datetime.timedelta(days=delta),
+                webinar_date=delta,
             )
             _ = SubscriptionFactory(user=user, course=webinar.lesson.chapter.course, cohort=webinar.cohort)
             url = reverse("lesson-webinar-detail", kwargs={"lesson_id": webinar.lesson.id})
@@ -68,7 +68,7 @@ class TestWebinar:
             assert response.json()["status"] == status
 
         # 1. Проверяем, что вебинар в будущем возвращается со статусом запланирован.
-        assert_status(5, Webinar.Status.COMING)
+        assert_status(datetime.date.today() + datetime.timedelta(days=5), Webinar.Status.COMING)
 
         # 2. Проверяем, что пройденный вебинар возвращается со статусом завершен.
-        assert_status(-5, Webinar.Status.FINISHED)
+        assert_status(datetime.date.today() - datetime.timedelta(days=5), Webinar.Status.FINISHED)
