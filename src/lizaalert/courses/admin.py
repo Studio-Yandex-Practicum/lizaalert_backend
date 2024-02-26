@@ -106,7 +106,9 @@ class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
 
     inlines = (CourseFaqInline, CourseKnowledgeInline, ChapterInline)
-    list_filter = ["direction",]
+    list_filter = [
+        "direction",
+    ]
     model = Course
     list_display = (
         "title",
@@ -239,12 +241,8 @@ class KnowledgeAdmin(admin.ModelAdmin):
 
     inlines = (CourseKnowledgeInline,)
     ordering = ("-updated_at",)
-    list_display = (
-        "title",
-        "author",
-        "created_at",
-        "updated_at",
-    )
+    list_filter = ("direction",)
+    list_display = ("title", "author", "created_at", "updated_at", "direction")
 
 
 @admin.register(Lesson)
@@ -295,16 +293,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
 class DirectionAdmin(admin.ModelAdmin):
     """Aдминка для Direction."""
 
-#    inlines = (CourseKnowledgeInline,)
     ordering = ("-updated_at",)
-#    list_filter = ["courses__direction",]
-    list_display = (
-        "title",
-        "author",
-        "created_at",
-        "updated_at",
-        "courses"
-    )
+    list_display = ("title", "author", "created_at", "updated_at", "courses")
+
     @admin.display(description="Курсы")
     def courses(self, obj):
         return list(obj.course_set.all())
