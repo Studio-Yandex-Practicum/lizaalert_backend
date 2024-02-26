@@ -1,5 +1,4 @@
 import datetime
-from pprint import pprint
 from unittest.mock import Mock
 
 import pytest
@@ -214,7 +213,6 @@ class TestCourse:
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
             assert subscription_response.status_code == expected_response
-            pprint(subscription_response.json())
             assert subscription_response.json()["start_date"] == start_date
             assert response.json()["user_status"] == expected_status
             subscription_response = user_client.post(subscribe)
@@ -226,7 +224,7 @@ class TestCourse:
             status.HTTP_201_CREATED,
             Subscription.Status.ENROLLED,
             status.HTTP_403_FORBIDDEN,
-            cohort_1.start_date.isoformat()
+            cohort_1.start_date.isoformat(),
         )
 
         # 2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
