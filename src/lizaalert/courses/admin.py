@@ -51,20 +51,15 @@ class ChapterInline(admin.TabularInline):
     readonly_fields = ("get_chapter_link",)
     fields = (
         "get_chapter_link",
-        "order_number",
         "title",
-        "user_created",
-        "user_modifier",
     )
 
     # Метод для отображения ссылки на главу курса
     def get_chapter_link(self, obj):
-        id = obj.id
-        if not id:
-            return "Нет названия"
         title = obj.title or "Нет названия"
-        url = reverse("admin:courses_chapter_change", args=(id,))
-        return format_html('<a href="{}">{}</a>', url, title)
+        if not (id := obj.id):
+            return format_html("<span>{}</span>", title)
+        return format_html('<a href="{}">{}</a>', reverse("admin:courses_chapter_change", args=(id,)), title)
 
     get_chapter_link.short_description = "Глава"
 
