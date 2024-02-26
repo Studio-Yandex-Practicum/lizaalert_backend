@@ -56,6 +56,7 @@ class TestWebinar:
         1. Проверяем, что вебинар в будущем возвращается со статусом запланирован.
         2. Проверяем, что пройденный вебинар возвращается со статусом завершен.
         """
+
         def assert_status(delta, status):
             webinar = WebinarFactory(
                 webinar_date=datetime.date.today() + datetime.timedelta(days=delta),
