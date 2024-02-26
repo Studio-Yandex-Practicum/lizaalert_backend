@@ -11,6 +11,7 @@ from lizaalert.courses.models import (
     CourseFaq,
     CourseKnowledge,
     CourseProgressStatus,
+    Direction,
     Knowledge,
     Lesson,
     LessonProgressStatus,
@@ -65,6 +66,14 @@ class ChapterInline(admin.TabularInline):
     get_chapter_link.short_description = "Глава"
 
 
+class DirectionInline(admin.StackedInline):
+    """Инлайн направления для отображения в главе."""
+
+    model = Direction
+    min_num = 1
+    extra = 0
+
+
 @admin.register(Cohort)
 class CohortAdmin(admin.ModelAdmin):
     """
@@ -97,6 +106,7 @@ class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
 
     inlines = (CourseFaqInline, CourseKnowledgeInline, ChapterInline)
+    list_filter = ["direction",]
     model = Course
     list_display = (
         "title",
@@ -105,6 +115,7 @@ class CourseAdmin(admin.ModelAdmin):
         "user_created",
         "created_at",
         "updated_at",
+        "direction",
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
@@ -278,3 +289,22 @@ class SubscriptionAdmin(admin.ModelAdmin):
     ]
 
     ordering = ("-updated_at",)
+
+
+@admin.register(Direction)
+class DirectionAdmin(admin.ModelAdmin):
+    """Aдминка для Direction."""
+
+#    inlines = (CourseKnowledgeInline,)
+    ordering = ("-updated_at",)
+#    list_filter = ["courses__direction",]
+    list_display = (
+        "title",
+        "author",
+        "created_at",
+        "updated_at",
+        "courses"
+    )
+    @admin.display(description="Курсы")
+    def courses(self, obj):
+        return list(obj.course_set.all())
