@@ -152,7 +152,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 "current_chapter": current_lesson.values("chapter_id")[:1],
             }
 
-            queryset = (
+            return (
                 Course.objects.filter(
                     Q(status=Course.CourseStatus.PUBLISHED)
                     | Q(
@@ -168,7 +168,6 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Prefetch("chapters__lessons", queryset=lessons_with_progress),
                 )
             )
-            return queryset
 
         return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 

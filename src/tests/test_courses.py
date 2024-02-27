@@ -793,4 +793,4 @@ class TestCourse:
         response = user_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert hidden_course.title not in [course["title"] for course in response.json()["results"]]
+        assert hidden_course.id not in set(course["id"] for course in response.json()["results"])
