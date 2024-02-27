@@ -91,6 +91,7 @@ class CohortAdmin(admin.ModelAdmin):
 
     course_title.short_description = "Курс"
 
+# TODO add user input protection
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
