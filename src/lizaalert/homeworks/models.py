@@ -1,8 +1,16 @@
 from django.db import models
 
 from lizaalert.courses.mixins import TimeStampedModel
-from lizaalert.courses.models import Lesson, Subscription
 from lizaalert.users.models import User
+
+
+class ProgressionStatus(models.IntegerChoices):
+    DRAFT = 0, "Черновик"
+    SUBMITTED = 1, "Отправлено"
+    IN_REVIEW = 2, "На проверке"
+    APPROVED = 3, "Одобрено"
+    REJECTED = 4, "Отклонено"
+    CANCELLED = 5, "Отменено"
 
 
 class Homework(TimeStampedModel):
@@ -18,14 +26,6 @@ class Homework(TimeStampedModel):
     required - обязательное задание или нет, по умолчанию обязательное.
     """
 
-    class ProgressionStatus(models.IntegerChoices):
-        DRAFT = 0, "Черновик"
-        SUBMITTED = 1, "Отправлено"
-        IN_REVIEW = 2, "На проверке"
-        APPROVED = 3, "Одобрено"
-        REJECTED = 4, "Отклонено"
-        CANCELLED = 5, "Отменено"
-
     reviewer = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -35,11 +35,13 @@ class Homework(TimeStampedModel):
         verbose_name="Проверяющий",
     )
     status = models.PositiveSmallIntegerField(
-        verbose_name="Статус", choices=ProgressionStatus.choices, default=ProgressionStatus.DRAFT
+        verbose_name="Статус",
+        choices=ProgressionStatus.choices,
+        default=ProgressionStatus.DRAFT,
     )
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, verbose_name="Урок")
+    lesson = models.ForeignKey("courses.Lesson", on_delete=models.CASCADE, verbose_name="Урок", related_name="homework")
     text = models.CharField(verbose_name="Текст задания", max_length=10000)
-    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, verbose_name="Подписка")
+    subscription = models.ForeignKey("courses.Subscription", on_delete=models.CASCADE, verbose_name="Подписка")
     required = models.BooleanField(verbose_name="Обязательное задание", default=True)
 
     class Meta:

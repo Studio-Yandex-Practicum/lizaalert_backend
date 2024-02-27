@@ -26,3 +26,11 @@ class ResetPasswordSerializer(serializers.Serializer):
     """Serializer for reset user password backend."""
 
     email = serializers.EmailField()
+
+
+class OauthTokenSerializer(serializers.Serializer):
+    oauth_token = serializers.CharField(max_length=100)
+
+
+class YandexResponseStatusSerializer(serializers.Serializer):
+    yandex_response_status = serializers.IntegerField()

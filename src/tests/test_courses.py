@@ -6,9 +6,11 @@ from django.dispatch import receiver
 from django.urls import reverse
 from rest_framework import status
 
+from lizaalert.courses.exceptions import ProgressNotFinishedException
 from lizaalert.courses.mixins import order_number_mixin
-from lizaalert.courses.models import Chapter, Course, Lesson
+from lizaalert.courses.models import BaseProgress, Chapter, Course, Lesson, LessonProgressStatus
 from lizaalert.courses.signals import course_finished
+from lizaalert.homeworks.models import ProgressionStatus
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 from tests.factories.courses import (
     ChapterFactory,
@@ -29,6 +31,7 @@ from tests.factories.courses import (
     SubscriptionFactory,
     UnpublishedLessonFactory,
 )
+from tests.factories.homeworks import HomeworkFactory
 from tests.factories.users import LevelFactory
 
 
@@ -74,6 +77,9 @@ class TestCourse:
         interfere with our Course.
         Asserts correct lessons_count.
         Asserts correct total course duration.
+
+        Проверяем, что дата начала курса для подписанного пользователя отображается правильно
+         в зависимости от условий начала когорты, как в списке курсов, так и у конкретного курса.
         """
         chapter = ChapterWith3Lessons()
         lessons = Lesson.objects.filter(chapter_id=chapter.id)
@@ -85,6 +91,28 @@ class TestCourse:
         response = user_client.get(reverse("courses-detail", kwargs={"pk": course.id}))
         assert response.json()["lessons_count"] == 3
         assert response.json()["course_duration"] == course_duration
+
+        def assert_start_date(cohort):
+            course = cohort.course
+            start_date = cohort.start_date.isoformat() if cohort.start_date else None
+            _ = SubscriptionFactory(course=course, user=user)
+            url = reverse("courses-detail", kwargs={"pk": course.id})
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            assert response.json()["start_date"] == start_date
+
+            url = reverse("courses-list")
+            response = user_client.get(url)
+            assert response.status_code == status.HTTP_200_OK
+            for result in response.json()["results"]:
+                if result["id"] == course.id:
+                    assert result["start_date"] == start_date
+
+        # Тест с датой начала когрты в будущем.
+        assert_start_date(CohortFactory())
+
+        # Тест с открытой когортой.
+        assert_start_date(CohortAlwaysAvailableFactory())
 
     def test_course_status_anonymous(self, anonymous_client):
         response = anonymous_client.get(self.url)
@@ -173,10 +201,12 @@ class TestCourse:
         1. Проверяем, что можно записаться на курс в когорту, которая начнется в будущем и нельзя записаться повторно.
         2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
         """
-        cohort_1 = CohortFactory()
-        cohort_2 = CohortAlwaysAvailableFactory()
+        course_1 = CourseWith2Chapters()
+        course_2 = CourseWith2Chapters()
+        cohort_1 = CohortFactory(course=course_1)
+        cohort_2 = CohortAlwaysAvailableFactory(course=course_2)
 
-        def assert_subscription(cohort, expected_response, expected_status, recurrent_response):
+        def assert_subscription(cohort, expected_response, expected_status, recurrent_response, start_date=None):
             course = cohort.course
             subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
             subscription_response = user_client.post(subscribe)
@@ -184,8 +214,8 @@ class TestCourse:
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
             assert subscription_response.status_code == expected_response
+            assert subscription_response.json()["start_date"] == start_date
             assert response.json()["user_status"] == expected_status
-
             subscription_response = user_client.post(subscribe)
             assert subscription_response.status_code == recurrent_response
 
@@ -195,6 +225,7 @@ class TestCourse:
             status.HTTP_201_CREATED,
             Subscription.Status.ENROLLED,
             status.HTTP_403_FORBIDDEN,
+            cohort_1.start_date.isoformat(),
         )
 
         # 2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
@@ -794,3 +825,34 @@ class TestCourse:
 
         assert response.status_code == status.HTTP_200_OK
         assert hidden_course.id not in set(course["id"] for course in response.json()["results"])
+
+    def test_lessons_with_content_check(self, user):
+        """
+        Тест, что урок с контентом можно завершить только после прохождения контента.
+
+        1. Проверяем, что урок c непройденным контентом вызовет ошибку при завершении.
+        2. Проверяем, что урок с пройденным контентом можно завершить.
+        """
+        homework = HomeworkFactory()
+        lesson = homework.lesson
+        subscription = homework.subscription
+        _ = CohortAlwaysAvailableFactory(course=lesson.chapter.course)
+
+        def assert_finish(lesson, homework_status, expected_status=BaseProgress.ProgressStatus.FINISHED):
+            homework.status = homework_status
+            homework.save()
+            if homework_status == ProgressionStatus.APPROVED:
+                lesson.finish(subscription)
+                assert (
+                    LessonProgressStatus.objects.get(lesson=lesson, subscription=subscription).progress
+                    == expected_status
+                )
+            else:
+                with pytest.raises(ProgressNotFinishedException):
+                    lesson.finish(subscription)
+
+        # 1. Проверяем, что урок c непройденным контентом вызовет ошибку при завершении.
+        assert_finish(lesson, ProgressionStatus.DRAFT)
+
+        # 2. Проверяем, что урок с пройденным контентом можно завершить.
+        assert_finish(lesson, ProgressionStatus.APPROVED)

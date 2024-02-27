@@ -46,6 +46,7 @@ class CourseCommonFieldsMixin(serializers.ModelSerializer):
     user_course_progress = serializers.ChoiceField(
         default=CourseProgressStatus.ProgressStatus.NOT_STARTED, choices=CourseProgressStatus.ProgressStatus
     )
+    start_date = serializers.DateField(read_only=True, default=None)
 
     @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
     def get_user_status(self, obj):
@@ -77,6 +78,7 @@ class CourseSerializer(CourseCommonFieldsMixin):
             "knowledge",
             "user_status",
             "user_course_progress",
+            "start_date",
         )
 
 
@@ -137,6 +139,7 @@ class CourseDetailSerializer(CourseCommonFieldsMixin):
             "user_status",
             "user_course_progress",
             "current_lesson",
+            "start_date",
         )
 
     @swagger_serializer_method(serializer_or_field=BreadcrumbLessonSerializer)
@@ -235,6 +238,7 @@ class UserStatusEnrollmentSerializer(CurrentLessonSerializer):
     """Сериалайзер для получения статуса записи пользователя на курс."""
 
     user_status = serializers.SerializerMethodField()
+    start_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -242,14 +246,27 @@ class UserStatusEnrollmentSerializer(CurrentLessonSerializer):
             "lesson_id",
             "chapter_id",
             "user_status",
+            "start_date",
         )
 
     @swagger_serializer_method(serializer_or_field=serializers.ChoiceField(choices=Subscription.Status.choices))
     def get_user_status(self, obj):
-        subscription = self.context["subscription"]
-        if subscription.status == Subscription.Status.ENROLLED and subscription.cohort.is_available:
+        subscription = self.context.get("subscription")
+        if (
+            subscription
+            and subscription.cohort
+            and subscription.status == Subscription.Status.ENROLLED
+            and subscription.cohort.is_available
+        ):
             return Subscription.Status.AVAILABLE
-        return subscription.status
+        return subscription.status if subscription else None
+
+    @swagger_serializer_method(serializer_or_field=serializers.DateField())
+    def get_start_date(self, obj):
+        subscription = self.context.get("subscription")
+        if subscription and subscription.cohort and (start_date := subscription.cohort.start_date):
+            return start_date.isoformat()
+        return None
 
 
 class MessageResponseSerializer(serializers.Serializer):
