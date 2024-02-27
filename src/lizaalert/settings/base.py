@@ -14,6 +14,8 @@ SECRET_KEY = env.str("SECRET_KEY", "django-insecure-71lo1($*i%(=yl@51%3$1hd@!g-f
 
 DEBUG = env.bool("DEBUG", False)
 
+YANDEX_AUTH = True  # Переключатель для использования авторизации через Яндекс
+
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
     [
@@ -88,7 +90,7 @@ ROOT_URLCONF = "lizaalert.settings.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ['/src/lizaalert/authentication/templates/authentication'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -210,3 +212,13 @@ if sentry_key := env.str("SENTRY_KEY", default=None):
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
     )
+
+
+if YANDEX_AUTH:
+    INSTALLED_APPS += ['social_django']
+    TEMPLATES[0]['OPTIONS']["context_processors"].append("lizaalert.authentication.context_processors.custom_settings")
+
+
+SOCIAL_AUTH_YANDEX_OAUTH2_KEY = env.str("YANDEX_CLIENT_ID", None)
+SOCIAL_AUTH_YANDEX_OAUTH2_SECRET = env.str("YANDEX_SECRET", None)
+YANDEX_REDIRECT_URI = env.str("REDIRECT_URI", None)

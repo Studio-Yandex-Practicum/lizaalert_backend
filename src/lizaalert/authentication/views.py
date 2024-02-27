@@ -4,13 +4,14 @@ Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
 import logging
+import requests
 import smtplib
 import socket
 
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.core.mail import send_mail
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.parsers import JSONParser
@@ -30,16 +31,45 @@ logger = logging.getLogger(__name__)
 class LoginView(BaseLoginView):
     template_name = 'authentication/login.html'
 
+    def get(self, request, *args, **kwargs):
+
+        ''' Получение Oauth-токена от Яндекса. '''
+        access_token = self.request.GET.get('access_token')
+        if access_token:
+            if user_detail := self.get_passport_info(access_token):
+                auth_login(self.request, self.get_user(user_detail))
+                return HttpResponseRedirect(self.get_success_url())
+        return super().get(request, *args, **kwargs)
+
     def get_passport_info(self, access_token):
-        # curl 'https://login.yandex.ru/info?format=json' -H 'Authorization: OAuth y0_AgAAAAABMdiSAAn0cwAAAADj4WM5iQQPi4GWQXud_lHF_db1oBhW490')
+
+        ''' Получаем информацию о пользователе от я.паспорта. '''
+
+        url = 'https://login.yandex.ru/info'
+        headers = {"Authorization": f"OAuth {access_token}"}
+        response = requests.get(url, headers=headers)
         if status == 200:
-            return {"id": "20043922", "login": "ndcomp", "client_id": "48ffa8bf752e49a988525882568e8022", "display_name": "ndcomp", "real_name": "\u0414\u0435\u043d\u0438\u0441 \u041c\u043e\u0441\u043a\u043e\u0432\u0447\u0435\u043d\u043a\u043e", "first_name": "\u0414\u0435\u043d\u0438\u0441", "last_name": "\u041c\u043e\u0441\u043a\u043e\u0432\u0447\u0435\u043d\u043a\u043e", "sex": "male", "default_email": "ndcomp@yandex.ru", "emails": ["ndcomp@yandex.ru"], "default_avatar_id": "0/0-0", "is_avatar_empty": True, "psuid": "1.AAn0cw.Ih177p5BWMrgjBYbHBLITg.CRqswaxP9sXOwT9vbEn9CA"}
+            return {
+                'uid': response.json()['id'],
+                'login': response.json()['login'],
+                'client_id': response.json()['client_id']
+                }
         return None
-    
-    def get_user(self, user_detail):
-        # get or create
+
+    def get_user(self, user_detail): 
+
+        '''
+        Если пользователь отсутствует в базе,
+        то регистрируем соответствующего пользователя на основании информации, полученной от я.паспорта
+        '''
+
+        user = User.objects.get_or_create(
+            uid=user_detail['uid'],
+            login=user_detail['login'],
+            client_id=user_detail['client_id']
+            )
         return user
-    
+
 
 class CustomCreateUser(APIView):
     """New user registration."""

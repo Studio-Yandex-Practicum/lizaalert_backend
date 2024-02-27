@@ -58,11 +58,11 @@ connect-src https://passport.yandex.ru https://autofill.yandex.ru;">
 <script>
   window.onload = function() {
     window.YaAuthSuggest.init({
-        client_id: '48ffa8bf752e49a988525882568e8022',
+        client_id: '{{ YANDEX_OAUTH2_KEY }}',
         response_type: 'token',
-        redirect_uri: 'https://1034-2a02-6b8-b081-7323-00-1-13.ngrok-free.app/admin/'
+        redirect_uri: '{{ YANDEX_REDIRECT_URI }}'
       },
-      'https://1034-2a02-6b8-b081-7323-00-1-13.ngrok-free.app/admin/',
+      '{{ YANDEX_REDIRECT_URI }}',
       {
         view: "button",
         parentId: "buttonContainerId",
