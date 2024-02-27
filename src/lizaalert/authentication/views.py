@@ -137,6 +137,11 @@ class TokenExchange(APIView):
         def __init__(self, status):
             self.yandex_response_status = status
 
+    class Tokens:
+        def __init__(self, refresh, access):
+            self.refresh = refresh
+            self.access = access
+
     permission_classes = [AllowAny]
     UserData = namedtuple("UserData", ("id", "login"))
     StatusCode = namedtuple("StatusCode", ("yandex_response_status",))
@@ -156,8 +161,8 @@ class TokenExchange(APIView):
             return Response(serializer.data, status=status.HTTP_401_UNAUTHORIZED)
         user, _ = User.objects.get_or_create(id=int(yandex_user_data.id), username=yandex_user_data.login)
         refresh = RefreshToken.for_user(user)
-        data = {"refresh": str(refresh), "access": str(refresh.access_token)}
-        return Response(data, status=status.HTTP_201_CREATED)
+        tokens = self.Tokens(str(refresh), str(refresh.access_token))
+        return Response(TokenRefreshSerializer(tokens).data, status=status.HTTP_201_CREATED)
 
     def get_yandex_user_data(self, oauth_token):
         headers = {"Authorization": f"OAuth {oauth_token}"}

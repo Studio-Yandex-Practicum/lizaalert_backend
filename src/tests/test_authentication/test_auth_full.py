@@ -51,6 +51,11 @@ class TestAuthFull:
 
     @pytest.mark.django_db(transaction=True)
     def test_yandex_auth_bad_request(self, client):
+        """
+        Тест возврата JWT-токенов при получении некорректного ответа о пользователе от Яндекса:
+        - метод не вызван;
+        - ответ корректный.
+        """
         with (
             patch.object(TokenExchange, "get_yandex_user_data") as mock_user_data,
             patch.object(User.objects, "get_or_create") as mock_get_or_create,
@@ -63,6 +68,11 @@ class TestAuthFull:
 
     @pytest.mark.django_db(transaction=True)
     def test_yandex_auth_new_user(self, client):
+        """
+        Тест возврата JWT-токенов при получении корректного ответа о пользователе от Яндекса, пользователя нет в БД:
+        - токены созданы;
+        - пользователь создан.
+        """
         user_data = namedtuple("UserData", ("id", "login"))(2039480239, "test_user")
         with patch.object(TokenExchange, "get_yandex_user_data") as mock_user_data:
             mock_user_data.return_value = (user_data, status.HTTP_200_OK)
@@ -73,6 +83,11 @@ class TestAuthFull:
 
     @pytest.mark.django_db(transaction=True)
     def test_yandex_auth_user_exists(self, client):
+        """
+        Тест возврата JWT-токенов при получении корректного ответа о пользователе от Яндекса, пользователь есть в БД:
+        - токены созданы;
+        - пользователь не задублирован.
+        """
         user = UserFactory()
         user_data = namedtuple("UserData", ("id", "login"))(user.id, user.username)
         with patch.object(TokenExchange, "get_yandex_user_data") as mock_user_data:
