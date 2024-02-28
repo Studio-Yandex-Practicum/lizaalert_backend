@@ -17,6 +17,7 @@ class WebinarSerializer(serializers.ModelSerializer):
             "description",
             "link",
             "recording_link",
+            "recording_description",
             "cohort",
             "webinar_date",
             "status",
