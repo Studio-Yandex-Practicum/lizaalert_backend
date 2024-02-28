@@ -80,3 +80,11 @@ def create_level():
     levels = [Level.objects.create(name=choice[1], description=choice[0]) for choice in Level.LevelName.choices]
     yield levels
     # Level.objects.filter(id__in=[level.id for level in levels]).delete()
+
+
+@pytest.fixture()
+def create_user_role(user):
+    from lizaalert.users.models import UserRole
+
+    volunteer, created = UserRole.objects.get_or_create(user=user, role=UserRole.Role.VOLUNTEER)
+    return volunteer
