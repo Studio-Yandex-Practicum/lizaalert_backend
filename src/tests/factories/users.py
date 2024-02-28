@@ -15,7 +15,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         """Factory configuration."""
 
         model = User
-        django_get_or_create = ("username", )
+        django_get_or_create = ("username",)
 
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
