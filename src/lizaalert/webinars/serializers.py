@@ -6,7 +6,7 @@ from lizaalert.webinars.models import Webinar
 class WebinarSerializer(serializers.ModelSerializer):
     """Сериализатор для вебинара."""
 
-    status = serializers.ChoiceField(source="check_status", choices=Webinar.Status.choices, read_only=True)
+    status = serializers.ChoiceField(choices=Webinar.Status.choices, read_only=True)
 
     class Meta:
         model = Webinar

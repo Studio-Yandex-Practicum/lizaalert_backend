@@ -27,9 +27,6 @@ class Webinar(TimeStampedModel):
         "courses.Cohort", on_delete=models.CASCADE, verbose_name="Когорта", related_name="webinar"
     )
     webinar_date = models.DateTimeField(verbose_name="Дата вебинара")
-    status = models.PositiveSmallIntegerField(
-        verbose_name="Статус вебинара", default=Status.COMING, choices=Status.choices
-    )
     duration = models.PositiveSmallIntegerField(verbose_name="Длительность вебинара", default=DEFAULT_WEBINAR_LENGTH)
 
     class Meta:
@@ -41,7 +38,7 @@ class Webinar(TimeStampedModel):
         return f"<Lesson: {self.lesson_id}, Cohort: {self.cohort_id}>"
 
     @property
-    def check_status(self):
+    def status(self):
         """
         Получение статуса прохождения вебинара.
 
