@@ -154,14 +154,24 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 "current_chapter": current_lesson.values("chapter_id")[:1],
                 "start_date": subscription_info.values("cohort__start_date")[:1],
             }
+
             return (
-                Course.objects.filter(status=Course.CourseStatus.PUBLISHED)
+                Course.objects.filter(
+                    Q(status=Course.CourseStatus.PUBLISHED)
+                    | Q(
+                        status=Course.CourseStatus.HIDDEN,
+                        id__in=Subquery(
+                            Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("course")
+                        ),
+                    )
+                )
                 .annotate(**base_annotations, **users_annotations)
                 .prefetch_related(
                     Prefetch("chapters", queryset=chapters_with_progress),
                     Prefetch("chapters__lessons", queryset=lessons_with_progress),
                 )
             )
+
         return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
 
     def get_serializer_class(self):
