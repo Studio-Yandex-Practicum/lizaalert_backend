@@ -43,7 +43,6 @@ class LoginView(BaseLoginView):
 
     def get_passport_info(self, access_token):
         """Получаем информацию о пользователе от я.паспорта."""
-
         url = "https://login.yandex.ru/info"
         headers = {"Authorization": f"OAuth {access_token}"}
         response = requests.get(url, headers=headers)
@@ -57,10 +56,12 @@ class LoginView(BaseLoginView):
 
     def get_user(self, user_detail):
         """
-        Если пользователь отсутствует в базе,
-        то регистрируем соответствующего пользователя на основании информации, полученной от я.паспорта
-        """
+        Получение пользователя.
 
+        Если пользователь отсутствует в базе,
+        то в базе создается новый пользователь на основании информации,
+        полученной от я.паспорта.
+        """
         user = User.objects.get_or_create(
             uid=user_detail["uid"], login=user_detail["login"], client_id=user_detail["client_id"]
         )
