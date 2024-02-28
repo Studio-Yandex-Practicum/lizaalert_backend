@@ -86,11 +86,3 @@ class VolunteerBadgeFactory(factory.django.DjangoModelFactory):
         kwargs["volunteer"] = volunteer
         kwargs["course"] = CourseFactory()
         return super()._create(model_class, *args, **kwargs)
-
-
-class UserRoleFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = UserRole
-
-    user = factory.SubFactory(UserFactory)
-    role = UserRole.Role.VOLUNTEER
