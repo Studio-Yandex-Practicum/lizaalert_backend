@@ -2,7 +2,7 @@ import factory
 from django.contrib.auth import get_user_model
 from factory import fuzzy
 
-from lizaalert.users.models import Badge, Level, Location, UserRole, Volunteer, VolunteerBadge
+from lizaalert.users.models import Badge, Level, Location, Volunteer, VolunteerBadge
 
 User = get_user_model()
 factory.Faker._DEFAULT_LOCALE = "en_US"
