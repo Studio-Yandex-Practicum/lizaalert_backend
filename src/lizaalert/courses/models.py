@@ -10,6 +10,7 @@ from django.utils import timezone
 from lizaalert.courses.exceptions import AlreadyExistsException, NoSuitableCohort, ProgressNotFinishedException
 from lizaalert.courses.mixins import TimeStampedModel, order_number_mixin, status_update_mixin
 from lizaalert.courses.signals import course_finished
+from lizaalert.courses.utils import check_finished_content
 from lizaalert.quizzes.models import Quiz
 from lizaalert.settings.constants import CHAPTER_STEP, LESSON_STEP
 
@@ -93,6 +94,7 @@ class Course(
         DRAFT = 0, "в разработке"
         PUBLISHED = 1, "опубликован"
         ARCHIVE = 2, "в архиве"
+        HIDDEN = 3, "скрытый"
 
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")
@@ -250,6 +252,7 @@ class Lesson(
         VIDEOLESSON = "Videolesson", "Видеоурок"
         WEBINAR = "Webinar", "Вебинар"
         QUIZ = "Quiz", "Тест"
+        HOMEWORK = "Homework", "Домашнее задание"
 
     class LessonStatus(models.IntegerChoices):
         DRAFT = 0, "В разработке"
@@ -310,6 +313,12 @@ class Lesson(
         """Вернуть предыдущий по очереди урок."""
         ordered_lessons = self.ordered
         return ordered_lessons.filter(ordering__lt=self.ordering).order_by("-ordering")[:1]
+
+    def finish(self, subscription):
+        """Завершить данный урок."""
+        if not check_finished_content(self, subscription, lesson_type=[Lesson.LessonType.HOMEWORK]):
+            raise ProgressNotFinishedException("Необходимый контент урока не пройден.")
+        super().finish(subscription)
 
 
 class LessonProgressStatus(TimeStampedModel, BaseProgress):
@@ -469,8 +478,8 @@ class Cohort(TimeStampedModel):
                 name="unique_course_cohort_number",
             )
         ]
-        verbose_name = "Группа курса"
-        verbose_name_plural = "Группы курса"
+        verbose_name = "Когорта"
+        verbose_name_plural = "Когорты"
         ordering = ("start_date",)
 
     def save(self, *args, **kwargs):
@@ -526,10 +535,6 @@ class Subscription(TimeStampedModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["cohort", "course"],
-                name="unique_cohort_course",
-            ),
             models.UniqueConstraint(
                 fields=["user", "course"],
                 name="unique_user_course",

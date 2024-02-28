@@ -6,7 +6,10 @@ Note:
 import logging
 import smtplib
 import socket
+from collections import namedtuple
 
+import requests
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -17,9 +20,17 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import ResetPasswordSerializer, UserIdSerialiazer, UserSerializer
-from .utils import get_new_password
+from lizaalert.authentication.serializers import (
+    OauthTokenSerializer,
+    ResetPasswordSerializer,
+    UserIdSerialiazer,
+    UserSerializer,
+    YandexResponseStatusSerializer,
+)
+from lizaalert.authentication.utils import get_new_password
 
 User = get_user_model()
 
@@ -111,3 +122,54 @@ class HiddenTestAuth(APIView):
         if request.user and request.user.username == "test_user":
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class TokenExchange(APIView):
+    """
+    Замена OAuth-токена Яндекс ID на JWT-токен.
+
+    Методы:
+    - POST: Принимает OAuth-токен Яндекс, Возвращает acsess и refresh JWT-токены.
+
+    """
+
+    class YandexStatus:
+        def __init__(self, status):
+            self.yandex_response_status = status
+
+    class Tokens:
+        def __init__(self, refresh, access):
+            self.refresh = refresh
+            self.access = access
+
+    permission_classes = [AllowAny]
+    UserData = namedtuple("UserData", ("id", "login"))
+    StatusCode = namedtuple("StatusCode", ("yandex_response_status",))
+
+    @swagger_auto_schema(
+        operation_description="Принимает OAuth-токен Яндекс, Возвращает acsess и refresh JWT-токены",
+        request_body=OauthTokenSerializer,
+        responses={
+            201: TokenRefreshSerializer,
+            401: YandexResponseStatusSerializer,
+        },
+    )
+    def post(self, request):
+        yandex_user_data, status_code = self.get_yandex_user_data(request.data["oauth_token"])
+        if not yandex_user_data:
+            serializer = YandexResponseStatusSerializer(status_code)
+            return Response(serializer.data, status=status.HTTP_401_UNAUTHORIZED)
+        user, _ = User.objects.get_or_create(id=int(yandex_user_data.id), username=yandex_user_data.login)
+        refresh = RefreshToken.for_user(user)
+        tokens = self.Tokens(str(refresh), str(refresh.access_token))
+        return Response(TokenRefreshSerializer(tokens).data, status=status.HTTP_201_CREATED)
+
+    def get_yandex_user_data(self, oauth_token):
+        headers = {"Authorization": f"OAuth {oauth_token}"}
+        request = requests.get(settings.YANDEX_INFO_URL, headers=headers)
+        if request.status_code == status.HTTP_200_OK:
+            request_data = request.json()
+            user_data = self.UserData(request_data["id"], request_data["login"])
+        else:
+            user_data = None
+        return user_data, self.YandexStatus(request.status_code)
