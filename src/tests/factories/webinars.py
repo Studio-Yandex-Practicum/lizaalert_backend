@@ -4,7 +4,7 @@ import factory.fuzzy
 
 from lizaalert.courses.models import Lesson
 from lizaalert.webinars.models import Webinar
-from tests.factories.courses import CohortFactory, LessonFactory
+from tests.factories.courses import CohortAlwaysAvailableFactory, LessonFactory
 
 
 class WebinarFactory(factory.django.DjangoModelFactory):
@@ -19,4 +19,4 @@ class WebinarFactory(factory.django.DjangoModelFactory):
         datetime.date.today() + datetime.timedelta(days=5),
         datetime.date.today() + datetime.timedelta(days=10),
     )
-    cohort = factory.SubFactory(CohortFactory, course=factory.SelfAttribute("..lesson.chapter.course"))
+    cohort = factory.SubFactory(CohortAlwaysAvailableFactory, course=factory.SelfAttribute("..lesson.chapter.course"))

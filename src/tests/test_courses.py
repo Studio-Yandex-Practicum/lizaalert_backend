@@ -25,6 +25,7 @@ from tests.factories.courses import (
     CourseWith3FaqFactory,
     CourseWith3KnowledgeFactory,
     CourseWithAvailableCohortFactory,
+    CourseWithFutureCohortFactory,
     LessonFactory,
     Subscription,
     SubscriptionFactory,
@@ -200,10 +201,12 @@ class TestCourse:
         1. Проверяем, что можно записаться на курс в когорту, которая начнется в будущем и нельзя записаться повторно.
         2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
         """
-        cohort_1 = CohortFactory()
-        cohort_2 = CohortAlwaysAvailableFactory()
+        course_1 = CourseWith2Chapters()
+        course_2 = CourseWith2Chapters()
+        cohort_1 = CohortFactory(course=course_1)
+        cohort_2 = CohortAlwaysAvailableFactory(course=course_2)
 
-        def assert_subscription(cohort, expected_response, expected_status, recurrent_response):
+        def assert_subscription(cohort, expected_response, expected_status, recurrent_response, start_date=None):
             course = cohort.course
             subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
             subscription_response = user_client.post(subscribe)
@@ -211,8 +214,8 @@ class TestCourse:
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
             assert subscription_response.status_code == expected_response
+            assert subscription_response.json()["start_date"] == start_date
             assert response.json()["user_status"] == expected_status
-
             subscription_response = user_client.post(subscribe)
             assert subscription_response.status_code == recurrent_response
 
@@ -222,6 +225,7 @@ class TestCourse:
             status.HTTP_201_CREATED,
             Subscription.Status.ENROLLED,
             status.HTTP_403_FORBIDDEN,
+            cohort_1.start_date.isoformat(),
         )
 
         # 2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
@@ -802,6 +806,25 @@ class TestCourse:
         assert_unpublished_object(lesson.chapter.course, "lessons-detail", lesson.id, status.HTTP_403_FORBIDDEN)
         # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
         assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)
+
+    def test_hidden_course_appears_for_subscribed_user(self, user_client, user):
+        """Тест, что скрытый курс появляется для подписанного пользователя."""
+        hidden_course = CourseWithFutureCohortFactory(status=Course.CourseStatus.HIDDEN)
+        _ = SubscriptionFactory(course=hidden_course, user=user)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert hidden_course.title in [course["title"] for course in response.json()["results"]]
+
+    def test_hidden_course_not_visible_for_unsubscribed_user(self, user_client):
+        """Тест, что скрытый курс не появляется для неподписанного пользователя."""
+        hidden_course = CourseWithFutureCohortFactory(status=Course.CourseStatus.HIDDEN)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert hidden_course.id not in set(course["id"] for course in response.json()["results"])
 
     def test_lessons_with_content_check(self, user):
         """
