@@ -27,6 +27,7 @@ ALLOWED_HOSTS = env.list(
         "0.0.0.0",
         "127.0.0.1",
         "localhost",
+        "*",
     ],
 )
 
@@ -90,7 +91,7 @@ ROOT_URLCONF = "lizaalert.settings.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ['/src/lizaalert/authentication/templates/authentication'],
+        "DIRS": ["/src/lizaalert/authentication/templates/authentication"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -215,8 +216,7 @@ if sentry_key := env.str("SENTRY_KEY", default=None):
 
 
 if YANDEX_AUTH:
-    INSTALLED_APPS += ['social_django']
-    TEMPLATES[0]['OPTIONS']["context_processors"].append("lizaalert.authentication.context_processors.custom_settings")
+    TEMPLATES[0]["OPTIONS"]["context_processors"].append("lizaalert.authentication.context_processors.custom_settings")
 
 
 SOCIAL_AUTH_YANDEX_OAUTH2_KEY = env.str("YANDEX_CLIENT_ID", None)

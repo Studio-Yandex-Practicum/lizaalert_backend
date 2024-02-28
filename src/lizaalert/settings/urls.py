@@ -39,4 +39,4 @@ if settings.DEBUG:
         path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     ]
 if settings.YANDEX_AUTH:
-    urlpatterns.insert(0, path("admin/login/", LoginView.as_view(), name='login'))
+    urlpatterns.insert(0, path("admin/login/", LoginView.as_view(), name="login"))

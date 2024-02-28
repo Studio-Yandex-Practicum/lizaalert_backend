@@ -4,11 +4,12 @@ Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
 import logging
-import requests
 import smtplib
 import socket
 
-from django.contrib.auth import get_user_model, login as auth_login
+import requests
+from django.contrib.auth import get_user_model
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, JsonResponse
@@ -29,12 +30,11 @@ logger = logging.getLogger(__name__)
 
 
 class LoginView(BaseLoginView):
-    template_name = 'authentication/login.html'
+    template_name = "authentication/login.html"
 
     def get(self, request, *args, **kwargs):
-
-        ''' Получение Oauth-токена от Яндекса. '''
-        access_token = self.request.GET.get('access_token')
+        """Получение Oauth-токена от Яндекса."""
+        access_token = self.request.GET.get("access_token")
         if access_token:
             if user_detail := self.get_passport_info(access_token):
                 auth_login(self.request, self.get_user(user_detail))
@@ -42,32 +42,28 @@ class LoginView(BaseLoginView):
         return super().get(request, *args, **kwargs)
 
     def get_passport_info(self, access_token):
+        """Получаем информацию о пользователе от я.паспорта."""
 
-        ''' Получаем информацию о пользователе от я.паспорта. '''
-
-        url = 'https://login.yandex.ru/info'
+        url = "https://login.yandex.ru/info"
         headers = {"Authorization": f"OAuth {access_token}"}
         response = requests.get(url, headers=headers)
         if status == 200:
             return {
-                'uid': response.json()['id'],
-                'login': response.json()['login'],
-                'client_id': response.json()['client_id']
-                }
+                "uid": response.json()["id"],
+                "login": response.json()["login"],
+                "client_id": response.json()["client_id"],
+            }
         return None
 
-    def get_user(self, user_detail): 
-
-        '''
+    def get_user(self, user_detail):
+        """
         Если пользователь отсутствует в базе,
         то регистрируем соответствующего пользователя на основании информации, полученной от я.паспорта
-        '''
+        """
 
         user = User.objects.get_or_create(
-            uid=user_detail['uid'],
-            login=user_detail['login'],
-            client_id=user_detail['client_id']
-            )
+            uid=user_detail["uid"], login=user_detail["login"], client_id=user_detail["client_id"]
+        )
         return user
 
 
