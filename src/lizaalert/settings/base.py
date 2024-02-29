@@ -14,7 +14,7 @@ SECRET_KEY = env.str("SECRET_KEY", "django-insecure-71lo1($*i%(=yl@51%3$1hd@!g-f
 
 DEBUG = env.bool("DEBUG", False)
 
-YANDEX_AUTH = True  # Переключатель для использования авторизации через Яндекс
+YANDEX_AUTH = False  # Переключатель для использования авторизации через Яндекс
 
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
