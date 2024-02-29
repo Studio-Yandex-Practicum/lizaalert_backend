@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 
 from lizaalert.courses.models import Lesson
+from lizaalert.webinars.models import Webinar
 from tests.factories.courses import CohortAlwaysAvailableFactory, LessonFactory, SubscriptionFactory
 from tests.factories.webinars import WebinarFactory
 
@@ -47,3 +48,27 @@ class TestWebinar:
         response = user_client.get(url)
         assert response.status_code == 200
         assert response.json()["id"] == webinar_to_show.id
+
+    def test_webinar_status_change(self, user_client, user):
+        """
+        Проверить изменение статуса вебинара.
+
+        1. Проверяем, что вебинар в будущем возвращается со статусом запланирован.
+        2. Проверяем, что пройденный вебинар возвращается со статусом завершен.
+        """
+
+        def assert_status(delta, status):
+            webinar = WebinarFactory(
+                webinar_date=delta,
+            )
+            _ = SubscriptionFactory(user=user, course=webinar.lesson.chapter.course, cohort=webinar.cohort)
+            url = reverse("lesson-webinar-detail", kwargs={"lesson_id": webinar.lesson.id})
+            response = user_client.get(url)
+            assert response.status_code == 200
+            assert response.json()["status"] == status
+
+        # 1. Проверяем, что вебинар в будущем возвращается со статусом запланирован.
+        assert_status(datetime.date.today() + datetime.timedelta(days=5), Webinar.Status.COMING)
+
+        # 2. Проверяем, что пройденный вебинар возвращается со статусом завершен.
+        assert_status(datetime.date.today() - datetime.timedelta(days=5), Webinar.Status.FINISHED)
