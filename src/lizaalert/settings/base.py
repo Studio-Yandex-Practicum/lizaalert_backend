@@ -215,7 +215,7 @@ if sentry_key := env.str("SENTRY_KEY", default=None):
 
 
 if YANDEX_AUTH:
-    ALLOWED_HOSTS.append(env.str("NGROK_HOST"))
+    ALLOWED_HOSTS.append(env.str("NGROK_HOST", None))
 
 
 SOCIAL_AUTH_YANDEX_OAUTH2_KEY = env.str("YANDEX_CLIENT_ID", None)
