@@ -14,7 +14,7 @@ SECRET_KEY = env.str("SECRET_KEY", "django-insecure-71lo1($*i%(=yl@51%3$1hd@!g-f
 
 DEBUG = env.bool("DEBUG", False)
 
-YANDEX_AUTH = False  # Переключатель для использования авторизации через Яндекс
+YANDEX_AUTH = True  # Переключатель для использования авторизации через Яндекс
 
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
@@ -215,10 +215,8 @@ if sentry_key := env.str("SENTRY_KEY", default=None):
 
 
 if YANDEX_AUTH:
-    ALLOWED_HOSTS.append('bf41-176-59-2-0.ngrok-free.app')
-    TEMPLATES[0]["OPTIONS"]["context_processors"].append("lizaalert.authentication.context_processors.custom_settings")
+    ALLOWED_HOSTS.append(env.str("NGROK_HOST"))
 
 
 SOCIAL_AUTH_YANDEX_OAUTH2_KEY = env.str("YANDEX_CLIENT_ID", None)
-SOCIAL_AUTH_YANDEX_OAUTH2_SECRET = env.str("YANDEX_SECRET", None)
-YANDEX_REDIRECT_URI = env.str("REDIRECT_URI", None)
+YANDEX_REDIRECT_URI = env.str("YANDEX_REDIRECT_URI", None)

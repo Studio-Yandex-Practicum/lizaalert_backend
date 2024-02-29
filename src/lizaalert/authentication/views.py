@@ -6,13 +6,16 @@ Note:
 import logging
 import smtplib
 import socket
+from dataclasses import dataclass
 
 import requests
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, JsonResponse
+from django.views.generic.base import TemplateView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.parsers import JSONParser
@@ -29,13 +32,23 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-class LoginView(BaseLoginView):
+@dataclass
+class YandexUserData:
+    uid: int
+    login: str
+
+
+class LoginView(BaseLoginView, TemplateView):
     template_name = "authentication/login.html"
+    extra_context = {
+        "YANDEX_OAUTH2_KEY": settings.SOCIAL_AUTH_YANDEX_OAUTH2_KEY,
+        "YANDEX_REDIRECT_URI": settings.YANDEX_REDIRECT_URI,
+    }
 
     def get(self, request, *args, **kwargs):
         """Получение Oauth-токена от Яндекса."""
-        # access_token = self.request.GET.get("access_token")
-        access_token = 'y0_AgAAAAB0IyrbAAtGKQAAAAD8X8btAADaYatu35tAWZ9vVM-iY07jlN-F4w'
+        access_token = self.request.GET.get("access_token")
+        # access_token = "y0_AgAAAAB0IyrbAAtGKQAAAAD8X8btAADaYatu35tAWZ9vVM-iY07jlN-F4w"
         if access_token:
             if user_detail := self.get_passport_info(access_token):
                 auth_login(self.request, self.get_user(user_detail))
@@ -47,13 +60,9 @@ class LoginView(BaseLoginView):
         url = "https://login.yandex.ru/info"
         headers = {"Authorization": f"OAuth {access_token}"}
         response = requests.get(url, headers=headers)
-        status = response.status_code
-        if status == 200:
-            print(response.json())
-            return {
-                "uid": response.json()["id"],
-                "login": response.json()["login"],
-            }
+        if response.status_code == 200:
+            user_data = response.json()
+            return YandexUserData(user_data["id"], user_data["login"])
         return None
 
     def get_user(self, user_detail):
@@ -64,11 +73,7 @@ class LoginView(BaseLoginView):
         то в базе создается новый пользователь на основании информации,
         полученной от я.паспорта.
         """
-        print('user_detail ', user_detail)
-        user = User.objects.get_or_create(
-            id=user_detail["uid"],
-            username=user_detail["login"]
-        )
+        user = User.objects.get_or_create(id=user_detail.uid, username=user_detail.login)
         return user
 
 
