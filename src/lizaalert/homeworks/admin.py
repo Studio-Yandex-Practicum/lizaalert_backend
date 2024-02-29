@@ -10,7 +10,7 @@ from lizaalert.homeworks.permissions import IsReviewerOrSuperUser
 class HomeworkAdminForm(forms.ModelForm):
     class Meta:
         model = Homework
-        fields = "__all__"
+        fields = ("reviewer", "status", "lesson", "text", "subscription", "required")
         widgets = {
             "text": TinyMCE(attrs={"cols": 80, "rows": 30}),
         }
@@ -48,11 +48,11 @@ class HomeworkAdmin(admin.ModelAdmin):
         return qs.filter(reviewer=request.user)
 
     @permission_classes([IsReviewerOrSuperUser])
-    def has_permission(self, request, obj=None):
+    def has_permission(self, request, view):
         """Проверить разрешение на изменение."""
         pass
 
     @permission_classes([IsReviewerOrSuperUser])
-    def has_object_permission(self, request, view, obj=None):
+    def has_object_permission(self, request, view, obj):
         """Проверить разрешение на удаление."""
         pass
