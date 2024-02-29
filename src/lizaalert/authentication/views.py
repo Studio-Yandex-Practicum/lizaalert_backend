@@ -34,19 +34,26 @@ class LoginView(BaseLoginView):
 
     def get(self, request, *args, **kwargs):
         """Получение Oauth-токена от Яндекса."""
-        access_token = self.request.GET.get("access_token")
+        # print(self.request.__dict__)
+        # access_token = self.request.GET.get("access_token")
+        access_token = 'y0_AgAAAAB0IyrbAAtGKQAAAAD8X8btAADaYatu35tAWZ9vVM-iY07jlN-F4w'
         if access_token:
+            print(access_token)
             if user_detail := self.get_passport_info(access_token):
+                print('flag')
                 auth_login(self.request, self.get_user(user_detail))
                 return HttpResponseRedirect(self.get_success_url())
         return super().get(request, *args, **kwargs)
 
     def get_passport_info(self, access_token):
         """Получаем информацию о пользователе от я.паспорта."""
+        print('test getpass', access_token)
         url = "https://login.yandex.ru/info"
         headers = {"Authorization": f"OAuth {access_token}"}
         response = requests.get(url, headers=headers)
+        status = response.status_code
         if status == 200:
+            print(response.json())
             return {
                 "uid": response.json()["id"],
                 "login": response.json()["login"],
@@ -62,8 +69,9 @@ class LoginView(BaseLoginView):
         то в базе создается новый пользователь на основании информации,
         полученной от я.паспорта.
         """
+        print('user_detail ', user_detail)
         user = User.objects.get_or_create(
-            uid=user_detail["uid"], login=user_detail["login"], client_id=user_detail["client_id"]
+            username=user_detail["login"], id=user_detail["uid"]
         )
         return user
 

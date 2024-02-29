@@ -27,7 +27,6 @@ ALLOWED_HOSTS = env.list(
         "0.0.0.0",
         "127.0.0.1",
         "localhost",
-        "*",
     ],
 )
 
@@ -216,6 +215,7 @@ if sentry_key := env.str("SENTRY_KEY", default=None):
 
 
 if YANDEX_AUTH:
+    ALLOWED_HOSTS.append('bf41-176-59-2-0.ngrok-free.app')
     TEMPLATES[0]["OPTIONS"]["context_processors"].append("lizaalert.authentication.context_processors.custom_settings")
 
 
