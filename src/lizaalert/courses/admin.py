@@ -87,6 +87,7 @@ class CohortAdmin(admin.ModelAdmin):
     list_select_related = ("course",)
     ordering = ("-updated_at",)
     readonly_fields = ("cohort_number", "students_count")
+    raw_id_fields = ("teacher",)
 
     def course_title(self, obj):
         return obj.course.title
