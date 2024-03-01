@@ -2,7 +2,7 @@ import factory
 from django.contrib.auth import get_user_model
 from factory import fuzzy
 
-from lizaalert.users.models import Badge, Level, Location, Volunteer, VolunteerBadge
+from lizaalert.users.models import Badge, Level, Location, UserRole, Volunteer, VolunteerBadge
 
 User = get_user_model()
 factory.Faker._DEFAULT_LOCALE = "en_US"
@@ -20,7 +20,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     username = factory.Faker("user_name")
-    email = factory.Faker("email")
+    email = factory.Sequence(lambda n: f"user{n}@example.com")
     password = factory.Faker("sha256")
 
 
@@ -86,3 +86,11 @@ class VolunteerBadgeFactory(factory.django.DjangoModelFactory):
         kwargs["volunteer"] = volunteer
         kwargs["course"] = CourseFactory()
         return super()._create(model_class, *args, **kwargs)
+
+
+class UserRoleFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = UserRole
+
+    user = factory.SubFactory(UserFactory)
+    role = UserRole.Role.VOLUNTEER
