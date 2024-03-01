@@ -11,7 +11,7 @@ from lizaalert.courses.models import (
     CourseFaq,
     CourseKnowledge,
     CourseProgressStatus,
-    Direction,
+    Division,
     Knowledge,
     Lesson,
     LessonProgressStatus,
@@ -66,10 +66,10 @@ class ChapterInline(admin.TabularInline):
     get_chapter_link.short_description = "Глава"
 
 
-class DirectionInline(admin.StackedInline):
+class DivisionInline(admin.StackedInline):
     """Инлайн направления для отображения в главе."""
 
-    model = Direction
+    model = Division
     min_num = 1
     extra = 0
 
@@ -107,7 +107,7 @@ class CourseAdmin(admin.ModelAdmin):
 
     inlines = (CourseFaqInline, CourseKnowledgeInline, ChapterInline)
     list_filter = [
-        "direction",
+        "division",
     ]
     model = Course
     list_display = (
@@ -117,7 +117,7 @@ class CourseAdmin(admin.ModelAdmin):
         "user_created",
         "created_at",
         "updated_at",
-        "direction",
+        "division",
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
@@ -241,8 +241,7 @@ class KnowledgeAdmin(admin.ModelAdmin):
 
     inlines = (CourseKnowledgeInline,)
     ordering = ("-updated_at",)
-    list_filter = ("direction",)
-    list_display = ("title", "author", "created_at", "updated_at", "direction")
+    list_display = ("title", "author", "created_at", "updated_at")
 
 
 @admin.register(Lesson)
@@ -289,13 +288,21 @@ class SubscriptionAdmin(admin.ModelAdmin):
     ordering = ("-updated_at",)
 
 
-@admin.register(Direction)
-class DirectionAdmin(admin.ModelAdmin):
-    """Aдминка для Direction."""
+@admin.register(Division)
+class DivisionAdmin(admin.ModelAdmin):
+    """Aдминка для Division."""
 
     ordering = ("-updated_at",)
     list_display = ("title", "author", "created_at", "updated_at", "courses")
+    list_select_related = ("author",)
 
     @admin.display(description="Курсы")
     def courses(self, obj):
-        return list(obj.course_set.all())
+        return list(obj.course_set.all().values_list("title", flat=True))
+
+    def get_queryset(self, request):
+        qs = self.model._default_manager.get_queryset().prefetch_related("course_set")
+        ordering = self.get_ordering(request)
+        if ordering:
+            qs = qs.order_by(*ordering)
+        return qs

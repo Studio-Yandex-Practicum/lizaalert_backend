@@ -74,13 +74,10 @@ class Knowledge(TimeStampedModel):
     title = models.CharField(max_length=250, verbose_name="Название умения")
     description = models.CharField(max_length=1000, verbose_name="Описание умения")
     author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель умения")
-    direction = models.ForeignKey(
-        "courses.Direction", on_delete=models.PROTECT, verbose_name="Направление умения", null=True, blank=True
-    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("title", "direction"), name="unique_knowledge"),
+            models.UniqueConstraint(fields=("title",), name="unique_knowledge"),
         ]
         verbose_name = "Умение"
         verbose_name_plural = "Умения"
@@ -123,8 +120,8 @@ class Course(
     )
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
     status = models.IntegerField(verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT)
-    direction = models.ForeignKey(
-        "courses.Direction", on_delete=models.PROTECT, verbose_name="Направление курса", null=True, blank=True
+    division = models.ForeignKey(
+        "courses.Division", on_delete=models.PROTECT, verbose_name="Направление курса", null=True, blank=True
     )
 
     class Meta:
@@ -597,15 +594,15 @@ class Subscription(TimeStampedModel):
         self.save()
 
 
-class Direction(TimeStampedModel):
+class Division(TimeStampedModel):
     title = models.CharField(max_length=250, verbose_name="Название направления")
     description = models.CharField(max_length=1000, verbose_name="Описание направления")
     author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель направления")
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["title"], name="unique_direction")]
+        constraints = [models.UniqueConstraint(fields=["title"], name="unique_division")]
         verbose_name = "Направление"
         verbose_name_plural = "Направления"
 
     def __str__(self):
-        return self.title
+        return f"<Division: {self.id}, title: {self.title}>"
