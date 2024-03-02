@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
+from lizaalert.courses.forms import CohortForm
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
@@ -74,6 +75,7 @@ class CohortAdmin(admin.ModelAdmin):
 
     model = Cohort
     extra = 1
+    form = CohortForm
     list_display = (
         "course_title",
         "start_date",
@@ -84,6 +86,8 @@ class CohortAdmin(admin.ModelAdmin):
     )
     list_select_related = ("course",)
     ordering = ("-updated_at",)
+    readonly_fields = ("cohort_number", "students_count")
+    raw_id_fields = ("teacher",)
 
     def course_title(self, obj):
         return obj.course.title

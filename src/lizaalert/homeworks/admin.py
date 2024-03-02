@@ -3,6 +3,7 @@ from django.contrib import admin
 from rest_framework.decorators import permission_classes
 from tinymce.widgets import TinyMCE
 
+from lizaalert.courses.models import Lesson
 from lizaalert.homeworks.models import Homework
 from lizaalert.homeworks.permissions import IsReviewerOrSuperUser
 
@@ -56,3 +57,9 @@ class HomeworkAdmin(admin.ModelAdmin):
     def has_object_permission(self, request, view, obj):
         """Проверить разрешение на удаление."""
         pass
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Ограничить в выдаче только уроки типа домашнее задание."""
+        if db_field.name == "lesson":
+            kwargs["queryset"] = Lesson.objects.filter(lesson_type=Lesson.LessonType.HOMEWORK)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
