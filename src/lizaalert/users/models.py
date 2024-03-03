@@ -302,6 +302,13 @@ class Volunteer(models.Model):
     )
     created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
+    divisionlevel = models.ManyToManyField(
+        "courses.Division",
+        through="users.UserDivisionLevel",
+        blank=True,
+        related_name="volunteers",
+        verbose_name="Уровень умения",
+    )
 
     class Meta:
         db_table = "volunteers"
@@ -327,3 +334,25 @@ def create_default_volunteer_level(sender, instance, created, **kwargs):
 
             if not existing_record:
                 VolunteerLevel.objects.create(volunteer=volunteer, level=beginner_level, confirmed=True)
+
+
+class UserDivisionLevel(models.Model):
+    """Модель для связи пользователей, направлений и уровней."""
+
+    volunteer = models.ForeignKey(
+        Volunteer,
+        on_delete=models.PROTECT,
+        related_name="divisionlevels",
+        verbose_name="Волонтер",
+    )
+    division = models.ForeignKey("courses.Division", on_delete=models.PROTECT, verbose_name="Направление умения")
+    level = models.ForeignKey(
+        Level, on_delete=models.PROTECT, verbose_name="Уровень умения", default=Level.LevelName.beginner
+    )
+
+    class Meta:
+        verbose_name = "Уровень волонтера по направлениям"
+        verbose_name_plural = "Уровни волонтеров по направлениям"
+
+    def __str__(self):
+        return f"Уровень {self.volunteer.user} {self.level.name} в направлении {self.division.title}"

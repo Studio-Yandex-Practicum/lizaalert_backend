@@ -9,6 +9,7 @@ from lizaalert.users.models import (
     Level,
     Location,
     User,
+    UserDivisionLevel,
     UserRole,
     Volunteer,
     VolunteerBadge,
@@ -34,6 +35,11 @@ class VolunteerBadgeInline(admin.TabularInline):
 
 class LevelAdmin(admin.ModelAdmin):
     inlines = [VolunteerLevelInline]
+
+
+class UserDivisionLevelInline(admin.TabularInline):
+    model = UserDivisionLevel
+    extra = 1
 
 
 class BadgeAdminForm(forms.ModelForm):
@@ -102,7 +108,17 @@ class VolunteerBadgeAdminForm(forms.ModelForm):
 
 
 class VolunteerAdmin(admin.ModelAdmin):
-    inlines = [VolunteerLevelInline, VolunteerBadgeInline]
+    inlines = [VolunteerLevelInline, VolunteerBadgeInline, UserDivisionLevelInline]
+
+
+class UserDivisionLevelAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "volunteer", "division", "level")
+    list_display_links = ("volunteer",)
+    list_filter = (
+        "volunteer",
+        "division",
+        "level",
+    )
 
 
 admin.site.register(User, CustomUserAdmin)
@@ -113,3 +129,4 @@ admin.site.register(Location)
 admin.site.register(Department)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Level, LevelAdmin)
+admin.site.register(UserDivisionLevel, UserDivisionLevelAdmin)
