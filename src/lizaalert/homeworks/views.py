@@ -4,7 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, response, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from lizaalert.courses.models import Subscription
+from lizaalert.courses.models import Course, Subscription
 from lizaalert.homeworks.models import Homework
 from lizaalert.homeworks.serializers import EmptyHomeworkSerializer, HomeworkSerializer
 
@@ -47,6 +47,10 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
     )
     def retrieve(self, request, *args, **kwargs):
         try:
+            subscription = get_object_or_404(
+                Subscription, user=request.user, course=get_object_or_404(Course, chapters__lessons=kwargs["lesson_id"])
+            )
+            kwargs["subscription_id"] = subscription.id
             instance = get_object_or_404(Homework, **kwargs)
             serializer = self.get_serializer(instance)
         except Http404:

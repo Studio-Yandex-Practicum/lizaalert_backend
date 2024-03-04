@@ -7,7 +7,6 @@ from lizaalert.courses.models import Lesson
 from lizaalert.homeworks.models import Homework, ProgressionStatus
 from tests.factories.courses import CourseWith2Chapters, SubscriptionFactory
 from tests.factories.homeworks import HomeworkFactory
-from tests.factories.users import UserRoleFactory
 
 
 @pytest.mark.django_db(transaction=True)
@@ -25,7 +24,6 @@ class TestHomework:
         for lesson in lessons:
             lesson.lesson_type = Lesson.LessonType.HOMEWORK
             lesson.save()
-        _ = UserRoleFactory(user=user)
         _ = SubscriptionFactory(course=course, user=user)
 
         def assert_status_homework(

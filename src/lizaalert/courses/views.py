@@ -424,6 +424,7 @@ class LessonViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             необходимые действия по завершению урока для конкретного пользователя.
         """
         user = self.request.user
+
         lesson = get_object(Lesson, **kwargs)
         subscription = get_object_or_404(Subscription, user=user, course=lesson.chapter.course)
         lesson.finish(subscription)
