@@ -108,5 +108,3 @@ data/**
 .devcontainer/
 *.code-workspace
 
-### minio ###
-s3_buckets/
