@@ -352,4 +352,4 @@ class UserDivisionLevel(models.Model):
         verbose_name_plural = "Уровни волонтеров по направлениям"
 
     def __str__(self):
-        return f"Уровень {self.volunteer.user} {self.level.name} в направлении {self.division.title}"
+        return f"Направление {self.division.title}"

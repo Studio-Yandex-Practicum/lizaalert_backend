@@ -294,12 +294,16 @@ class DivisionAdmin(admin.ModelAdmin):
 
     ordering = ("-updated_at",)
     list_display = ("title", "author", "updated_at", "courses")
-    exclude = ('author',)
+    exclude = ("author",)
     list_select_related = ("author",)
 
     @admin.display(description="Курсы")
     def courses(self, obj):
-        return str(list(obj.course_set.all().values_list("title", flat=True))).split('\\n')
+        courses_list = obj.course_set.all().values_list("title", flat=True)
+        result = ""
+        for course in courses_list:
+            result += course + "\n"
+        return result
 
     def get_queryset(self, request):
         qs = self.model._default_manager.get_queryset().prefetch_related("course_set")
