@@ -3,6 +3,7 @@
 Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
+
 import logging
 import smtplib
 import socket
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 class YandexUserData:
     uid: int
     login: str
+    emails: list
 
 
 class LoginView(BaseLoginView, TemplateView):
@@ -48,7 +50,7 @@ class LoginView(BaseLoginView, TemplateView):
     def get(self, request, *args, **kwargs):
         """Получение Oauth-токена от Яндекса."""
         access_token = self.request.GET.get("access_token")
-        # access_token = "y0_AgAAAAB0IyrbAAtGKQAAAAD8X8btAADaYatu35tAWZ9vVM-iY07jlN-F4w"
+        # access_token = settings.DEV_YA_TOKEN
         if access_token:
             if user_detail := self.get_passport_info(access_token):
                 auth_login(self.request, self.get_user(user_detail))
@@ -62,7 +64,7 @@ class LoginView(BaseLoginView, TemplateView):
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             user_data = response.json()
-            return YandexUserData(user_data["id"], user_data["login"])
+            return YandexUserData(user_data["id"], user_data["login"], user_data["emails"])
         return None
 
     def get_user(self, user_detail):
@@ -73,7 +75,9 @@ class LoginView(BaseLoginView, TemplateView):
         то в базе создается новый пользователь на основании информации,
         полученной от я.паспорта.
         """
-        user = User.objects.get_or_create(id=user_detail.uid, username=user_detail.login)
+        user, _ = User.objects.get_or_create(
+            id=user_detail.uid, username=user_detail.login, email=user_detail.emails[0], is_staff=True
+        )
         return user
 
 
