@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_filters",
+    "minio_storage",
     # 3-rd party authentication apps
     "djoser",
     "allauth",
@@ -143,12 +144,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
-MEDIA_URL = "media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.User"
@@ -212,3 +207,22 @@ if sentry_key := env.str("SENTRY_KEY", default=None):
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
     )
+
+STATIC_URL = "/static/"
+STATIC_ROOT = "./static_files/"
+
+DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
+STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
+MINIO_STORAGE_ENDPOINT = "s3:9000"
+MINIO_STORAGE_ACCESS_KEY = "admin"
+MINIO_STORAGE_SECRET_KEY = "password"
+MINIO_STORAGE_USE_HTTPS = False
+MINIO_STORAGE_MEDIA_OBJECT_METADATA = {"Cache-Control": "max-age=1000"}
+MINIO_STORAGE_MEDIA_BUCKET_NAME = "media"
+MINIO_STORAGE_MEDIA_BACKUP_BUCKET = "Recycle Bin"
+MINIO_STORAGE_MEDIA_BACKUP_FORMAT = "%c/"
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
+MINIO_STORAGE_STATIC_BUCKET_NAME = "static"
+MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
+DJANGO_HOST = os.environ.get("DJANGO_HOST", "localhost")
+MINIO_STORAGE_MEDIA_URL = f"http://{DJANGO_HOST}:9000/media/"
