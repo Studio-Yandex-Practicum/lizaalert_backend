@@ -47,7 +47,12 @@ class HomeworkViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            instance = get_object_or_404(Homework, **kwargs)
+            instance = get_object_or_404(
+                Homework,
+                lesson_id=kwargs.get("lesson_id"),
+                subscription__user=request.user,
+                subscription__course__chapters__lessons=kwargs.get("lesson_id"),
+            )
             serializer = self.get_serializer(instance)
         except Http404:
             serializer = EmptyHomeworkSerializer()

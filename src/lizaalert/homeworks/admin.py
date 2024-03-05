@@ -9,6 +9,7 @@ class HomeworkAdmin(admin.ModelAdmin):
     """Админка домашних заданий."""
 
     list_display = (
+        "id",
         "reviewer",
         "user",
         "status",
