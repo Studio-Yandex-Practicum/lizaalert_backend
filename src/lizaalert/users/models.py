@@ -164,13 +164,10 @@ class Badge(models.Model):
         verbose_name="Курс для получения",
     )
     division = models.ForeignKey(
-        "courses.Division", on_delete=models.PROTECT, verbose_name="Направление умения", null=True, blank=True
+        "courses.Division", on_delete=models.SET_NULL, verbose_name="Направление умения", null=True, blank=True
     )
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=("name", "division"), name="unique_badge"),
-        ]
         db_table = "badges"
         verbose_name = "Значок"
         verbose_name_plural = "Значки"
@@ -302,7 +299,7 @@ class Volunteer(models.Model):
     )
     created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
-    divisionlevel = models.ManyToManyField(
+    divisionlevels = models.ManyToManyField(
         "courses.Division",
         through="users.UserDivisionLevel",
         blank=True,
@@ -341,13 +338,13 @@ class UserDivisionLevel(models.Model):
 
     volunteer = models.ForeignKey(
         Volunteer,
-        on_delete=models.PROTECT,
-        related_name="divisionlevels",
+        on_delete=models.CASCADE,
+        related_name="divisionlevel",
         verbose_name="Волонтер",
     )
-    division = models.ForeignKey("courses.Division", on_delete=models.PROTECT, verbose_name="Направление умения")
+    division = models.ForeignKey("courses.Division", on_delete=models.CASCADE, verbose_name="Направление умения")
     level = models.ForeignKey(
-        Level, on_delete=models.PROTECT, verbose_name="Уровень умения", default=Level.LevelName.beginner
+        Level, on_delete=models.CASCADE, verbose_name="Уровень умения", default=Level.LevelName.beginner
     )
 
     class Meta:
