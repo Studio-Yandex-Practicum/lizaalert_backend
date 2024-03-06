@@ -1,7 +1,7 @@
 import django_filters
 from django_filters import rest_framework as filters
 
-from .models import Course
+from .models import Course, Division
 
 
 class CourseFilter(filters.FilterSet):
@@ -12,15 +12,13 @@ class CourseFilter(filters.FilterSet):
     """
 
     course_format = django_filters.CharFilter(field_name="course_format", lookup_expr="icontains")
-
     level = django_filters.BaseInFilter(field_name="level_id", lookup_expr="in")
-
-    direction = django_filters.CharFilter(field_name="direction", lookup_expr="icontains")
+    division = django_filters.ModelChoiceFilter(field_name="division", queryset=Division.objects.all())
 
     class Meta:
         model = Course
         fields = (
             "level",
             "course_format",
-            "direction",
+            "division",
         )
