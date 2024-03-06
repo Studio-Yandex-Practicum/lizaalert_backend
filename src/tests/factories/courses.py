@@ -329,5 +329,5 @@ class DivisionFactory(factory.django.DjangoModelFactory):
         model = Division
 
     title = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
-    description = factory.Faker("text", nb_words=10, variable_nb_words=True)
+    description = factory.Faker("text", max_nb_chars=50)
     author = factory.SubFactory(UserFactory)
