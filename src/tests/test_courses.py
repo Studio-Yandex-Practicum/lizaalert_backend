@@ -26,6 +26,7 @@ from tests.factories.courses import (
     CourseWith3KnowledgeFactory,
     CourseWithAvailableCohortFactory,
     CourseWithFutureCohortFactory,
+    DivisionFactory,
     LessonFactory,
     Subscription,
     SubscriptionFactory,
@@ -163,6 +164,16 @@ class TestCourse:
         assert len(response_2.json()["results"]) == 1
         assert len(response_3.json()["results"]) == 2
         assert len(response_full.json()["results"]) == 3
+
+    def test_test_filter_courses_by_division(self, user_client):
+        """Тест фильтра по направлению."""
+        division = DivisionFactory()
+        course = CourseFactory(division=division)
+        params = {"division": division.id}
+        response = user_client.get(self.url, params)
+        courses = response.json()["results"]
+        assert response.status_code == status.HTTP_200_OK
+        assert len(courses) != 0
 
     def test_field_faq_in_course(self, user_client):
         """
