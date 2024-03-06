@@ -26,6 +26,7 @@ from tests.factories.courses import (
     CourseWith3KnowledgeFactory,
     CourseWithAvailableCohortFactory,
     CourseWithFutureCohortFactory,
+    CourseWithUnavailableCohortFactory,
     LessonFactory,
     Subscription,
     SubscriptionFactory,
@@ -108,11 +109,39 @@ class TestCourse:
                 if result["id"] == course.id:
                     assert result["start_date"] == start_date
 
-        # Тест с датой начала когрты в будущем.
+        # Тест с датой начала когорты в будущем.
         assert_start_date(CohortFactory())
 
         # Тест с открытой когортой.
         assert_start_date(CohortAlwaysAvailableFactory())
+
+    def test_course_unavailable(self, anonymous_client, user_client):
+        """Проверяем, что курс с недоступной когортой не попадает в выдачу."""
+        CourseWithAvailableCohortFactory()
+        response = user_client.get(self.url)
+        courses_count = response.json()["count"]
+        CourseWithUnavailableCohortFactory()
+        response_anonymous = anonymous_client.get(self.url)
+        assert response_anonymous.json()["count"] == courses_count
+        response_user = user_client.get(self.url)
+        assert response_user.json()["count"] == courses_count
+
+    def test_course_unavailable_with_subscription(self, anonymous_client, user, user_client):
+        """
+        Проверяем, что курс с недоступной когортой, но с подпиской не попадает в выдачу
+        неаутентифицированному пользователю, но попадает аутентифицированному.
+        """
+        course = CourseWithAvailableCohortFactory()
+        response = anonymous_client.get(self.url)
+        courses_count = response.json()["count"]
+        SubscriptionFactory(user=user, course=course)
+        cohort = course.cohorts.all().first()
+        cohort.start_date = datetime.date.today() - datetime.timedelta(days=1)
+        cohort.save()
+        response_anonymous = anonymous_client.get(self.url)
+        assert response_anonymous.json()["count"] == courses_count - 1
+        response_user = user_client.get(self.url)
+        assert response_user.json()["count"] == courses_count
 
     def test_course_status_anonymous(self, anonymous_client):
         response = anonymous_client.get(self.url)
@@ -122,7 +151,7 @@ class TestCourse:
         assert all(course_status)
 
     def test_filter_courses_by_course_format(self, user_client):
-        course = CourseFactory()
+        course = CourseWithAvailableCohortFactory()
         course_format = course.course_format
         params = {"course_format": course_format}
         response = user_client.get(self.url, params)
