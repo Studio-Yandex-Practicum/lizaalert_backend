@@ -168,7 +168,7 @@ class TestCourse:
     def test_test_filter_courses_by_division(self, user_client):
         """Тест фильтра по направлению."""
         division = DivisionFactory()
-        course = CourseFactory(division=division)
+        _ = CourseFactory(division=division)
         params = {"division": division.id}
         response = user_client.get(self.url, params)
         courses = response.json()["results"]
