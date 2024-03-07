@@ -241,7 +241,7 @@ class FilterSerializer(serializers.Serializer):
     def get_options(self, model):
         return OptionSerializer(model.objects.all(), many=True).data
 
-    @swagger_serializer_method(serializer_or_field=OptionSerializer)
+    @swagger_serializer_method(serializer_or_field=DivisionSerializer)
     def get_division(self, model):
         return DivisionSerializer(Division.objects.all(), many=True).data
 
