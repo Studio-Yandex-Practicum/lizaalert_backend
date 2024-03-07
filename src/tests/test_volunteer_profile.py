@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from tests.factories.courses import CourseFactory, DivisionFactory
 from tests.factories.users import BadgeFactory, VolunteerBadgeFactory
 
 
@@ -51,3 +52,18 @@ class TestVolunteerBadgeList:
         assert response.status_code == status.HTTP_200_OK
         for field in data_fields:
             assert response.json()[0][field] == getattr(badge, field)
+
+
+@pytest.mark.django_db
+class TestVolunteerProfileDivision:
+
+    url = reverse("profile")
+
+    def test_get_volunteer_profile_division(self, user_client, user):
+        """Проверка присутствия направлений в профиле пользователя."""
+        division = DivisionFactory()
+        course = CourseFactory(division=division)
+        params = {"division": division.id}
+        response = user_client.get(self.url, params)
+        assert response.status_code == status.HTTP_200_OK
+        assert course.division == division
