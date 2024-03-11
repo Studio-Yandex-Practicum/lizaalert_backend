@@ -58,3 +58,4 @@ class CohortForm(forms.ModelForm):
                         """
                     )
                 )
+        return None
