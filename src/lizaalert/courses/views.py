@@ -96,6 +96,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 filter=Q(chapters__lessons__status=lesson_status),
             ),
         }
+        qo_courses_with_always_available_cohort = Q(
+            status=Course.CourseStatus.PUBLISHED, cohorts__start_date=None, cohorts__max_students=None
+        )
+        qo_courses_with_available_cohort = Q(
+            status=Course.CourseStatus.PUBLISHED,
+            cohorts__start_date__gte=timezone.now().date(),
+            cohorts__students_count__lt=F("cohorts__max_students"),
+        )
 
         if user.is_authenticated:
             if course:
@@ -165,12 +173,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                     Prefetch("chapters__lessons", queryset=lessons_with_progress),
                 )
                 .filter(
-                    Q(status=Course.CourseStatus.PUBLISHED, cohorts__start_date=None, cohorts__max_students=None)
-                    | Q(
-                        status=Course.CourseStatus.PUBLISHED,
-                        cohorts__start_date__gte=timezone.now().date(),
-                        cohorts__students_count__lt=F("cohorts__max_students"),
-                    )
+                    qo_courses_with_always_available_cohort
+                    | qo_courses_with_available_cohort
                     | Q(
                         status__in=(Course.CourseStatus.PUBLISHED, Course.CourseStatus.HIDDEN),
                         id__in=Subquery(
@@ -184,14 +188,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         return (
             Course.objects.prefetch_related("cohorts")
-            .filter(
-                Q(status=Course.CourseStatus.PUBLISHED, cohorts__start_date=None, cohorts__max_students=None)
-                | Q(
-                    cohorts__start_date__gte=timezone.now().date(),
-                    cohorts__students_count__lt=F("cohorts__max_students"),
-                    status=Course.CourseStatus.PUBLISHED,
-                )
-            )
+            .filter(qo_courses_with_always_available_cohort | qo_courses_with_available_cohort)
             .annotate(**base_annotations)
             .order_by("id")
         )
