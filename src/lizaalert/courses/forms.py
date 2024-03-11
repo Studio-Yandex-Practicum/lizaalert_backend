@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
@@ -22,14 +24,26 @@ class CohortForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        required_data = (
+        CohortData = namedtuple("CohortData", ["start_date", "end_date", "max_students"])
+        required_data = CohortData(
             cleaned_data.get("start_date"),
             cleaned_data.get("end_date"),
             cleaned_data.get("max_students"),
         )
 
-        if all(required_data) or not any(required_data):
-            return cleaned_data
+        match required_data:
+            case CohortData(start_date, end_date, max_students) if all((start_date, end_date, max_students)):
+                if start_date > end_date:
+                    raise ValidationError(
+                        mark_safe(
+                            """
+                            Дата начала не может быть больше даты окончания.
+                            """
+                        )
+                    )
+                return cleaned_data
+            case CohortData(None, None, None):
+                return cleaned_data
 
         raise ValidationError(
             mark_safe(
