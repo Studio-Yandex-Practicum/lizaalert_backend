@@ -53,6 +53,8 @@ jobs:
       #----------------------------------------------
       - name: Install project
         run: cd src && poetry install --no-interaction
+      - name: Start services
+        run: docker-compose up -d
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
