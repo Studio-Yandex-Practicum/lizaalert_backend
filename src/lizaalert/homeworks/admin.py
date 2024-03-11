@@ -1,11 +1,9 @@
 from django import forms
 from django.contrib import admin
-from rest_framework.decorators import permission_classes
 from tinymce.widgets import TinyMCE
 
 from lizaalert.courses.models import Lesson
 from lizaalert.homeworks.models import Homework
-from lizaalert.homeworks.permissions import IsReviewerOrSuperUser
 
 
 class HomeworkAdminForm(forms.ModelForm):
@@ -47,16 +45,6 @@ class HomeworkAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(reviewer=request.user)
-
-    @permission_classes([IsReviewerOrSuperUser])
-    def has_permission(self, request, view):
-        """Проверить разрешение на изменение."""
-        pass
-
-    @permission_classes([IsReviewerOrSuperUser])
-    def has_object_permission(self, request, view, obj):
-        """Проверить разрешение на удаление."""
-        pass
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Ограничить в выдаче только уроки типа домашнее задание."""
