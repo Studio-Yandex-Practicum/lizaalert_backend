@@ -11,7 +11,7 @@ class HomeworkAdminForm(forms.ModelForm):
         model = Homework
         fields = ("reviewer", "status", "lesson", "text", "subscription", "required")
         widgets = {
-            "text": TinyMCE(attrs={"cols": 80, "rows": 30}),
+            "text": TinyMCE(attrs={"cols": 80, "rows": 10}),
         }
 
 
