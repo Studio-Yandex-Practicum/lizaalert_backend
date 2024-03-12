@@ -53,6 +53,8 @@ jobs:
       #----------------------------------------------
       - name: Install project
         run: cd src && poetry install --no-interaction
+      - name: Create .env file for Postgres
+        run: touch services/postgres/.env
       - name: Start services
         env:
           MINIO_STORAGE_ACCESS_KEY: ${{ secrets.MINIO_STORAGE_ACCESS_KEY }}
