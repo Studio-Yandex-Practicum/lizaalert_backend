@@ -1,7 +1,16 @@
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 
-from lizaalert.courses.models import FAQ, Chapter, Course, CourseProgressStatus, Knowledge, Lesson, Subscription
+from lizaalert.courses.models import (
+    FAQ,
+    Chapter,
+    Course,
+    CourseProgressStatus,
+    Division,
+    Knowledge,
+    Lesson,
+    Subscription,
+)
 from lizaalert.courses.utils import BreadcrumbLessonSerializer, BreadcrumbSchema
 
 
@@ -205,10 +214,22 @@ class OptionSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+class DivisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Division
+        fields = (
+            "id",
+            "title",
+            "description",
+            "author",
+        )
+
+
 class FilterSerializer(serializers.Serializer):
     slug = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
     options = serializers.SerializerMethodField()
+    division = serializers.SerializerMethodField()
 
     def get_name(self, model):
         return model._meta.verbose_name
@@ -219,6 +240,10 @@ class FilterSerializer(serializers.Serializer):
     @swagger_serializer_method(serializer_or_field=OptionSerializer)
     def get_options(self, model):
         return OptionSerializer(model.objects.all(), many=True).data
+
+    @swagger_serializer_method(serializer_or_field=DivisionSerializer)
+    def get_division(self, model):
+        return DivisionSerializer(Division.objects.all(), many=True).data
 
 
 class CurrentLessonSerializer(serializers.ModelSerializer):

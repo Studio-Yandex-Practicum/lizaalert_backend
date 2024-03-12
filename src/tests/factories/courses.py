@@ -10,6 +10,7 @@ from lizaalert.courses.models import (
     Course,
     CourseFaq,
     CourseKnowledge,
+    Division,
     Knowledge,
     Lesson,
     Subscription,
@@ -319,3 +320,14 @@ class UnpublishedCourseFactory(CourseFactory):
     """Test factory for unpublished Course."""
 
     status = Course.CourseStatus.DRAFT
+
+
+class DivisionFactory(factory.django.DjangoModelFactory):
+    """Test factory for unpublished Division."""
+
+    class Meta:
+        model = Division
+
+    title = factory.Faker("sentence", nb_words=5, variable_nb_words=True)
+    description = factory.Faker("text", max_nb_chars=50)
+    author = factory.SubFactory(UserFactory)
