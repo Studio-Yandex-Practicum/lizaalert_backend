@@ -12,9 +12,6 @@ jobs:
   linting:
     name: Check
     runs-on: ubuntu-latest
-    env:
-      MINIO_STORAGE_ACCESS_KEY: ${{ secrets.MINIO_STORAGE_ACCESS_KEY }}
-      MINIO_STORAGE_SECRET_KEY: ${{ secrets.MINIO_STORAGE_SECRET_KEY }}
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -57,7 +54,10 @@ jobs:
       - name: Install project
         run: cd src && poetry install --no-interaction
       - name: Start services
-        run: docker-compose up -d
+        run: docker-compose up -d s3
+        env:
+          MINIO_STORAGE_ACCESS_KEY: ${{ secrets.MINIO_STORAGE_ACCESS_KEY }}
+          MINIO_STORAGE_SECRET_KEY: ${{ secrets.MINIO_STORAGE_SECRET_KEY }}
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
