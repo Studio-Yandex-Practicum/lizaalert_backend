@@ -1,6 +1,11 @@
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from lizaalert.authentication.views import LoginView, YandexUserData
+
+User = get_user_model()
 
 
 class TestAuthFull:
@@ -50,3 +55,9 @@ class TestAuthFull:
         client.force_authenticate(user=user)
         response = client.post("/api/v1/auth/users/test/")
         assert response.status_code == status.HTTP_200_OK
+
+    @pytest.mark.django_db(transaction=True)
+    def test_yandex_get_user(self, client):
+        user_data = YandexUserData(99, "TestYaUser", ["user@user.com"])
+        LoginView.get_user(self, user_data)
+        assert User.objects.filter(id=99, username="TestYaUser", email="user@user.com").exists
