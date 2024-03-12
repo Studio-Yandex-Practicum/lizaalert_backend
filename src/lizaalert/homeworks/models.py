@@ -45,6 +45,12 @@ class Homework(TimeStampedModel):
     required = models.BooleanField(verbose_name="Обязательное задание", default=True)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["subscription", "lesson"],
+                name="unique_subscription_lesson",
+            ),
+        ]
         verbose_name = "Домашнее задание"
         verbose_name_plural = "Домашние задания"
         ordering = ["-updated_at"]
