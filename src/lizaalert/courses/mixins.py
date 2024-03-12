@@ -20,6 +20,7 @@ class TimeStampedModel(models.Model):
     all_objects - менеджер модели без поддержки мягкого удаления
 
     переопределен метод delete для мягкого удаления записи.
+    переопределены методы str и repr для отображения статуса удаления записи.
     """
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,6 +35,18 @@ class TimeStampedModel(models.Model):
     def delete(self, *args, **kwargs):
         self.deleted_at = timezone.now()
         self.save()
+
+    def __str__(self):
+        base_str = super().__str__()
+        if self.deleted_at:
+            return f"{base_str} (deleted)"
+        return base_str
+
+    def __repr__(self):
+        base_repr = super().__repr__()
+        if self.deleted_at:
+            return f"{base_repr} (deleted)"
+        return base_repr
 
 
 def order_number_mixin(step, parent_field):
