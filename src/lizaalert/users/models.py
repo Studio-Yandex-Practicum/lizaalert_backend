@@ -302,6 +302,11 @@ class Volunteer(models.Model):
     )
     created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
+    division = models.ManyToManyField(
+        "courses.Division",
+        verbose_name="Направление курса",
+        blank=True,
+    )
 
     class Meta:
         db_table = "volunteers"
