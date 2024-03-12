@@ -299,7 +299,7 @@ class Volunteer(models.Model):
     )
     created_at = models.DateTimeField("Дата и время создания запси", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления записи", auto_now=True)
-    divisionlevels = models.ManyToManyField(
+    division_levels = models.ManyToManyField(
         "courses.Division",
         through="users.UserDivisionLevel",
         blank=True,
@@ -339,12 +339,14 @@ class UserDivisionLevel(models.Model):
     volunteer = models.ForeignKey(
         Volunteer,
         on_delete=models.CASCADE,
-        related_name="divisionlevel",
+        related_name="division_level",
         verbose_name="Волонтер",
     )
     division = models.ForeignKey("courses.Division", on_delete=models.CASCADE, verbose_name="Направление умения")
     level = models.ForeignKey(
-        Level, on_delete=models.CASCADE, verbose_name="Уровень умения", default=Level.LevelName.beginner
+        Level,
+        on_delete=models.CASCADE,
+        verbose_name="Уровень умения",
     )
 
     class Meta:

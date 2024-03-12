@@ -595,6 +595,8 @@ class Subscription(TimeStampedModel):
 
 
 class Division(TimeStampedModel):
+    """Модель направления курсов."""
+
     title = models.CharField(max_length=250, verbose_name="Название направления")
     description = models.CharField(max_length=1000, verbose_name="Описание направления")
     author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель направления")

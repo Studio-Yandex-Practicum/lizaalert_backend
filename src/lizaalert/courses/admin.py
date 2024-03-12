@@ -66,14 +66,6 @@ class ChapterInline(admin.TabularInline):
     get_chapter_link.short_description = "Глава"
 
 
-class DivisionInline(admin.StackedInline):
-    """Инлайн направления для отображения в главе."""
-
-    model = Division
-    min_num = 1
-    extra = 0
-
-
 @admin.register(Cohort)
 class CohortAdmin(admin.ModelAdmin):
     """
@@ -299,11 +291,8 @@ class DivisionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Курсы")
     def courses(self, obj):
-        courses_list = obj.course_set.all().values_list("title", flat=True)
-        result = ""
-        for course in courses_list:
-            result += course + "\n"
-        return result
+        """Показывает курсы по этим направлениям."""
+        return [[course.title] for course in obj.course_set.all()]
 
     def get_queryset(self, request):
         qs = self.model._default_manager.get_queryset().prefetch_related("course_set")

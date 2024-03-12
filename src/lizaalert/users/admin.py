@@ -112,7 +112,7 @@ class VolunteerAdmin(admin.ModelAdmin):
 
 
 class UserDivisionLevelAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "volunteer", "division", "level")
+    list_display = ("id", "volunteer", "division", "level")
     list_display_links = ("volunteer",)
     list_filter = (
         "volunteer",
