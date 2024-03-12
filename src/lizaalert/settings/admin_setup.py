@@ -4,6 +4,11 @@ from django.utils.translation import ngettext
 
 
 class ShowDeletedObjectsFilter(admin.SimpleListFilter):
+    """
+    Фильтр для django admin.
+
+    Позволяет показывать/скрывать удаленные записи в админке.
+    """
 
     title = "Показать удаленные записи"
     parameter_name = "is_deleted"
