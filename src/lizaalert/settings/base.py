@@ -227,8 +227,8 @@ MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
 DJANGO_HOST = os.environ.get("DJANGO_HOST", "localhost")
 MINIO_STORAGE_MEDIA_URL = f"http://{DJANGO_HOST}:9000/media/"
 
-if os.environ.get('IS_GITHUB_ACTION') == 'true':
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+if os.environ.get("IS_GITHUB_ACTION") == "true":
+    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 else:
     DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
     STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
