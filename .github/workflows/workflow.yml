@@ -68,6 +68,8 @@ jobs:
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
+      - name: Set up environment variable for tests 
+        run: echo "IS_GITHUB_ACTION=true" >> $GITHUB_ENV
       - name: Run tests
         run: cd src && poetry run pytest
 
