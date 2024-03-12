@@ -2,6 +2,9 @@ from django.apps import apps
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Max
+from django.utils import timezone
+
+from lizaalert.settings.managers import SoftDeleteManager
 
 
 class TimeStampedModel(models.Model):
@@ -11,15 +14,26 @@ class TimeStampedModel(models.Model):
     created_at* - дата создания записи об уроке, автоматическое проставление
     текущего времени
     updated_at* - дата обновления записи об уроке, автоматическое проставление
-    текущего времени.
+    текущего времени
+    deleted_at - дата удаления записи об уроке, автоматическое проставление
+    objects - менеджер модели с поддержкой мягкого удаления
+    all_objects - менеджер модели без поддержки мягкого удаления
+
+    переопределен метод delete для мягкого удаления записи.
     """
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
 
     class Meta:
         abstract = True
+
+    def delete(self, *args, **kwargs):
+        self.deleted_at = timezone.now()
+        self.save()
 
 
 def order_number_mixin(step, parent_field):
