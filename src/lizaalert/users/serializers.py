@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 
+from lizaalert.courses.serializers import DivisionSerializer
 from lizaalert.users.models import Badge, Level, Location, UserRole, Volunteer
 
 User = get_user_model()
@@ -27,6 +28,7 @@ class VolunteerSerializer(serializers.ModelSerializer):
     count_pass_course = serializers.IntegerField(read_only=True)
     phone_number = serializers.CharField(source="user.phone", read_only=True)
     department = serializers.CharField(required=False, allow_null=True, source="department.title")
+    division = DivisionSerializer(many=True)
 
     class Meta:
         model = Volunteer
@@ -42,6 +44,7 @@ class VolunteerSerializer(serializers.ModelSerializer):
             "call_sign",
             "phone_number",
             "email",
+            "division",
         ]
 
     def update(self, instance, validated_data):
