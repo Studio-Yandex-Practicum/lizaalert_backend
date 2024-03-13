@@ -136,8 +136,8 @@ class TestCourse:
         course = CourseWithAvailableCohortFactory()
         response = anonymous_client.get(self.url)
         courses_count = response.json()["count"]
-        SubscriptionFactory(user=user, course=course)
-        cohort = course.cohorts.all().first()
+        subscription = SubscriptionFactory(user=user, course=course)
+        cohort = subscription.cohort
         cohort.start_date = datetime.date.today() - datetime.timedelta(days=1)
         cohort.save()
         response_anonymous = anonymous_client.get(self.url)
