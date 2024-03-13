@@ -11,7 +11,7 @@ from .managers import UserManager
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True)
+    email = models.EmailField(null=True, blank=True, unique=True)
     full_name = models.CharField(max_length=255, blank=True, verbose_name="Полное имя")
     phone = PhoneNumberField(max_length=20, null=True, blank=True, verbose_name="телефон")
 

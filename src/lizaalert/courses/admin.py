@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
+from lizaalert.courses.forms import CohortForm
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
@@ -52,16 +53,15 @@ class ChapterInline(admin.TabularInline):
     readonly_fields = ("get_chapter_link",)
     fields = (
         "get_chapter_link",
-        "order_number",
         "title",
-        "user_created",
-        "user_modifier",
     )
 
     # Метод для отображения ссылки на главу курса
     def get_chapter_link(self, obj):
-        url = reverse("admin:courses_chapter_change", args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.title)
+        title = obj.title or "Нет названия"
+        if not (id := obj.id):
+            return format_html("<span>{}</span>", title)
+        return format_html('<a href="{}">{}</a>', reverse("admin:courses_chapter_change", args=(id,)), title)
 
     get_chapter_link.short_description = "Глава"
 
@@ -84,6 +84,7 @@ class CohortAdmin(admin.ModelAdmin):
 
     model = Cohort
     extra = 1
+    form = CohortForm
     list_display = (
         "course_title",
         "start_date",
@@ -94,6 +95,8 @@ class CohortAdmin(admin.ModelAdmin):
     )
     list_select_related = ("course",)
     ordering = ("-updated_at",)
+    readonly_fields = ("cohort_number", "students_count")
+    raw_id_fields = ("teacher",)
 
     def course_title(self, obj):
         return obj.course.title
@@ -121,6 +124,19 @@ class CourseAdmin(admin.ModelAdmin):
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
+
+    # Автоматическое заполнение полей user_created и user_modifier для главы
+    def save_formset(self, request, form, formset, change):
+        if formset.model == Chapter:
+            chapters = formset.save(commit=False)
+            for chapter in chapters:
+                if not chapter.id:
+                    chapter.user_created = request.user
+                chapter.user_modifier = request.user
+                chapter.save()
+            formset.save_m2m()
+        else:
+            super().save_formset(request, form, formset, change)
 
 
 @admin.register(Chapter)
