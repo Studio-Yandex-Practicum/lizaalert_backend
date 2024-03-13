@@ -163,14 +163,8 @@ class Badge(models.Model):
         blank=True,
         verbose_name="Курс для получения",
     )
-    division = models.ForeignKey(
-        "courses.Division", on_delete=models.PROTECT, verbose_name="Направление умения", null=True, blank=True
-    )
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=("name", "division"), name="unique_badge"),
-        ]
         db_table = "badges"
         verbose_name = "Значок"
         verbose_name_plural = "Значки"
