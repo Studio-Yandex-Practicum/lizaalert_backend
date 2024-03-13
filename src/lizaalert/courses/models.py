@@ -96,6 +96,7 @@ class Course(
         DRAFT = 0, "в разработке"
         PUBLISHED = 1, "опубликован"
         ARCHIVE = 2, "в архиве"
+        HIDDEN = 3, "скрытый"
 
     title = models.CharField(max_length=120, verbose_name="Название курса")
     course_format = models.CharField(max_length=60, verbose_name="Формат курса")

@@ -1,11 +1,12 @@
 from django.contrib import admin
 
 from lizaalert.courses.models import Lesson
+from lizaalert.settings.admin_setup import BaseAdmin
 from lizaalert.webinars.models import Webinar
 
 
 @admin.register(Webinar)
-class Webinar(admin.ModelAdmin):
+class Webinar(BaseAdmin):
     """
     Админка домашних заданий.
 
