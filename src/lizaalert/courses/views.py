@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value
 from django.db.models.functions import Cast, Coalesce
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
@@ -59,6 +60,8 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
         Этот метод извлекает QuerySet для курсов с аннотациями как для
         аутентифицированных, так и для неаутентифицированных пользователей.
+        Для неаутентифицированных пользователей возвращает только опубликованные курсы с подходящими когортами.
+        Для аутентифицированных - дополнительно возвращает курсы на которые пользователь подписан, в том числе скрытые.
 
         Возвращает:
             QuerySet: QuerySet для курсов.
@@ -93,6 +96,14 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
                 filter=Q(chapters__lessons__status=lesson_status),
             ),
         }
+        qo_courses_with_always_available_cohort = Q(
+            status=Course.CourseStatus.PUBLISHED, cohorts__start_date=None, cohorts__max_students=None
+        )
+        qo_courses_with_available_cohort = Q(
+            status=Course.CourseStatus.PUBLISHED,
+            cohorts__start_date__gte=timezone.now().date(),
+            cohorts__students_count__lt=F("cohorts__max_students"),
+        )
 
         if user.is_authenticated:
             if course:
@@ -156,23 +167,31 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
             }
 
             return (
-                Course.objects.filter(
-                    Q(status=Course.CourseStatus.PUBLISHED)
+                Course.objects.prefetch_related(
+                    "cohorts",
+                    Prefetch("chapters", queryset=chapters_with_progress),
+                    Prefetch("chapters__lessons", queryset=lessons_with_progress),
+                )
+                .filter(
+                    qo_courses_with_always_available_cohort
+                    | qo_courses_with_available_cohort
                     | Q(
-                        status=Course.CourseStatus.HIDDEN,
+                        status__in=(Course.CourseStatus.PUBLISHED, Course.CourseStatus.HIDDEN),
                         id__in=Subquery(
                             Subscription.objects.filter(user=user, course_id=OuterRef("id")).values("course")
                         ),
                     )
                 )
                 .annotate(**base_annotations, **users_annotations)
-                .prefetch_related(
-                    Prefetch("chapters", queryset=chapters_with_progress),
-                    Prefetch("chapters__lessons", queryset=lessons_with_progress),
-                )
+                .order_by("id")
             )
 
-        return Course.objects.filter(status=Course.CourseStatus.PUBLISHED).annotate(**base_annotations)
+        return (
+            Course.objects.prefetch_related("cohorts")
+            .filter(qo_courses_with_always_available_cohort | qo_courses_with_available_cohort)
+            .annotate(**base_annotations)
+            .order_by("id")
+        )
 
     def get_serializer_class(self):
         if self.action in (

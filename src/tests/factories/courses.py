@@ -239,11 +239,26 @@ class CohortAlwaysAvailableFactory(factory.django.DjangoModelFactory):
     students_count = factory.fuzzy.FuzzyInteger(0, 10)
 
 
+class UnavailableCohortFactory(CohortFactory):
+    """Test factory for Cohort model with start yesterday."""
+
+    start_date = datetime.date.today() - datetime.timedelta(days=1)
+
+
 class CourseWithAvailableCohortFactory(CourseFactory):
     """Test factory for Course with available Cohort."""
 
     membership1 = factory.RelatedFactory(
         CohortAlwaysAvailableFactory,
+        factory_related_name="course",
+    )
+
+
+class CourseWithUnavailableCohortFactory(CourseFactory):
+    """Test factory for Course with unavailable Cohort."""
+
+    membership1 = factory.RelatedFactory(
+        UnavailableCohortFactory,
         factory_related_name="course",
     )
 
