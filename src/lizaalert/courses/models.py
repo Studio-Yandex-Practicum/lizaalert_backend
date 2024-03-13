@@ -76,7 +76,9 @@ class Knowledge(TimeStampedModel):
     author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель умения")
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["title"], name="unique_knowledge")]
+        constraints = [
+            models.UniqueConstraint(fields=("title",), name="unique_knowledge"),
+        ]
         verbose_name = "Умение"
         verbose_name_plural = "Умения"
 
@@ -119,6 +121,9 @@ class Course(
     )
     user_created = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель курса")
     status = models.IntegerField(verbose_name="статус курса", choices=CourseStatus.choices, default=CourseStatus.DRAFT)
+    division = models.ForeignKey(
+        "courses.Division", on_delete=models.PROTECT, verbose_name="Направление курса", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "Курс"
@@ -588,3 +593,17 @@ class Subscription(TimeStampedModel):
         """Завершить подписку на курс."""
         self.status = Subscription.Status.COMPLETED
         self.save()
+
+
+class Division(TimeStampedModel):
+    title = models.CharField(max_length=250, verbose_name="Название направления")
+    description = models.CharField(max_length=1000, verbose_name="Описание направления")
+    author = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создатель направления")
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["title"], name="unique_division")]
+        verbose_name = "Направление"
+        verbose_name_plural = "Направления"
+
+    def __str__(self):
+        return f"<Division: {self.id}, title: {self.title}>"
