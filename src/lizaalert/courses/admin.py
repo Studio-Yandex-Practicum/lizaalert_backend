@@ -12,6 +12,7 @@ from lizaalert.courses.models import (
     CourseFaq,
     CourseKnowledge,
     CourseProgressStatus,
+    Division,
     Knowledge,
     Lesson,
     LessonProgressStatus,
@@ -65,6 +66,14 @@ class ChapterInline(admin.TabularInline):
     get_chapter_link.short_description = "Глава"
 
 
+class DivisionInline(admin.StackedInline):
+    """Инлайн направления для отображения в главе."""
+
+    model = Division
+    min_num = 1
+    extra = 0
+
+
 @admin.register(Cohort)
 class CohortAdmin(admin.ModelAdmin):
     """
@@ -100,6 +109,9 @@ class CourseAdmin(admin.ModelAdmin):
     """Админка курса."""
 
     inlines = (CourseFaqInline, CourseKnowledgeInline, ChapterInline)
+    list_filter = [
+        "division",
+    ]
     model = Course
     list_display = (
         "title",
@@ -108,6 +120,7 @@ class CourseAdmin(admin.ModelAdmin):
         "user_created",
         "created_at",
         "updated_at",
+        "division",
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
@@ -247,7 +260,6 @@ class KnowledgeAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "author",
-        "created_at",
         "updated_at",
     )
 
@@ -294,3 +306,23 @@ class SubscriptionAdmin(admin.ModelAdmin):
     ]
 
     ordering = ("-updated_at",)
+
+
+@admin.register(Division)
+class DivisionAdmin(admin.ModelAdmin):
+    """Aдминка для Division."""
+
+    ordering = ("-updated_at",)
+    list_display = ("title", "author", "created_at", "updated_at", "courses")
+    list_select_related = ("author",)
+
+    @admin.display(description="Курсы")
+    def courses(self, obj):
+        return [course.title for course in obj.course_set.all()]
+
+    def get_queryset(self, request):
+        qs = self.model._default_manager.get_queryset().prefetch_related("course_set")
+        ordering = self.get_ordering(request)
+        if ordering:
+            qs = qs.order_by(*ordering)
+        return qs
