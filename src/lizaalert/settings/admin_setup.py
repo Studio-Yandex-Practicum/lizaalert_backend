@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from django.contrib.admin.actions import delete_selected as delete_selected_original
+from django.contrib.admin.actions import delete_selected
 from django.utils.translation import ngettext
 
 
@@ -43,7 +43,7 @@ class BaseAdmin(admin.ModelAdmin):
         super().__init__(*args, **kwargs)
         self.list_display += ("is_deleted",)
         self.readonly_fields += ("deleted_at",)
-        self.actions = ("soft_restore", "soft_delete_selected", "delete_selected_custom")
+        self.actions = ("soft_restore", "soft_delete_selected", "delete_selected")
         self.list_filter += (ShowDeletedObjectsFilter,)
 
     def get_queryset(self, request):
@@ -78,11 +78,5 @@ class BaseAdmin(admin.ModelAdmin):
         )
 
     @admin.action(description="Безвозвратно удалить выбранные объекты")
-    def delete_selected_custom(self, request, queryset):
-        return delete_selected_original(self, request, queryset)
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        if "delete_selected" in actions:
-            del actions["delete_selected"]
-        return actions
+    def delete_selected(self, request, queryset):
+        return delete_selected(self, request, queryset)
