@@ -856,3 +856,19 @@ class TestCourse:
 
         # 2. Проверяем, что урок с пройденным контентом можно завершить.
         assert_finish(lesson, ProgressionStatus.APPROVED)
+
+    def test_soft_delete(self):
+        """
+        Проверка мягкого удаления.
+
+        Создаем курс, удаляем его и проверяем, что он не отображается в списке курсов при
+         использовании менеджера objects и отображается при использовании менеджера all_objects.
+        """
+        course = CourseFactory()
+        Course.objects.filter(id=course.id).delete()
+        assert not Course.objects.filter(id=course.id).exists()
+        assert Course.all_objects.filter(id=course.id).exists()
+
+        # Проверяем появления маркировки (deleted) у удаленных объектов в методе __repr__
+        deleted_course = Course.all_objects.get(id=course.id)
+        assert deleted_course.__repr__() == course.__repr__() + " (deleted)"

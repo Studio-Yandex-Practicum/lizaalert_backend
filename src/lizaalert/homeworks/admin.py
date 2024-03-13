@@ -4,6 +4,7 @@ from tinymce.widgets import TinyMCE
 
 from lizaalert.courses.models import Lesson
 from lizaalert.homeworks.models import Homework
+from lizaalert.settings.admin_setup import BaseAdmin
 
 
 class HomeworkAdminForm(forms.ModelForm):
@@ -16,7 +17,7 @@ class HomeworkAdminForm(forms.ModelForm):
 
 
 @admin.register(Homework)
-class HomeworkAdmin(admin.ModelAdmin):
+class HomeworkAdmin(BaseAdmin):
     """Админка домашних заданий."""
 
     form = HomeworkAdminForm
