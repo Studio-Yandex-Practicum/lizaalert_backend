@@ -6,6 +6,8 @@ from lizaalert.webinars.models import Webinar
 class WebinarSerializer(serializers.ModelSerializer):
     """Сериализатор для вебинара."""
 
+    status = serializers.ChoiceField(choices=Webinar.Status.choices, read_only=True)
+
     class Meta:
         model = Webinar
         fields = (
@@ -13,8 +15,11 @@ class WebinarSerializer(serializers.ModelSerializer):
             "lesson",
             "description",
             "link",
+            "recording_link",
+            "recording_description",
             "cohort",
             "webinar_date",
+            "status",
         )
 
 

@@ -26,6 +26,8 @@ from tests.factories.courses import (
     CourseWith3KnowledgeFactory,
     CourseWithAvailableCohortFactory,
     DivisionFactory,
+    CourseWithFutureCohortFactory,
+    CourseWithUnavailableCohortFactory,
     LessonFactory,
     Subscription,
     SubscriptionFactory,
@@ -108,11 +110,41 @@ class TestCourse:
                 if result["id"] == course.id:
                     assert result["start_date"] == start_date
 
-        # Тест с датой начала когрты в будущем.
+        # Тест с датой начала когорты в будущем.
         assert_start_date(CohortFactory())
 
         # Тест с открытой когортой.
         assert_start_date(CohortAlwaysAvailableFactory())
+
+    def test_course_unavailable(self, anonymous_client, user_client):
+        """Проверяем, что курс с недоступной когортой не попадает в выдачу."""
+        CourseWithAvailableCohortFactory()
+        response = user_client.get(self.url)
+        courses_count = response.json()["count"]
+        CourseWithUnavailableCohortFactory()
+        response_anonymous = anonymous_client.get(self.url)
+        assert response_anonymous.json()["count"] == courses_count
+        response_user = user_client.get(self.url)
+        assert response_user.json()["count"] == courses_count
+
+    def test_course_unavailable_with_subscription(self, anonymous_client, user, user_client):
+        """
+        Проверяем корректность работы с подпиской.
+
+        Проверяем, что курс с недоступной когортой, но с подпиской не попадает в выдачу
+        неаутентифицированному пользователю, но попадает аутентифицированному.
+        """
+        course = CourseWithAvailableCohortFactory()
+        response = anonymous_client.get(self.url)
+        courses_count = response.json()["count"]
+        subscription = SubscriptionFactory(user=user, course=course)
+        cohort = subscription.cohort
+        cohort.start_date = datetime.date.today() - datetime.timedelta(days=1)
+        cohort.save()
+        response_anonymous = anonymous_client.get(self.url)
+        assert response_anonymous.json()["count"] == courses_count - 1
+        response_user = user_client.get(self.url)
+        assert response_user.json()["count"] == courses_count
 
     def test_course_status_anonymous(self, anonymous_client):
         response = anonymous_client.get(self.url)
@@ -122,7 +154,7 @@ class TestCourse:
         assert all(course_status)
 
     def test_filter_courses_by_course_format(self, user_client):
-        course = CourseFactory()
+        course = CourseWithAvailableCohortFactory()
         course_format = course.course_format
         params = {"course_format": course_format}
         response = user_client.get(self.url, params)
@@ -211,10 +243,12 @@ class TestCourse:
         1. Проверяем, что можно записаться на курс в когорту, которая начнется в будущем и нельзя записаться повторно.
         2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
         """
-        cohort_1 = CohortFactory()
-        cohort_2 = CohortAlwaysAvailableFactory()
+        course_1 = CourseWith2Chapters()
+        course_2 = CourseWith2Chapters()
+        cohort_1 = CohortFactory(course=course_1)
+        cohort_2 = CohortAlwaysAvailableFactory(course=course_2)
 
-        def assert_subscription(cohort, expected_response, expected_status, recurrent_response):
+        def assert_subscription(cohort, expected_response, expected_status, recurrent_response, start_date=None):
             course = cohort.course
             subscribe = reverse("courses-enroll", kwargs={"pk": course.id})
             subscription_response = user_client.post(subscribe)
@@ -222,8 +256,8 @@ class TestCourse:
             response = user_client.get(url)
             assert response.status_code == status.HTTP_200_OK
             assert subscription_response.status_code == expected_response
+            assert subscription_response.json()["start_date"] == start_date
             assert response.json()["user_status"] == expected_status
-
             subscription_response = user_client.post(subscribe)
             assert subscription_response.status_code == recurrent_response
 
@@ -233,6 +267,7 @@ class TestCourse:
             status.HTTP_201_CREATED,
             Subscription.Status.ENROLLED,
             status.HTTP_403_FORBIDDEN,
+            cohort_1.start_date.isoformat(),
         )
 
         # 2. Проверяем, что можно записаться на курс в когорту, которая начнется сегодня и нельзя записаться повторно.
@@ -814,6 +849,25 @@ class TestCourse:
         # 2. Нельзя получить доступ к неопубликованному курсу ожидаем ошибку 404.
         assert_unpublished_object(course, "courses-detail", course.id, status.HTTP_404_NOT_FOUND)
 
+    def test_hidden_course_appears_for_subscribed_user(self, user_client, user):
+        """Тест, что скрытый курс появляется для подписанного пользователя."""
+        hidden_course = CourseWithFutureCohortFactory(status=Course.CourseStatus.HIDDEN)
+        _ = SubscriptionFactory(course=hidden_course, user=user)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert hidden_course.title in [course["title"] for course in response.json()["results"]]
+
+    def test_hidden_course_not_visible_for_unsubscribed_user(self, user_client):
+        """Тест, что скрытый курс не появляется для неподписанного пользователя."""
+        hidden_course = CourseWithFutureCohortFactory(status=Course.CourseStatus.HIDDEN)
+        url = reverse("courses-list")
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert hidden_course.id not in set(course["id"] for course in response.json()["results"])
+
     def test_lessons_with_content_check(self, user):
         """
         Тест, что урок с контентом можно завершить только после прохождения контента.
@@ -844,3 +898,19 @@ class TestCourse:
 
         # 2. Проверяем, что урок с пройденным контентом можно завершить.
         assert_finish(lesson, ProgressionStatus.APPROVED)
+
+    def test_soft_delete(self):
+        """
+        Проверка мягкого удаления.
+
+        Создаем курс, удаляем его и проверяем, что он не отображается в списке курсов при
+         использовании менеджера objects и отображается при использовании менеджера all_objects.
+        """
+        course = CourseFactory()
+        Course.objects.filter(id=course.id).delete()
+        assert not Course.objects.filter(id=course.id).exists()
+        assert Course.all_objects.filter(id=course.id).exists()
+
+        # Проверяем появления маркировки (deleted) у удаленных объектов в методе __repr__
+        deleted_course = Course.all_objects.get(id=course.id)
+        assert deleted_course.__repr__() == course.__repr__() + " (deleted)"
