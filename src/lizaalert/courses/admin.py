@@ -258,11 +258,7 @@ class KnowledgeAdmin(BaseAdmin):
 
     inlines = (CourseKnowledgeInline,)
     ordering = ("-updated_at",)
-    list_display = (
-        "title",
-        "author",
-        "updated_at",
-    )
+    list_display = ("title", "author", "created_at", "updated_at")
 
 
 @admin.register(Lesson)
@@ -310,7 +306,7 @@ class SubscriptionAdmin(BaseAdmin):
 
 
 @admin.register(Division)
-class DivisionAdmin(admin.ModelAdmin):
+class DivisionAdmin(BaseAdmin):
     """Aдминка для Division."""
 
     ordering = ("-updated_at",)
@@ -324,11 +320,7 @@ class DivisionAdmin(admin.ModelAdmin):
         return [[course.title] for course in obj.course_set.all()]
 
     def get_queryset(self, request):
-        qs = self.model._default_manager.get_queryset().prefetch_related("course_set")
-        ordering = self.get_ordering(request)
-        if ordering:
-            qs = qs.order_by(*ordering)
-        return qs
+        return super().get_queryset(request).prefetch_related("course_set")
 
     def save_model(self, request, obj, form, change):
         obj.author = request.user
