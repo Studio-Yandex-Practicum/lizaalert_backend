@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 import pytest
+import requests
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -6,6 +9,7 @@ from rest_framework.test import APIClient
 from lizaalert.authentication.views import LoginView, YandexUserData
 
 User = get_user_model()
+oauth_token = {"oauth_token": "fake_token"}
 
 
 class TestAuthFull:
@@ -60,4 +64,19 @@ class TestAuthFull:
     def test_yandex_get_user(self, client):
         user_data = YandexUserData(99, "TestYaUser", ["user@user.com"])
         LoginView.get_user(self, user_data)
-        assert User.objects.filter(id=99, username="TestYaUser", email="user@user.com").exists
+        assert User.objects.filter(id=99, username="TestYaUser", email="user@user.com").exists()
+
+    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.parametrize(
+        "status, expected", [(200, YandexUserData(99, "TestYaUser", ["user@user.com"])), (401, None)]
+    )
+    def test_yandex_get_user_info(self, client, status, expected):
+        with patch.object(requests, "get") as mock_get_info_success:
+            mock_get_info_success.return_value.status_code = status
+            mock_get_info_success.return_value.json.return_value = {
+                "id": 99,
+                "login": "TestYaUser",
+                "emails": ["user@user.com"],
+            }
+            response = LoginView.get_passport_info(self, access_token=oauth_token)
+        assert response == expected
