@@ -9,7 +9,7 @@ class ProgressionStatus(models.IntegerChoices):
     SUBMITTED = 1, "Отправлено"
     IN_REVIEW = 2, "На проверке"
     APPROVED = 3, "Одобрено"
-    REJECTED = 4, "Отклонено"
+    REJECTED = 4, "Возвращено на доработку"
     CANCELLED = 5, "Отменено"
 
 
