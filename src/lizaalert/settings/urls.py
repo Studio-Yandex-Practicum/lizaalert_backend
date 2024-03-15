@@ -14,7 +14,7 @@ urlpatterns = []
 if settings.YANDEX_AUTH:
     urlpatterns += [
         path("admin/login/", LoginView.as_view(), name="login"),
-        ]
+    ]
 
 urlpatterns += [
     path("admin/", admin.site.urls),
