@@ -9,8 +9,8 @@ import smtplib
 import socket
 from collections import namedtuple
 from dataclasses import dataclass
-import requests
 
+import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import login as auth_login
