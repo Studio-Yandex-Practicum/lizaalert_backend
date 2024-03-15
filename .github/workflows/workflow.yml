@@ -39,6 +39,8 @@ jobs:
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v3
+        env:
+          USE_MINIO_STORAGE: true
         with:
           path: src/.venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/src/poetry.lock') }}
@@ -68,8 +70,6 @@ jobs:
       #----------------------------------------------
       #              run checks
       #----------------------------------------------
-      - name: Set up environment variable for tests 
-        run: echo "IS_GITHUB_ACTION=true" >> $GITHUB_ENV
       - name: Run tests
         run: cd src && poetry run pytest
 

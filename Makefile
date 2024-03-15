@@ -11,6 +11,10 @@ new:
 run:
 	docker-compose up --detach --build
 
+# Запуск с контейнером minio
+run-with-minio:
+	docker-compose -f docker-compose.yml -f docker-compose.s3.yml up --detach --build
+
 # Собирает статику
 collect:
 	docker-compose exec backend python manage.py collectstatic --no-input
