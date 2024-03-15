@@ -3,16 +3,21 @@
 Note:
 - generate refresh token  from rest_framework_simplejwt.tokens import RefreshToken
 """
+
 import logging
 import smtplib
 import socket
 from collections import namedtuple
+from dataclasses import dataclass
 
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth import login as auth_login
+from django.contrib.auth.views import LoginView as BaseLoginView
 from django.core.mail import send_mail
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
+from django.views.generic.base import TemplateView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.parsers import JSONParser
@@ -35,6 +40,54 @@ from lizaalert.authentication.utils import get_new_password
 User = get_user_model()
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class YandexUserData:
+    uid: int
+    login: str
+    emails: list
+
+
+class LoginView(BaseLoginView, TemplateView):
+    template_name = "authentication/login.html"
+    extra_context = {
+        "YANDEX_OAUTH2_KEY": settings.SOCIAL_AUTH_YANDEX_OAUTH2_KEY,
+        "YANDEX_REDIRECT_URI": settings.YANDEX_REDIRECT_URI,
+    }
+
+    def get(self, request, *args, **kwargs):
+        """Получение Oauth-токена от Яндекса."""
+        access_token = self.request.GET.get("access_token")
+        # access_token = settings.DEV_YA_TOKEN
+        if access_token:
+            if user_detail := self.get_passport_info(access_token):
+                auth_login(self.request, self.get_user(user_detail))
+                return HttpResponseRedirect(self.get_success_url())
+        return super().get(request, *args, **kwargs)
+
+    def get_passport_info(self, access_token):
+        """Получаем информацию о пользователе от я.паспорта."""
+        url = "https://login.yandex.ru/info"
+        headers = {"Authorization": f"OAuth {access_token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            user_data = response.json()
+            return YandexUserData(user_data["id"], user_data["login"], user_data["emails"])
+        return None
+
+    def get_user(self, user_detail):
+        """
+        Получение пользователя.
+
+        Если пользователь отсутствует в базе,
+        то в базе создается новый пользователь на основании информации,
+        полученной от я.паспорта.
+        """
+        user, _ = User.objects.get_or_create(
+            id=user_detail.uid, username=user_detail.login, email=user_detail.emails[0], is_staff=True
+        )
+        return user
 
 
 class CustomCreateUser(APIView):

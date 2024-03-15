@@ -4,10 +4,19 @@ from django.urls import include, path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
+from lizaalert.authentication.views import LoginView
+
 admin.site.site_header = "ЛизаАлерт"
 admin.site.site_title = "ЛизаАлерт"
 
-urlpatterns = [
+urlpatterns = []
+
+if settings.YANDEX_AUTH:
+    urlpatterns += [
+        path("admin/login/", LoginView.as_view(), name="login"),
+    ]
+
+urlpatterns += [
     path("admin/", admin.site.urls),
     path("api/v1/", include("lizaalert.courses.urls")),
     path("api/v1/", include("lizaalert.quizzes.urls")),
@@ -37,3 +46,5 @@ if settings.DEBUG:
         ),
         path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     ]
+# if settings.YANDEX_AUTH:
+#     urlpatterns.insert(0, path("admin/login/", LoginView.as_view(), name="login"))
