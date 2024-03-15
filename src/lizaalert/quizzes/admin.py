@@ -6,6 +6,7 @@ from pydantic import ValidationError as PydanticValidationError
 
 from lizaalert.quizzes.models import Question, Quiz, UserAnswer
 from lizaalert.quizzes.validators import ValidateAnswersModel
+from lizaalert.settings.admin_setup import BaseAdmin
 
 
 class QuestionAdminForm(forms.ModelForm):
@@ -24,13 +25,13 @@ class QuestionAdminForm(forms.ModelForm):
 
 
 @admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
+class QuizAdmin(BaseAdmin):
     list_display = ("id", "title", "created_at", "deleted_at")
     search_fields = ("title",)
 
 
 @admin.register(Question)
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(BaseAdmin):
     form = QuestionAdminForm
     list_display = ("id", "title", "quiz", "question_type", "order_number", "created_at", "deleted_at")
     list_filter = ("quiz",)
@@ -38,7 +39,7 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserAnswer)
-class UserAnswerAdmin(admin.ModelAdmin):
+class UserAnswerAdmin(BaseAdmin):
     list_display = ("id", "user", "quiz")
     readonly_fields = ("user", "quiz")
     search_fields = ("user__username", "quiz__title")

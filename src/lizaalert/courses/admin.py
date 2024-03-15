@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
+from lizaalert.courses.forms import CohortForm
 from lizaalert.courses.models import (
     FAQ,
     Chapter,
@@ -11,11 +12,13 @@ from lizaalert.courses.models import (
     CourseFaq,
     CourseKnowledge,
     CourseProgressStatus,
+    Division,
     Knowledge,
     Lesson,
     LessonProgressStatus,
     Subscription,
 )
+from lizaalert.settings.admin_setup import BaseAdmin
 
 
 class CourseFaqInline(admin.TabularInline):
@@ -51,22 +54,29 @@ class ChapterInline(admin.TabularInline):
     readonly_fields = ("get_chapter_link",)
     fields = (
         "get_chapter_link",
-        "order_number",
         "title",
-        "user_created",
-        "user_modifier",
     )
 
     # Метод для отображения ссылки на главу курса
     def get_chapter_link(self, obj):
-        url = reverse("admin:courses_chapter_change", args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj.title)
+        title = obj.title or "Нет названия"
+        if not (id := obj.id):
+            return format_html("<span>{}</span>", title)
+        return format_html('<a href="{}">{}</a>', reverse("admin:courses_chapter_change", args=(id,)), title)
 
     get_chapter_link.short_description = "Глава"
 
 
+class DivisionInline(admin.StackedInline):
+    """Инлайн направления для отображения в главе."""
+
+    model = Division
+    min_num = 1
+    extra = 0
+
+
 @admin.register(Cohort)
-class CohortAdmin(admin.ModelAdmin):
+class CohortAdmin(BaseAdmin):
     """
     Админка когорты.
 
@@ -75,6 +85,7 @@ class CohortAdmin(admin.ModelAdmin):
 
     model = Cohort
     extra = 1
+    form = CohortForm
     list_display = (
         "course_title",
         "start_date",
@@ -85,6 +96,8 @@ class CohortAdmin(admin.ModelAdmin):
     )
     list_select_related = ("course",)
     ordering = ("-updated_at",)
+    readonly_fields = ("cohort_number", "students_count")
+    raw_id_fields = ("teacher",)
 
     def course_title(self, obj):
         return obj.course.title
@@ -93,10 +106,13 @@ class CohortAdmin(admin.ModelAdmin):
 
 
 @admin.register(Course)
-class CourseAdmin(admin.ModelAdmin):
+class CourseAdmin(BaseAdmin):
     """Админка курса."""
 
     inlines = (CourseFaqInline, CourseKnowledgeInline, ChapterInline)
+    list_filter = [
+        "division",
+    ]
     model = Course
     list_display = (
         "title",
@@ -105,13 +121,27 @@ class CourseAdmin(admin.ModelAdmin):
         "user_created",
         "created_at",
         "updated_at",
+        "division",
     )
     ordering = ("-updated_at",)
     empty_value_display = "-пусто-"
 
+    # Автоматическое заполнение полей user_created и user_modifier для главы
+    def save_formset(self, request, form, formset, change):
+        if formset.model == Chapter:
+            chapters = formset.save(commit=False)
+            for chapter in chapters:
+                if not chapter.id:
+                    chapter.user_created = request.user
+                chapter.user_modifier = request.user
+                chapter.save()
+            formset.save_m2m()
+        else:
+            super().save_formset(request, form, formset, change)
+
 
 @admin.register(Chapter)
-class ChapterAdmin(admin.ModelAdmin):
+class ChapterAdmin(BaseAdmin):
     """Админка главы."""
 
     inlines = (LessonInline,)
@@ -131,7 +161,7 @@ class ChapterAdmin(admin.ModelAdmin):
 
 
 @admin.register(LessonProgressStatus)
-class LessonProgressStatusAdmin(admin.ModelAdmin):
+class LessonProgressStatusAdmin(BaseAdmin):
     ordering = ("-updated_at",)
     list_display = (
         "subscribed_user",
@@ -156,7 +186,7 @@ class LessonProgressStatusAdmin(admin.ModelAdmin):
 
 
 @admin.register(ChapterProgressStatus)
-class ChapterProgressStatusAdmin(admin.ModelAdmin):
+class ChapterProgressStatusAdmin(BaseAdmin):
 
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
@@ -183,7 +213,7 @@ class ChapterProgressStatusAdmin(admin.ModelAdmin):
 
 
 @admin.register(CourseProgressStatus)
-class CourseProgressStatusAdmin(admin.ModelAdmin):
+class CourseProgressStatusAdmin(BaseAdmin):
 
     raw_id_fields = ("subscription",)
     ordering = ("-updated_at",)
@@ -209,7 +239,7 @@ class CourseProgressStatusAdmin(admin.ModelAdmin):
 
 
 @admin.register(FAQ)
-class FaqAdmin(admin.ModelAdmin):
+class FaqAdmin(BaseAdmin):
     """Админка для FAQ."""
 
     inlines = (CourseFaqInline,)
@@ -223,7 +253,7 @@ class FaqAdmin(admin.ModelAdmin):
 
 
 @admin.register(Knowledge)
-class KnowledgeAdmin(admin.ModelAdmin):
+class KnowledgeAdmin(BaseAdmin):
     """Aдминка для Knowledge."""
 
     inlines = (CourseKnowledgeInline,)
@@ -231,13 +261,12 @@ class KnowledgeAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "author",
-        "created_at",
         "updated_at",
     )
 
 
 @admin.register(Lesson)
-class LessonAdmin(admin.ModelAdmin):
+class LessonAdmin(BaseAdmin):
     """Админка для урока."""
 
     raw_id_fields = (
@@ -258,7 +287,7 @@ class LessonAdmin(admin.ModelAdmin):
 
 
 @admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
+class SubscriptionAdmin(BaseAdmin):
     """Админка подписки."""
 
     raw_id_fields = ("user", "course")
@@ -278,3 +307,23 @@ class SubscriptionAdmin(admin.ModelAdmin):
     ]
 
     ordering = ("-updated_at",)
+
+
+@admin.register(Division)
+class DivisionAdmin(admin.ModelAdmin):
+    """Aдминка для Division."""
+
+    ordering = ("-updated_at",)
+    list_display = ("title", "author", "created_at", "updated_at", "courses")
+    list_select_related = ("author",)
+
+    @admin.display(description="Курсы")
+    def courses(self, obj):
+        return [course.title for course in obj.course_set.all()]
+
+    def get_queryset(self, request):
+        qs = self.model._default_manager.get_queryset().prefetch_related("course_set")
+        ordering = self.get_ordering(request)
+        if ordering:
+            qs = qs.order_by(*ordering)
+        return qs

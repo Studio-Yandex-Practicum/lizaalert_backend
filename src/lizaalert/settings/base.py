@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_filters",
+    "tinymce",
     # 3-rd party authentication apps
     "djoser",
     "allauth",
@@ -167,6 +168,8 @@ DJOSER = {
     "ACTIVATION_URL": False,
 }
 
+YANDEX_INFO_URL = "https://login.yandex.ru/info?format=json"
+
 # https://djoser.readthedocs.io/en/latest/authentication_backends.html#json-web-token-authentication
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -221,3 +224,22 @@ if YANDEX_AUTH:
 SOCIAL_AUTH_YANDEX_OAUTH2_KEY = env.str("YANDEX_CLIENT_ID", None)
 YANDEX_REDIRECT_URI = env.str("YANDEX_REDIRECT_URI", None)
 DEV_YA_TOKEN = env.str("DEV_YA_TOKEN", None)
+
+# TinyMCE settings, редактор текста для админки
+TINYMCE_DEFAULT_CONFIG = {
+    "height": "320px",
+    "width": "960px",
+    "menubar": "file edit view insert format tools table help",
+    "plugins": "advlist autolink lists link image charmap print "
+    "preview anchor searchreplace visualblocks code "
+    "fullscreen insertdatetime media table paste code help wordcount spellchecker",
+    "toolbar": "undo redo | bold italic underline strikethrough | fontselect fontsizeselect formatselect | alignleft "
+    "aligncenter alignright alignjustify | outdent indent |  numlist bullist checklist | forecolor "
+    "backcolor casechange permanentpen formatpainter removeformat | pagebreak | charmap emoticons | "
+    "fullscreen  preview save print | insertfile image media pageembed template link anchor codesample | "
+    "a11ycheck ltr rtl | showcomments addcomment code",
+    "custom_undo_redo_levels": 10,
+    "language": "ru_RU",
+    "skin": "oxide-dark",
+    "content_css": "dark",
+}
